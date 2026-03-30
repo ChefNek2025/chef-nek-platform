@@ -272,7 +272,7 @@
 // FIREBASE CONFIG
 // ============================================
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -341,7 +341,10 @@ function renderLogin() {
           <input type="password" id="login-password" class="form-input" placeholder="Your password">
         </div>
         <button class="form-btn" id="login-btn" onclick="handleLogin()">Sign in</button>
-        <p style="text-align:center;margin-top:20px;font-size:0.875rem;color:var(--ink-muted);">
+        <p style="text-align:center;margin-top:16px;font-size:0.875rem;">
+          <span style="color:var(--green);cursor:pointer;font-weight:500;" onclick="renderForgotPassword()">Forgot your password?</span>
+        </p>
+        <p style="text-align:center;margin-top:10px;font-size:0.875rem;color:var(--ink-muted);">
           Don't have an account? <span style="color:var(--green);cursor:pointer;font-weight:500;" onclick="renderRegister()">Contact Chef Nek</span>
         </p>
       </div>
@@ -385,6 +388,40 @@ function renderRegister() {
       </div>
     </div>
   `;
+}
+
+
+// ============================================
+// RENDER FORGOT PASSWORD PAGE
+// ============================================
+function renderForgotPassword() {
+  document.getElementById('root').innerHTML = `
+    <div class="login-page">
+      <div class="login-left">
+        <div class="login-brand">Chef Nek <span>Pro</span></div>
+        <p class="login-tagline">No worries — we'll send you a reset link straight to your email.</p>
+      </div>
+      <div class="login-right">
+        <h1 class="login-form-title">Reset password</h1>
+        <p class="login-form-sub">Enter your email and we'll send you a reset link</p>
+        <div id="reset-error" style="display:none;" class="form-error"></div>
+        <div id="reset-success" style="display:none;background:var(--green-light);border:1px solid rgba(29,158,117,0.3);color:var(--green-dark);font-size:0.875rem;padding:12px 16px;border-radius:10px;margin-bottom:16px;line-height:1.6;">
+          ✓ Reset email sent! Check your inbox and follow the link to reset your password.
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input type="email" id="reset-email" class="form-input" placeholder="you@restaurant.com">
+        </div>
+        <button class="form-btn" id="reset-btn" onclick="handleForgotPassword()">Send reset link</button>
+        <p style="text-align:center;margin-top:20px;font-size:0.875rem;color:var(--ink-muted);">
+          Remember your password? <span style="color:var(--green);cursor:pointer;font-weight:500;" onclick="renderLogin()">Sign in</span>
+        </p>
+      </div>
+    </div>
+  `;
+  document.getElementById('reset-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleForgotPassword();
+  });
 }
 
 // ============================================
@@ -1186,6 +1223,33 @@ window.handleRegister = async function() {
     errorEl.textContent = e.message;
     errorEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Create account';
+  }
+}
+
+
+window.handleForgotPassword = async function() {
+  const email = document.getElementById('reset-email').value.trim();
+  const errorEl = document.getElementById('reset-error');
+  const successEl = document.getElementById('reset-success');
+  const btn = document.getElementById('reset-btn');
+  if (!email || !email.includes('@')) {
+    errorEl.textContent = 'Please enter a valid email address.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  errorEl.style.display = 'none';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    successEl.style.display = 'block';
+    btn.textContent = 'Email sent!';
+    btn.style.background = 'var(--green-dark)';
+  } catch(e) {
+    errorEl.textContent = 'No account found with that email. Please check and try again.';
+    errorEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Send reset link';
   }
 }
 
