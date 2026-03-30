@@ -1,0 +1,22 @@
+{
+  "name": "Chef Nek Pro",
+  "short_name": "Chef Nek Pro",
+  "description": "The professional platform for DMV restaurant owners",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#1D9E75",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/srCVgm3/IMG-8789.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://i.ibb.co/srCVgm3/IMG-8789.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

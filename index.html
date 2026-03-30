@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chef Nek Pro — Platform</title>
+<!-- PWA Support -->
+<meta name="theme-color" content="#1D9E75">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chef Nek Pro">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Chef Nek Pro">
+<link rel="manifest" href="manifest.json">
+<!-- App Icons -->
+<link rel="apple-touch-icon" href="https://i.ibb.co/srCVgm3/IMG-8789.jpg">
+<link rel="icon" type="image/png" href="https://i.ibb.co/srCVgm3/IMG-8789.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -1295,6 +1306,63 @@ window.printPage = function(type) {
   document.querySelector('.main-content').prepend(header);
   window.print();
   setTimeout(() => header.remove(), 500);
+}
+
+// ============================================
+// PWA INSTALL PROMPT
+// ============================================
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner();
+});
+
+function showInstallBanner() {
+  const existing = document.getElementById('install-banner');
+  if (existing) return;
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.style.cssText = `
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: #fff; padding: 14px 20px;
+    border-radius: 14px; display: flex; align-items: center; gap: 14px;
+    font-family: var(--font-body); font-size: 0.875rem; z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 340px; width: 90%;
+  `;
+  banner.innerHTML = `
+    <div>
+      <div style="font-weight:500;margin-bottom:2px;">Install Chef Nek Pro</div>
+      <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);">Add to your home screen for quick access</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-shrink:0;">
+      <button onclick="installApp()" style="height:34px;padding:0 14px;background:#1D9E75;color:#fff;border:none;border-radius:8px;font-size:0.8rem;font-weight:500;cursor:pointer;">Install</button>
+      <button onclick="document.getElementById('install-banner').remove()" style="height:34px;padding:0 10px;background:rgba(255,255,255,0.1);color:#fff;border:none;border-radius:8px;font-size:0.8rem;cursor:pointer;">✕</button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+}
+
+window.installApp = async function() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner')?.remove();
+  if (outcome === 'accepted') showToast('Chef Nek Pro installed! Check your home screen.');
+}
+
+window.addEventListener('appinstalled', () => {
+  showToast('Chef Nek Pro installed successfully!');
+  document.getElementById('install-banner')?.remove();
+});
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
 }
 
 // ============================================
