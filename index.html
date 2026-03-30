@@ -547,7 +547,21 @@ function renderRecipes(main, userData) {
         <div class="card-title">Add new recipe</div>
         <div class="add-client-form">
           <input type="text" id="recipe-name" class="form-input-small" placeholder="Recipe name">
-          <input type="text" id="recipe-category" class="form-input-small" placeholder="Category (Mains, Sides...)">
+          <select id="recipe-category" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+            <option value="">Select category...</option>
+            <option value="Wraps">Wraps</option>
+            <option value="Salads">Salads</option>
+            <option value="Breakfast">Breakfast</option>
+            <option value="Sandwiches">Sandwiches</option>
+            <option value="Burgers">Burgers</option>
+            <option value="Mains">Mains</option>
+            <option value="Sides">Sides</option>
+            <option value="Sauces">Sauces</option>
+            <option value="Desserts">Desserts</option>
+            <option value="Drinks">Drinks</option>
+            <option value="Vegan">Vegan</option>
+            <option value="Vegetarian">Vegetarian</option>
+          </select>
           <input type="text" id="recipe-servings" class="form-input-small" placeholder="Servings (e.g. 4)">
           <input type="text" id="recipe-photo" class="form-input-small" placeholder="Photo URL (from imgbb.com)">
         </div>
@@ -616,7 +630,21 @@ async function loadRecipes(userData) {
           <div id="edit-form-${id}" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
               <input type="text" id="edit-name-${id}" value="${safeName}" class="form-input-small" placeholder="Recipe name">
-              <input type="text" id="edit-category-${id}" value="${safeCategory}" class="form-input-small" placeholder="Category">
+              <select id="edit-category-${id}" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+              <option value="">Select category...</option>
+              <option value="Wraps" ${safeCategory==='Wraps'?'selected':''}>Wraps</option>
+              <option value="Salads" ${safeCategory==='Salads'?'selected':''}>Salads</option>
+              <option value="Breakfast" ${safeCategory==='Breakfast'?'selected':''}>Breakfast</option>
+              <option value="Sandwiches" ${safeCategory==='Sandwiches'?'selected':''}>Sandwiches</option>
+              <option value="Burgers" ${safeCategory==='Burgers'?'selected':''}>Burgers</option>
+              <option value="Mains" ${safeCategory==='Mains'?'selected':''}>Mains</option>
+              <option value="Sides" ${safeCategory==='Sides'?'selected':''}>Sides</option>
+              <option value="Sauces" ${safeCategory==='Sauces'?'selected':''}>Sauces</option>
+              <option value="Desserts" ${safeCategory==='Desserts'?'selected':''}>Desserts</option>
+              <option value="Drinks" ${safeCategory==='Drinks'?'selected':''}>Drinks</option>
+              <option value="Vegan" ${safeCategory==='Vegan'?'selected':''}>Vegan</option>
+              <option value="Vegetarian" ${safeCategory==='Vegetarian'?'selected':''}>Vegetarian</option>
+            </select>
               <input type="text" id="edit-servings-${id}" value="${safeServings}" class="form-input-small" placeholder="Servings">
               <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL">
             </div>
@@ -641,7 +669,7 @@ window.editRecipe = function(id) {
 
 window.saveRecipe = async function(id) {
   const name = document.getElementById('edit-name-' + id).value.trim();
-  const category = document.getElementById('edit-category-' + id).value.trim();
+  const category = document.getElementById('edit-category-' + id).value;
   const servings = document.getElementById('edit-servings-' + id).value.trim();
   const photoUrl = document.getElementById('edit-photo-' + id).value.trim();
   const notes = document.getElementById('edit-notes-' + id).value.trim();
@@ -665,7 +693,7 @@ window.deleteRecipe = async function(id) {
 
 window.addRecipe = async function() {
   const name = document.getElementById('recipe-name').value.trim();
-  const category = document.getElementById('recipe-category').value.trim();
+  const category = document.getElementById('recipe-category').value;
   const servings = document.getElementById('recipe-servings').value.trim();
   const photoUrl = document.getElementById('recipe-photo').value.trim();
   const notes = document.getElementById('recipe-notes').value.trim();
