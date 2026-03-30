@@ -868,9 +868,8 @@ function renderPrepList(main, userData) {
       </div>
     </div>
     <div class="page-body">
-      ${isAdmin ? `
       <div class="card">
-        <div class="card-title">Add prep task</div>
+        <div class="card-title">${isAdmin ? 'Add prep task' : 'Add your own task'}</div>
         <div class="add-client-form">
           <input type="text" id="task-name" class="form-input-small" placeholder="Task name (e.g. Prep jerk marinade)">
           <input type="text" id="task-qty" class="form-input-small" placeholder="Quantity (e.g. 10 lbs)">
@@ -883,13 +882,13 @@ function renderPrepList(main, userData) {
             <option value="General">General</option>
           </select>
           <input type="text" id="task-assignee" class="form-input-small" placeholder="Assign to staff (e.g. John)">
+          ${isAdmin ? `
           <select id="task-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
             <option value="">Assign to restaurant...</option>
-          </select>
+          </select>` : `<input type="hidden" id="task-restaurant" value="${userData.uid}">`}
         </div>
         <button class="form-btn-small" style="margin-top:10px;" onclick="addPrepTask()">Add task</button>
       </div>
-      ` : ''}
       <div id="prep-progress" style="margin-bottom:16px;"></div>
       <div id="prep-list">
         <div class="empty-state"><div class="loading-spinner" style="margin:0 auto;"></div></div>
@@ -898,6 +897,7 @@ function renderPrepList(main, userData) {
   `;
   loadPrepTasks(userData);
   if (isAdmin) loadRestaurantsForSelect('task-restaurant');
+  else { const el = document.getElementById('task-restaurant'); if(el) el.value = userData.uid; }
 }
 
 let showArchived = false;
