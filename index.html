@@ -587,10 +587,16 @@ async function loadRecipes(userData) {
         </div>`;
       return;
     }
-    list.innerHTML = snap.docs.map(doc => {
-      const r = doc.data();
+    list.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      const id = d.id;
+      const safeName = (r.name||'').replace(/`/g,'');
+      const safePhoto = (r.photoUrl||'').replace(/`/g,'');
+      const safeNotes = (r.notes||'').replace(/`/g,'').replace(/\n/g,' ');
+      const safeCategory = (r.category||'').replace(/`/g,'');
+      const safeServings = (r.servings||'').replace(/`/g,'');
       return `
-        <div class="card" style="margin-bottom:14px;">
+        <div class="card" style="margin-bottom:14px;" id="recipe-card-${id}">
           <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
             ${r.photoUrl ? `<img src="${r.photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:10px;flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:80px;height:80px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="2" width="18" height="20" rx="3"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/></svg></div>`}
             <div style="flex:1;">
@@ -601,12 +607,60 @@ async function loadRecipes(userData) {
               ${r.servings ? `<div style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:6px;">${r.servings} servings</div>` : ''}
               ${r.notes ? `<div style="font-size:0.875rem;color:var(--ink-soft);line-height:1.6;">${r.notes}</div>` : ''}
             </div>
+            ${isAdmin ? `
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button onclick="editRecipe('${id}')" style="height:32px;padding:0 12px;border-radius:7px;border:0.5px solid var(--border);background:var(--cream);color:var(--ink-soft);font-size:12px;cursor:pointer;">Edit</button>
+              <button onclick="deleteRecipe('${id}')" style="height:32px;padding:0 12px;border-radius:7px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;font-size:12px;cursor:pointer;">Delete</button>
+            </div>` : ''}
+          </div>
+          <div id="edit-form-${id}" style="display:none;margin-top:14px;border-top:0.5px solid var(--border);padding-top:14px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+              <input type="text" id="edit-name-${id}" value="${safeName}" class="form-input-small" placeholder="Recipe name">
+              <input type="text" id="edit-category-${id}" value="${safeCategory}" class="form-input-small" placeholder="Category">
+              <input type="text" id="edit-servings-${id}" value="${safeServings}" class="form-input-small" placeholder="Servings">
+              <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL">
+            </div>
+            <textarea id="edit-notes-${id}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;color:var(--ink);background:var(--cream);resize:vertical;min-height:80px;outline:none;margin-bottom:10px;">${r.notes||''}</textarea>
+            <div style="display:flex;gap:8px;">
+              <button onclick="saveRecipe('${id}')" class="form-btn-small">Save changes</button>
+              <button onclick="document.getElementById('edit-form-${id}').style.display='none'" style="height:42px;padding:0 16px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--ink-soft);font-size:0.875rem;cursor:pointer;">Cancel</button>
+            </div>
           </div>
         </div>`;
     }).join('');
   } catch(e) {
     list.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading recipes. Please try again.</p></div>`;
   }
+}
+
+
+window.editRecipe = function(id) {
+  const form = document.getElementById('edit-form-' + id);
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+window.saveRecipe = async function(id) {
+  const name = document.getElementById('edit-name-' + id).value.trim();
+  const category = document.getElementById('edit-category-' + id).value.trim();
+  const servings = document.getElementById('edit-servings-' + id).value.trim();
+  const photoUrl = document.getElementById('edit-photo-' + id).value.trim();
+  const notes = document.getElementById('edit-notes-' + id).value.trim();
+  if (!name) { showToast('Recipe name is required', 'error'); return; }
+  try {
+    await setDoc(doc(db, 'recipes', id), { name, category, servings, photoUrl, notes }, { merge: true });
+    showToast('Recipe updated!');
+    loadRecipes(window._userData);
+  } catch(e) { showToast('Error updating recipe', 'error'); }
+}
+
+window.deleteRecipe = async function(id) {
+  if (!confirm('Delete this recipe? This cannot be undone.')) return;
+  try {
+    const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await deleteDoc(doc(db, 'recipes', id));
+    showToast('Recipe deleted');
+    loadRecipes(window._userData);
+  } catch(e) { showToast('Error deleting recipe', 'error'); }
 }
 
 window.addRecipe = async function() {
