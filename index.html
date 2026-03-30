@@ -563,7 +563,17 @@ function renderRecipes(main, userData) {
             <option value="Vegetarian">Vegetarian</option>
           </select>
           <input type="text" id="recipe-servings" class="form-input-small" placeholder="Servings (e.g. 4)">
-          <input type="text" id="recipe-photo" class="form-input-small" placeholder="Photo URL (from imgbb.com)">
+          <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="recipe-photo" class="form-input-small" placeholder="Photo URL or upload below" style="flex:1;">
+              <label for="recipe-photo-file" style="height:42px;padding:0 12px;background:var(--green);color:#fff;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;white-space:nowrap;">
+                Upload photo
+                <input type="file" id="recipe-photo-file" accept="image/*" style="display:none;" onchange="uploadPhoto(this, 'recipe-photo', 'recipe-photo-preview')">
+              </label>
+            </div>
+            <div id="recipe-photo-preview" style="display:none;margin-top:6px;">
+              <img id="recipe-photo-preview-img" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:0.5px solid var(--border);">
+              <span style="font-size:11px;color:var(--green);margin-left:8px;">Photo ready!</span>
+            </div>
         </div>
         <textarea id="recipe-notes" style="width:100%;margin-top:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;color:var(--ink);background:var(--cream);resize:vertical;min-height:80px;outline:none;" placeholder="Chef Nek notes, steps, ingredients..."></textarea>
         <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
@@ -661,6 +671,49 @@ async function loadRecipes(userData) {
   }
 }
 
+
+
+window.uploadPhoto = async function(input, urlFieldId, previewId) {
+  const file = input.files[0];
+  if (!file) return;
+  const previewDiv = document.getElementById(previewId);
+  const previewImg = document.getElementById(previewId + '-img');
+  const urlField = document.getElementById(urlFieldId);
+
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (previewImg) previewImg.src = e.target.result;
+    if (previewDiv) previewDiv.style.display = 'flex';
+    previewDiv.style.alignItems = 'center';
+  };
+  reader.readAsDataURL(file);
+
+  // Upload to ImgBB free API
+  showToast('Uploading photo...', 'success');
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch('https://api.imgbb.com/1/upload?key=2607f98fd74e91661681ef5b362c36f2', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) {
+      urlField.value = data.data.url;
+      if (previewImg) previewImg.src = data.data.url;
+      showToast('Photo uploaded!');
+    } else {
+      // Fallback — use base64 local preview
+      urlField.value = document.getElementById(previewId + '-img').src;
+      showToast('Photo ready — save the recipe!');
+    }
+  } catch(e) {
+    // Fallback — use the local preview
+    urlField.value = document.getElementById(previewId + '-img') ? document.getElementById(previewId + '-img').src : '';
+    showToast('Photo ready — save the recipe!');
+  }
+}
 
 window.editRecipe = function(id) {
   const form = document.getElementById('edit-form-' + id);
