@@ -647,6 +647,7 @@ function renderRecipes(main, userData) {
           </select>
           <input type="text" id="recipe-servings" class="form-input-small" placeholder="Servings (e.g. 4)">
           <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="recipe-price" class="form-input-small" placeholder="Price (e.g. $13.99)">
               <input type="text" id="recipe-photo" class="form-input-small" placeholder="Photo URL or upload below" style="flex:1;">
               <label for="recipe-photo-file" style="height:42px;padding:0 12px;background:var(--green);color:#fff;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;white-space:nowrap;">
                 Upload photo
@@ -711,7 +712,10 @@ async function loadRecipes(userData) {
                 <div style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--ink);">${r.name}</div>
                 ${r.category ? `<span class="status-badge status-active">${r.category}</span>` : ''}
               </div>
-              ${r.servings ? `<div style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:6px;">${r.servings} servings</div>` : ''}
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+                ${r.servings ? `<div style="font-size:0.8rem;color:var(--ink-muted);">${r.servings} servings</div>` : ''}
+                ${r.price ? `<div style="font-size:0.9rem;font-weight:700;color:var(--green);">${r.price}</div>` : ''}
+              </div>
               ${r.notes ? `<div style="font-size:0.875rem;color:var(--ink-soft);line-height:1.6;">${r.notes}</div>` : ''}
             </div>
             ${isAdmin ? `
@@ -739,6 +743,7 @@ async function loadRecipes(userData) {
               <option value="Vegetarian" ${safeCategory==='Vegetarian'?'selected':''}>Vegetarian</option>
             </select>
               <input type="text" id="edit-servings-${id}" value="${safeServings}" class="form-input-small" placeholder="Servings">
+              <input type="text" id="edit-price-${id}" value="${r.price||''}" class="form-input-small" placeholder="Price (e.g. $13.99)">
               <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL">
             </div>
             <textarea id="edit-notes-${id}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;color:var(--ink);background:var(--cream);resize:vertical;min-height:80px;outline:none;margin-bottom:10px;">${r.notes||''}</textarea>
@@ -807,11 +812,12 @@ window.saveRecipe = async function(id) {
   const name = document.getElementById('edit-name-' + id).value.trim();
   const category = document.getElementById('edit-category-' + id).value;
   const servings = document.getElementById('edit-servings-' + id).value.trim();
+  const price = document.getElementById('edit-price-' + id).value.trim();
   const photoUrl = document.getElementById('edit-photo-' + id).value.trim();
   const notes = document.getElementById('edit-notes-' + id).value.trim();
   if (!name) { showToast('Recipe name is required', 'error'); return; }
   try {
-    await setDoc(doc(db, 'recipes', id), { name, category, servings, photoUrl, notes }, { merge: true });
+    await setDoc(doc(db, 'recipes', id), { name, category, servings, price, photoUrl, notes }, { merge: true });
     showToast('Recipe updated!');
     loadRecipes(window._userData);
   } catch(e) { showToast('Error updating recipe', 'error'); }
@@ -831,17 +837,19 @@ window.addRecipe = async function() {
   const name = document.getElementById('recipe-name').value.trim();
   const category = document.getElementById('recipe-category').value;
   const servings = document.getElementById('recipe-servings').value.trim();
+  const price = document.getElementById('recipe-price').value.trim();
   const photoUrl = document.getElementById('recipe-photo').value.trim();
   const notes = document.getElementById('recipe-notes').value.trim();
   const restaurantId = document.getElementById('recipe-restaurant').value;
   if (!name || !restaurantId) { showToast('Recipe name and restaurant are required', 'error'); return; }
   try {
-    await addDoc(collection(db, 'recipes'), { name, category, servings, photoUrl, notes, restaurantId, createdAt: serverTimestamp() });
+    await addDoc(collection(db, 'recipes'), { name, category, servings, price, photoUrl, notes, restaurantId, createdAt: serverTimestamp() });
     showToast('Recipe added successfully!');
     loadRecipes(window._userData);
     document.getElementById('recipe-name').value = '';
     document.getElementById('recipe-category').value = '';
     document.getElementById('recipe-servings').value = '';
+    document.getElementById('recipe-price').value = '';
     document.getElementById('recipe-photo').value = '';
     document.getElementById('recipe-notes').value = '';
   } catch(e) { showToast('Error adding recipe', 'error'); }
