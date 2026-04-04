@@ -886,6 +886,33 @@ window.uploadPhoto = async function(input, urlFieldId, previewId) {
   }
 }
 
+window.handleSectionSelect = function(select) {
+  const customInput = document.getElementById('task-section');
+  if (select.value === 'custom') {
+    customInput.style.display = 'block';
+    select.style.display = 'none';
+    customInput.focus();
+    customInput.value = '';
+    // Add back button
+    if (!document.getElementById('section-back-btn')) {
+      const btn = document.createElement('button');
+      btn.id = 'section-back-btn';
+      btn.textContent = '← Back';
+      btn.style.cssText = 'height:42px;padding:0 12px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--ink-soft);font-size:12px;cursor:pointer;margin-top:4px;';
+      btn.onclick = function() {
+        customInput.style.display = 'none';
+        select.style.display = 'block';
+        select.value = '';
+        btn.remove();
+      };
+      customInput.parentElement.appendChild(btn);
+    }
+  } else {
+    customInput.value = select.value;
+    customInput.style.display = 'none';
+  }
+}
+
 window.editRecipe = function(id) {
   const form = document.getElementById('edit-form-' + id);
   if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
@@ -967,15 +994,25 @@ function renderPrepList(main, userData) {
         <div class="add-client-form">
           <input type="text" id="task-name" class="form-input-small" placeholder="Task name (e.g. Prep jerk marinade)">
           <input type="text" id="task-qty" class="form-input-small" placeholder="Quantity (e.g. 10 lbs)">
-          <select id="task-section" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
-            <option value="">Select section...</option>
-            <option value="Morning prep">Morning prep</option>
-            <option value="Midday prep">Midday prep</option>
-            <option value="Before service">Before service</option>
-            <option value="Closing">Closing</option>
-            <option value="General">General</option>
-          </select>
+          <div style="display:flex;gap:6px;">
+            <select id="task-section-select" onchange="handleSectionSelect(this)" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;flex:1;">
+              <option value="">Select section...</option>
+              <option value="Morning prep">Morning prep</option>
+              <option value="Midday prep">Midday prep</option>
+              <option value="Before service">Before service</option>
+              <option value="Closing">Closing</option>
+              <option value="Opening">Opening</option>
+              <option value="Deep clean">Deep clean</option>
+              <option value="Weekly">Weekly</option>
+              <option value="custom">+ Add custom section...</option>
+            </select>
+            <input type="text" id="task-section" style="display:none;height:42px;padding:0 14px;border:1.5px solid var(--green);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;flex:1;" placeholder="Type custom section name...">
+          </div>
           <input type="text" id="task-assignee" class="form-input-small" placeholder="Assign to staff (e.g. John)">
+          <label style="display:flex;align-items:center;gap:8px;height:42px;cursor:pointer;font-size:0.875rem;color:var(--ink-soft);">
+            <input type="checkbox" id="task-critical" style="width:16px;height:16px;accent-color:#E24B4A;cursor:pointer;">
+            <span style="color:#A32D2D;font-weight:500;">🚨 Mark as critical — must be done daily</span>
+          </label>
           ${isAdmin ? `
           <select id="task-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
             <option value="">Assign to restaurant...</option>
@@ -1031,6 +1068,21 @@ async function loadPrepTasks(userData) {
     // Filter based on archive toggle
     const tasks = showArchived ? allTasks : allTasks.filter(t => !t.completed);
     const pending = allTasks.filter(t => !t.completed).length;
+
+    // Show critical tasks alert if any critical tasks are not done
+    const criticalPending = allTasks.filter(t => t.critical && !t.completed);
+    if (criticalPending.length > 0) {
+      const alertDiv = document.createElement('div');
+      alertDiv.style.cssText = 'background:#FCEBEB;border:1px solid #F09595;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;';
+      alertDiv.innerHTML = `
+        <div style="font-size:1.2rem;flex-shrink:0;">🚨</div>
+        <div>
+          <div style="font-size:0.9rem;font-weight:500;color:#A32D2D;margin-bottom:2px;">${criticalPending.length} critical task${criticalPending.length>1?'s':''} not done!</div>
+          <div style="font-size:0.8rem;color:#A32D2D;">${criticalPending.map(t=>t.name).join(' • ')}</div>
+        </div>
+      `;
+      list.before(alertDiv);
+    }
 
     progressEl.innerHTML = `
       <div class="card" style="padding:16px 20px;">
@@ -1117,8 +1169,11 @@ window.toggleTask = async function(taskId, completed) {
 window.addPrepTask = async function() {
   const name = document.getElementById('task-name').value.trim();
   const qty = document.getElementById('task-qty').value.trim();
-  const section = document.getElementById('task-section').value;
+  const sectionInput = document.getElementById('task-section');
+  const sectionSelect = document.getElementById('task-section-select');
+  const section = sectionInput && sectionInput.style.display !== 'none' ? sectionInput.value.trim() : (sectionSelect ? sectionSelect.value : '');
   const assignee = document.getElementById('task-assignee').value.trim();
+  const critical = document.getElementById('task-critical') ? document.getElementById('task-critical').checked : false;
   const restaurantId = document.getElementById('task-restaurant').value;
   if (!name || !restaurantId) { showToast('Task name and restaurant required', 'error'); return; }
   try {
@@ -1126,6 +1181,7 @@ window.addPrepTask = async function() {
       name, qty,
       section: section || 'General',
       assignedTo: assignee,
+      critical: critical,
       restaurantId,
       completed: false,
       completedBy: '',
@@ -1137,6 +1193,7 @@ window.addPrepTask = async function() {
     document.getElementById('task-name').value = '';
     document.getElementById('task-qty').value = '';
     document.getElementById('task-assignee').value = '';
+    if(document.getElementById('task-critical')) document.getElementById('task-critical').checked = false;
   } catch(e) { showToast('Error adding task', 'error'); }
 }
 
