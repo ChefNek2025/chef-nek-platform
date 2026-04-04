@@ -240,6 +240,42 @@
   .empty-state-sub { font-size: 0.875rem; color: var(--ink-muted); }
 
 
+  /* ── PREP LIST PRO STYLES ── */
+  .prep-week-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .week-label { font-size:0.9rem; font-weight:500; color:var(--ink); }
+  .week-btn { height:34px; padding:0 14px; border-radius:8px; border:0.5px solid var(--border); background:var(--white); color:var(--ink-soft); font-size:0.8125rem; cursor:pointer; transition:background 0.15s; }
+  .week-btn:hover { background:var(--green-light); color:var(--green-dark); }
+  .prep-category { background:var(--white); border-radius:16px; border:0.5px solid var(--border); margin-bottom:16px; overflow:hidden; }
+  .prep-cat-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; cursor:pointer; user-select:none; transition:background 0.15s; }
+  .prep-cat-header:hover { background:var(--cream); }
+  .prep-cat-title { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:10px; }
+  .prep-cat-meta { display:flex; align-items:center; gap:10px; }
+  .prep-cat-progress { font-size:0.8rem; color:var(--ink-muted); }
+  .prep-cat-chevron { font-size:12px; color:var(--ink-muted); transition:transform 0.2s; }
+  .prep-cat-chevron.open { transform:rotate(90deg); }
+  .prep-cat-body { border-top:0.5px solid var(--border); }
+  .prep-cat-assign { padding:10px 18px; background:var(--cream); display:flex; align-items:center; gap:10px; border-bottom:0.5px solid var(--border); flex-wrap:wrap; }
+  .prep-cat-assign-label { font-size:0.8rem; color:var(--ink-muted); }
+  .prep-cat-assign-name { font-size:0.8rem; font-weight:500; color:var(--ink); }
+  .prep-item-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; align-items:center; padding:8px 18px; border-bottom:0.5px solid var(--border); }
+  .prep-item-row:last-child { border-bottom:none; }
+  .prep-item-row.critical-row { background:#FCEBEB; border-left:3px solid #E24B4A; }
+  .prep-item-name { font-size:0.875rem; color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .prep-item-qty { font-size:0.8rem; color:var(--ink-muted); text-align:center; }
+  .day-header { font-size:0.7rem; font-weight:500; color:var(--ink-muted); text-align:center; text-transform:uppercase; }
+  .day-check { width:28px; height:28px; border-radius:6px; border:1.5px solid var(--border); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin:0 auto; }
+  .day-check.checked { background:var(--green); border-color:var(--green); }
+  .day-check.checked svg { display:block; }
+  .day-check.today { border-color:var(--green); border-width:2px; }
+  .day-check svg { display:none; width:12px; height:12px; }
+  .prep-cat-footer { padding:12px 18px; background:var(--cream); border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  .approve-btn { height:36px; padding:0 18px; background:var(--green); color:#fff; border:none; border-radius:8px; font-size:0.8125rem; font-weight:500; cursor:pointer; transition:background 0.15s; }
+  .approve-btn:hover { background:var(--green-dark); }
+  .approve-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .approved-stamp { display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--green-dark); font-weight:500; }
+  .prep-header-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; padding:6px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
+  .critical-alert { background:#FCEBEB; border:1px solid #F09595; border-radius:12px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px; }
+
   /* ── PRINT STYLES ── */
   @media print {
     .sidebar, .mobile-header, .no-print { display: none !important; }
@@ -969,66 +1005,344 @@ window.addRecipe = async function() {
 // PREP LIST PAGE
 // ============================================
 function renderPrepList(main, userData) {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  window._weekStart = window._weekStart || monday.toISOString().split('T')[0];
+
+  const weekStart = new Date(window._weekStart);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const weekLabel = weekStart.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' – ' + weekEnd.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
   main.innerHTML = `
     <div class="page-header">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
-          <h1 class="page-title">Today's prep list</h1>
-          <p class="page-sub">${new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}</p>
+          <h1 class="page-title">Prep list</h1>
+          <p class="page-sub">Weekly prep tracker — check off each day</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
-          <button class="print-btn" onclick="toggleArchive()" id="archive-toggle-btn">
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="12" height="9" rx="1.5"/><path d="M1 4l1.5-2h9L13 4"/><line x1="5" y1="8" x2="9" y2="8"/></svg>
-            Show completed
-          </button>
           <button class="print-btn" onclick="printPage('preplist')">
-            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="10" height="7" rx="1.5"/><path d="M4 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/><line x1="4" y1="9" x2="10" y2="9"/><line x1="4" y1="11" x2="8" y2="11"/></svg>
-            Print prep list
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="10" height="7" rx="1.5"/><path d="M4 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Print week
           </button>
         </div>
       </div>
     </div>
     <div class="page-body">
-      <div class="card">
-        <div class="card-title">${isAdmin ? 'Add prep task' : 'Add your own task'}</div>
-        <div class="add-client-form">
-          <input type="text" id="task-name" class="form-input-small" placeholder="Task name (e.g. Prep jerk marinade)">
-          <input type="text" id="task-qty" class="form-input-small" placeholder="Quantity (e.g. 10 lbs)">
-          <div style="display:flex;gap:6px;">
-            <select id="task-section-select" onchange="handleSectionSelect(this)" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;flex:1;">
-              <option value="">Select section...</option>
-              <option value="Morning prep">Morning prep</option>
-              <option value="Midday prep">Midday prep</option>
-              <option value="Before service">Before service</option>
-              <option value="Closing">Closing</option>
-              <option value="Opening">Opening</option>
-              <option value="Deep clean">Deep clean</option>
-              <option value="Weekly">Weekly</option>
-              <option value="custom">+ Add custom section...</option>
-            </select>
-            <input type="text" id="task-section" style="display:none;height:42px;padding:0 14px;border:1.5px solid var(--green);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;flex:1;" placeholder="Type custom section name...">
-          </div>
-          <input type="text" id="task-assignee" class="form-input-small" placeholder="Assign to staff (e.g. John)">
-          <label style="display:flex;align-items:center;gap:8px;height:42px;cursor:pointer;font-size:0.875rem;color:var(--ink-soft);">
-            <input type="checkbox" id="task-critical" style="width:16px;height:16px;accent-color:#E24B4A;cursor:pointer;">
-            <span style="color:#A32D2D;font-weight:500;">🚨 Mark as critical — must be done daily</span>
-          </label>
-          ${isAdmin ? `
-          <select id="task-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
-            <option value="">Assign to restaurant...</option>
-          </select>` : `<input type="hidden" id="task-restaurant" value="${userData.uid}">`}
-        </div>
-        <button class="form-btn-small" style="margin-top:10px;" onclick="addPrepTask()">Add task</button>
+      <div class="prep-week-nav no-print">
+        <button class="week-btn" onclick="changeWeek(-1)">← Previous week</button>
+        <div class="week-label">📅 ${weekLabel}</div>
+        <button class="week-btn" onclick="changeWeek(1)">Next week →</button>
       </div>
-      <div id="prep-progress" style="margin-bottom:16px;"></div>
-      <div id="prep-list">
-        <div class="empty-state"><div class="loading-spinner" style="margin:0 auto;"></div></div>
+      <div id="critical-alert-zone"></div>
+      ${isAdmin ? `
+      <div class="card" style="margin-bottom:20px;" id="add-category-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">Manage prep categories</div>
+          <button onclick="toggleAddCategory()" class="form-btn-small" id="add-cat-toggle-btn">+ Add category</button>
+        </div>
+        <div id="add-category-form" style="display:none;border-top:0.5px solid var(--border);padding-top:14px;margin-top:4px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <input type="text" id="new-cat-name" class="form-input-small" placeholder="Category name (e.g. Fish prep)">
+            <input type="text" id="new-cat-assignee" class="form-input-small" placeholder="Assign to staff (e.g. John)">
+          </div>
+          <select id="new-cat-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;width:100%;margin-bottom:10px;">
+            <option value="">Assign to restaurant...</option>
+          </select>
+          <button onclick="addPrepCategory()" class="form-btn-small">Save category</button>
+        </div>
+      </div>
+      ` : ''}
+      <div id="prep-categories-list">
+        <div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>
       </div>
     </div>
   `;
-  loadPrepTasks(userData);
-  if (isAdmin) loadRestaurantsForSelect('task-restaurant');
-  else { const el = document.getElementById('task-restaurant'); if(el) el.value = userData.uid; }
+  loadPrepCategories(userData);
+  if (isAdmin) loadRestaurantsForSelect('new-cat-restaurant');
+}
+
+window.changeWeek = function(dir) {
+  const current = new Date(window._weekStart);
+  current.setDate(current.getDate() + dir * 7);
+  window._weekStart = current.toISOString().split('T')[0];
+  renderPage(window._userData);
+}
+
+window.toggleAddCategory = function() {
+  const form = document.getElementById('add-category-form');
+  const btn = document.getElementById('add-cat-toggle-btn');
+  const isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '+ Add category' : '✕ Cancel';
+}
+
+window.addPrepCategory = async function() {
+  const name = document.getElementById('new-cat-name').value.trim();
+  const assignee = document.getElementById('new-cat-assignee').value.trim();
+  const restaurantId = document.getElementById('new-cat-restaurant').value;
+  if (!name || !restaurantId) { showToast('Category name and restaurant required', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'prepCategories'), {
+      name, assignedTo: assignee, restaurantId,
+      order: Date.now(), createdAt: serverTimestamp()
+    });
+    showToast('Category added!');
+    document.getElementById('new-cat-name').value = '';
+    document.getElementById('new-cat-assignee').value = '';
+    loadPrepCategories(window._userData);
+    document.getElementById('add-category-form').style.display = 'none';
+    document.getElementById('add-cat-toggle-btn').textContent = '+ Add category';
+  } catch(e) { showToast('Error adding category', 'error'); }
+}
+
+async function loadPrepCategories(userData) {
+  const listEl = document.getElementById('prep-categories-list');
+  const alertZone = document.getElementById('critical-alert-zone');
+  const weekStart = window._weekStart;
+  const today = new Date().toISOString().split('T')[0];
+  const todayIdx = new Date().getDay();
+  const todayCol = todayIdx === 0 ? 6 : todayIdx - 1;
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  try {
+    const q = isAdmin
+      ? query(collection(db, 'prepCategories'), orderBy('order'))
+      : query(collection(db, 'prepCategories'), where('restaurantId','==', userData.uid), orderBy('order'));
+    const catSnap = await getDocs(q);
+
+    if (catSnap.empty) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;">
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No prep categories yet</div>
+          <div style="font-size:0.875rem;color:var(--ink-muted);">${isAdmin ? 'Add your first category above' : 'Chef Nek will set up your prep list soon'}</div>
+        </div>`;
+      return;
+    }
+
+    const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    let criticalMissed = [];
+    let html = '';
+
+    for (const cat of cats) {
+      const itemsSnap = await getDocs(
+        query(collection(db, 'prepItems'),
+          where('categoryId','==', cat.id),
+          where('restaurantId','==', cat.restaurantId),
+          orderBy('createdAt'))
+      );
+      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Get checks for this week
+      const checksSnap = await getDocs(
+        query(collection(db, 'prepChecks'),
+          where('categoryId','==', cat.id),
+          where('weekStart','==', weekStart))
+      );
+      const checks = {};
+      checksSnap.docs.forEach(d => { checks[d.data().itemId + '_' + d.data().dayIdx] = d.data(); });
+
+      // Get approval
+      const approvalSnap = await getDocs(
+        query(collection(db, 'prepApprovals'),
+          where('categoryId','==', cat.id),
+          where('weekStart','==', weekStart),
+          where('dayIdx','==', todayCol))
+      );
+      const approved = !approvalSnap.empty ? approvalSnap.docs[0].data() : null;
+
+      // Check critical items for today
+      items.filter(i => i.critical).forEach(i => {
+        if (!checks[i.id + '_' + todayCol]) criticalMissed.push({ name: i.name, cat: cat.name });
+      });
+
+      const doneToday = items.filter(i => checks[i.id + '_' + todayCol]).length;
+      const totalItems = items.length;
+
+      html += `
+        <div class="prep-category" id="prep-cat-${cat.id}">
+          <div class="prep-cat-header" onclick="toggleCat('${cat.id}')">
+            <div class="prep-cat-title">
+              ${cat.name}
+              ${items.filter(i=>i.critical).length > 0 ? `<span style="font-size:0.7rem;background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:20px;font-weight:500;">🚨 ${items.filter(i=>i.critical).length} critical</span>` : ''}
+            </div>
+            <div class="prep-cat-meta">
+              <span class="prep-cat-progress">${doneToday}/${totalItems} today</span>
+              ${approved ? `<span style="font-size:0.75rem;color:var(--green);font-weight:500;">✓ Approved</span>` : ''}
+              <span class="prep-cat-chevron open" id="chevron-${cat.id}">›</span>
+            </div>
+          </div>
+          <div class="prep-cat-body" id="cat-body-${cat.id}">
+            <div class="prep-cat-assign">
+              <span class="prep-cat-assign-label">Assigned to:</span>
+              <span class="prep-cat-assign-name">${cat.assignedTo || 'Not assigned'}</span>
+              ${isAdmin ? `<button onclick="editCatAssignee('${cat.id}','${cat.assignedTo||''}')" style="font-size:11px;padding:3px 10px;border-radius:6px;border:0.5px solid var(--border);background:transparent;cursor:pointer;color:var(--ink-soft);">Edit</button>
+              <button onclick="deletePrepCategory('${cat.id}')" style="font-size:11px;padding:3px 10px;border-radius:6px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;cursor:pointer;">Delete category</button>` : ''}
+            </div>
+            <div class="prep-header-row">
+              <div style="font-size:0.75rem;font-weight:500;color:var(--ink-muted);">Item</div>
+              <div class="day-header">Qty</div>
+              ${days.map((d,i) => `<div class="day-header" style="${i===todayCol?'color:var(--green);font-weight:700;':''}">${d}</div>`).join('')}
+            </div>
+            ${items.map(item => {
+              const isCritical = item.critical;
+              const rowChecks = days.map((_,i) => checks[item.id+'_'+i]);
+              return `
+                <div class="prep-item-row ${isCritical && !checks[item.id+'_'+todayCol] ? 'critical-row' : ''}">
+                  <div class="prep-item-name">
+                    ${isCritical ? '<span style="font-size:0.7rem;background:#E24B4A;color:#fff;padding:1px 6px;border-radius:10px;">🚨</span>' : ''}
+                    ${item.name}
+                  </div>
+                  <div class="prep-item-qty">${item.qty||'—'}</div>
+                  ${days.map((_,dayIdx) => {
+                    const chk = checks[item.id+'_'+dayIdx];
+                    return `<div class="day-check ${chk?'checked':''} ${dayIdx===todayCol?'today':''}" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="${chk ? 'Done by '+chk.by+' at '+chk.time : ''}">
+                      <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>`;
+                  }).join('')}
+                </div>`;
+            }).join('')}
+            ${isAdmin ? `
+            <div style="padding:10px 18px;border-top:0.5px solid var(--border);">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <input type="text" id="new-item-name-${cat.id}" class="form-input-small" placeholder="Add item (e.g. Cook chicken strips)">
+                <input type="text" id="new-item-qty-${cat.id}" class="form-input-small" placeholder="Qty (e.g. 10 lbs)">
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.8125rem;color:var(--ink-soft);cursor:pointer;">
+                  <input type="checkbox" id="new-item-critical-${cat.id}" style="accent-color:#E24B4A;width:14px;height:14px;">
+                  <span style="color:#A32D2D;font-weight:500;">🚨 Critical</span>
+                </label>
+                <button onclick="addPrepItem('${cat.id}','${cat.restaurantId}')" class="form-btn-small">+ Add item</button>
+              </div>
+            </div>` : ''}
+            <div class="prep-cat-footer">
+              <div style="font-size:0.8rem;color:var(--ink-muted);">
+                ${approved ? `✓ Approved by <strong>${approved.by}</strong> at ${approved.time}` : 'Not yet approved today'}
+              </div>
+              ${!approved ? `
+                <button class="approve-btn" onclick="approvePrepCategory('${cat.id}','${cat.restaurantId}','${weekStart}',${todayCol})" ${items.filter(i=>i.critical).some(i=>!checks[i.id+'_'+todayCol]) ? 'disabled title="Complete all critical items first"' : ''}>
+                  ✓ Approve today's prep
+                </button>` : `
+                <span class="approved-stamp">✅ Approved for today</span>`}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    listEl.innerHTML = html;
+
+    // Show critical alert
+    if (criticalMissed.length > 0 && alertZone) {
+      alertZone.innerHTML = `
+        <div class="critical-alert">
+          <div style="font-size:1.5rem;flex-shrink:0;">🚨</div>
+          <div>
+            <div style="font-size:0.9375rem;font-weight:500;color:#A32D2D;margin-bottom:6px;">${criticalMissed.length} critical item${criticalMissed.length>1?'s':''} not done today!</div>
+            ${criticalMissed.map(i=>`<div style="font-size:0.8125rem;color:#A32D2D;">• ${i.name} <span style="opacity:0.7;">(${i.cat})</span></div>`).join('')}
+          </div>
+        </div>`;
+    } else if (alertZone) {
+      alertZone.innerHTML = '';
+    }
+
+  } catch(e) {
+    console.error(e);
+    listEl.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading prep list. Please refresh.</p></div>`;
+  }
+}
+
+window.toggleCat = function(id) {
+  const body = document.getElementById('cat-body-'+id);
+  const chev = document.getElementById('chevron-'+id);
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chev.classList.toggle('open', !isOpen);
+}
+
+window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, weekStart, el) {
+  const isChecked = el.classList.contains('checked');
+  try {
+    if (isChecked) {
+      const snap = await getDocs(query(collection(db,'prepChecks'),
+        where('itemId','==',itemId), where('dayIdx','==',dayIdx), where('weekStart','==',weekStart)));
+      for (const d of snap.docs) {
+        const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        await dd(doc(db,'prepChecks',d.id));
+      }
+      el.classList.remove('checked');
+    } else {
+      const name = prompt('Your name:');
+      if (!name) return;
+      const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      await addDoc(collection(db,'prepChecks'),{
+        itemId, catId, restaurantId, dayIdx, weekStart,
+        by: name.trim(), time, checkedAt: serverTimestamp()
+      });
+      el.classList.add('checked');
+      el.title = 'Done by '+name+' at '+time;
+    }
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error updating check', 'error'); }
+}
+
+window.approvePrepCategory = async function(catId, restaurantId, weekStart, dayIdx) {
+  const name = prompt('Manager/Chef name to approve:');
+  if (!name) return;
+  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  try {
+    await addDoc(collection(db,'prepApprovals'),{
+      catId, categoryId: catId, restaurantId, weekStart, dayIdx,
+      by: name.trim(), time, approvedAt: serverTimestamp()
+    });
+    showToast('✅ Prep approved by '+name+'!');
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error approving', 'error'); }
+}
+
+window.addPrepItem = async function(catId, restaurantId) {
+  const name = document.getElementById('new-item-name-'+catId).value.trim();
+  const qty = document.getElementById('new-item-qty-'+catId).value.trim();
+  const critical = document.getElementById('new-item-critical-'+catId).checked;
+  if (!name) { showToast('Item name required', 'error'); return; }
+  try {
+    await addDoc(collection(db,'prepItems'),{
+      name, qty, critical, categoryId: catId, restaurantId,
+      createdAt: serverTimestamp()
+    });
+    showToast('Item added!');
+    document.getElementById('new-item-name-'+catId).value = '';
+    document.getElementById('new-item-qty-'+catId).value = '';
+    document.getElementById('new-item-critical-'+catId).checked = false;
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error adding item', 'error'); }
+}
+
+window.editCatAssignee = async function(catId, current) {
+  const name = prompt('Assign category to:', current);
+  if (name === null) return;
+  try {
+    await setDoc(doc(db,'prepCategories',catId),{assignedTo: name.trim()},{merge:true});
+    showToast('Updated!');
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+window.deletePrepCategory = async function(catId) {
+  if (!confirm('Delete this category and all its items? This cannot be undone.')) return;
+  try {
+    const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await dd(doc(db,'prepCategories',catId));
+    showToast('Category deleted');
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+
 }
 
 let showArchived = false;
