@@ -1154,9 +1154,7 @@ async function loadPrepCategories(userData) {
     for (const cat of cats) {
       const itemsSnap = await getDocs(
         query(collection(db, 'prepItems'),
-          where('categoryId','==', cat.id),
-          where('restaurantId','==', cat.restaurantId),
-          orderBy('createdAt'))
+          where('categoryId','==', cat.id))
       );
       const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
@@ -1382,173 +1380,13 @@ window.deletePrepCategory = async function(catId) {
 }
 
 
-}
 
-let showArchived = false;
 
-window.toggleArchive = function() {
-  showArchived = !showArchived;
-  const btn = document.getElementById('archive-toggle-btn');
-  if (btn) btn.innerHTML = showArchived ? 
-    `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="12" height="9" rx="1.5"/><path d="M1 4l1.5-2h9L13 4"/><line x1="5" y1="8" x2="9" y2="8"/></svg> Hide completed` :
-    `<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="4" width="12" height="9" rx="1.5"/><path d="M1 4l1.5-2h9L13 4"/><line x1="5" y1="8" x2="9" y2="8"/></svg> Show completed`;
-  loadPrepTasks(window._userData);
-}
 
-async function loadPrepTasks(userData) {
-  const list = document.getElementById('prep-list');
-  const progressEl = document.getElementById('prep-progress');
-  try {
-    const q = isAdmin
-      ? query(collection(db, 'prepTasks'), orderBy('createdAt', 'desc'))
-      : query(collection(db, 'prepTasks'), where('restaurantId', '==', userData.uid));
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      list.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><polyline points="3,7 7,11 13,4"/><line x1="3" y1="14" x2="20" y2="14"/><line x1="3" y1="19" x2="14" y2="19"/></svg></div>
-          <div class="empty-state-title">No prep tasks yet</div>
-          <div class="empty-state-sub">${isAdmin ? 'Add tasks above' : 'Chef Nek will add your prep list soon'}</div>
-        </div>`;
-      progressEl.innerHTML = '';
-      return;
-    }
-    const allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const done = allTasks.filter(t => t.completed).length;
-    const total = allTasks.length;
-    const pct = Math.round((done / total) * 100);
 
-    // Filter based on archive toggle
-    const tasks = showArchived ? allTasks : allTasks.filter(t => !t.completed);
-    const pending = allTasks.filter(t => !t.completed).length;
 
-    // Show critical tasks alert if any critical tasks are not done
-    const criticalPending = allTasks.filter(t => t.critical && !t.completed);
-    if (criticalPending.length > 0) {
-      const alertDiv = document.createElement('div');
-      alertDiv.style.cssText = 'background:#FCEBEB;border:1px solid #F09595;border-radius:12px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:12px;';
-      alertDiv.innerHTML = `
-        <div style="font-size:1.2rem;flex-shrink:0;">🚨</div>
-        <div>
-          <div style="font-size:0.9rem;font-weight:500;color:#A32D2D;margin-bottom:2px;">${criticalPending.length} critical task${criticalPending.length>1?'s':''} not done!</div>
-          <div style="font-size:0.8rem;color:#A32D2D;">${criticalPending.map(t=>t.name).join(' • ')}</div>
-        </div>
-      `;
-      list.before(alertDiv);
-    }
 
-    progressEl.innerHTML = `
-      <div class="card" style="padding:16px 20px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:0.875rem;font-weight:500;color:var(--ink);">Today's progress</div>
-          <div style="font-size:0.875rem;font-weight:500;color:var(--green);">${done} / ${total} done</div>
-        </div>
-        <div style="background:var(--green-light);border-radius:100px;height:8px;overflow:hidden;">
-          <div style="background:var(--green);height:8px;border-radius:100px;width:${pct}%;transition:width 0.3s;"></div>
-        </div>
-        ${done > 0 && !showArchived ? `<div style="font-size:0.8rem;color:var(--ink-muted);margin-top:8px;">${done} completed task${done>1?'s':''} hidden — click "Show completed" to view</div>` : ''}
-        ${pending === 0 && done > 0 ? `<div style="font-size:0.875rem;font-weight:500;color:var(--green);margin-top:8px;">All tasks done! Great work today 🎉</div>` : ''}
-      </div>`;
 
-    if (tasks.length === 0) {
-      list.innerHTML = `
-        <div class="card" style="text-align:center;padding:32px;">
-          <div style="font-size:2rem;margin-bottom:12px;">🎉</div>
-          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:6px;">All tasks completed!</div>
-          <div style="font-size:0.875rem;color:var(--ink-muted);">Click "Show completed" to see your finished tasks</div>
-        </div>`;
-      return;
-    }
-
-    const sections = {};
-    tasks.forEach(t => {
-      const s = t.section || 'General';
-      if (!sections[s]) sections[s] = [];
-      sections[s].push(t);
-    });
-
-    list.innerHTML = Object.entries(sections).map(([section, items]) => `
-      <div class="card">
-        <div class="card-title">${section}</div>
-        ${items.map(task => `
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);${task.completed ? 'opacity:0.6;' : ''}" id="task-row-${task.id}">
-            <div onclick="toggleTask('${task.id}', ${!task.completed})" style="width:22px;height:22px;border-radius:6px;border:1.5px solid ${task.completed ? 'var(--green)' : 'var(--border)'};background:${task.completed ? 'var(--green)' : 'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">
-              ${task.completed ? `<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
-            </div>
-            <div style="flex:1;">
-              <div style="font-size:0.9rem;${task.completed ? 'text-decoration:line-through;color:var(--ink-muted);' : 'color:var(--ink);'}">${task.name}</div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px;">
-                ${task.qty ? `<div style="font-size:0.8rem;color:var(--ink-muted);">${task.qty}</div>` : ''}
-                ${task.assignedTo && !task.completed ? `<div style="font-size:0.75rem;color:var(--ink-muted);background:var(--cream);padding:1px 8px;border-radius:20px;border:0.5px solid var(--border);">Assigned: ${task.assignedTo}</div>` : ''}
-                ${task.completed && task.completedBy ? `<div style="font-size:0.75rem;color:var(--green);margin-top:1px;">✓ Done by ${task.completedBy} ${task.completedAt ? '· ' + task.completedAt : ''}</div>` : ''}
-              </div>
-            </div>
-            ${task.completed ? `<div style="font-size:0.75rem;color:var(--green);font-weight:500;flex-shrink:0;">Done</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-    `).join('');
-  } catch(e) {
-    list.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading prep list.</p></div>`;
-  }
-}
-
-window.toggleTask = async function(taskId, completed) {
-  try {
-    if (completed) {
-      // Ask for staff name when completing a task
-      const name = prompt('Who completed this task? Enter your name:');
-      if (name === null) return; // cancelled
-      const staffName = name.trim() || 'Unknown';
-      const completedAt = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      await setDoc(doc(db, 'prepTasks', taskId), {
-        completed: true,
-        completedBy: staffName,
-        completedAt: completedAt
-      }, { merge: true });
-      showToast(staffName + ' completed the task!');
-    } else {
-      // Uncomplete — clear the name
-      await setDoc(doc(db, 'prepTasks', taskId), {
-        completed: false,
-        completedBy: '',
-        completedAt: ''
-      }, { merge: true });
-    }
-    loadPrepTasks(window._userData);
-  } catch(e) { showToast('Error updating task', 'error'); }
-}
-
-window.addPrepTask = async function() {
-  const name = document.getElementById('task-name').value.trim();
-  const qty = document.getElementById('task-qty').value.trim();
-  const sectionInput = document.getElementById('task-section');
-  const sectionSelect = document.getElementById('task-section-select');
-  const section = sectionInput && sectionInput.style.display !== 'none' ? sectionInput.value.trim() : (sectionSelect ? sectionSelect.value : '');
-  const assignee = document.getElementById('task-assignee').value.trim();
-  const critical = document.getElementById('task-critical') ? document.getElementById('task-critical').checked : false;
-  const restaurantId = document.getElementById('task-restaurant').value;
-  if (!name || !restaurantId) { showToast('Task name and restaurant required', 'error'); return; }
-  try {
-    await addDoc(collection(db, 'prepTasks'), {
-      name, qty,
-      section: section || 'General',
-      assignedTo: assignee,
-      critical: critical,
-      restaurantId,
-      completed: false,
-      completedBy: '',
-      completedAt: '',
-      createdAt: serverTimestamp()
-    });
-    showToast('Task added!');
-    loadPrepTasks(window._userData);
-    document.getElementById('task-name').value = '';
-    document.getElementById('task-qty').value = '';
-    document.getElementById('task-assignee').value = '';
-    if(document.getElementById('task-critical')) document.getElementById('task-critical').checked = false;
-  } catch(e) { showToast('Error adding task', 'error'); }
-}
 
 // ============================================
 // INVENTORY PAGE
@@ -1748,7 +1586,7 @@ window.addClient = async function() {
       status: 'new', createdAt: serverTimestamp()
     });
     await signInWithEmailAndPassword(auth, ADMIN_EMAIL, window._adminPassword);
-    showToast(`Account created for ${restaurantName}!`);
+    showToast('Account created for ' + restaurantName + '!');
     loadClients();
     document.getElementById('client-restaurant').value = '';
     document.getElementById('client-owner').value = '';
@@ -1908,13 +1746,7 @@ function showInstallBanner() {
   if (existing) return;
   const banner = document.createElement('div');
   banner.id = 'install-banner';
-  banner.style.cssText = `
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--ink); color: #fff; padding: 14px 20px;
-    border-radius: 14px; display: flex; align-items: center; gap: 14px;
-    font-family: var(--font-body); font-size: 0.875rem; z-index: 1000;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 340px; width: 90%;
-  `;
+  banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:14px 20px;border-radius:14px;display:flex;align-items:center;gap:14px;font-family:var(--font-body);font-size:0.875rem;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:340px;width:90%;';
   banner.innerHTML = `
     <div>
       <div style="font-weight:500;margin-bottom:2px;">Install Chef Nek Pro</div>
