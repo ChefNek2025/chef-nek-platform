@@ -782,7 +782,17 @@ function recipeCard(r) {
           </select>
           <input type="text" id="edit-servings-${id}" value="${safeServings}" class="form-input-small" placeholder="Servings">
           <input type="text" id="edit-price-${id}" value="${r.price||''}" class="form-input-small" placeholder="Price (e.g. $13.99)">
-          <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL">
+          <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL" style="flex:1;">
+              <label for="edit-photo-file-${id}" style="height:42px;padding:0 12px;background:var(--green);color:#fff;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;">
+                Upload
+                <input type="file" id="edit-photo-file-${id}" accept="image/*" style="display:none;" onchange="uploadPhoto(this, 'edit-photo-${id}', 'edit-preview-${id}')">
+              </label>
+            </div>
+            <div id="edit-preview-${id}" style="display:${r.photoUrl ? 'flex' : 'none'};align-items:center;gap:8px;margin-top:4px;">
+              <img id="edit-preview-${id}-img" src="${r.photoUrl||''}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:0.5px solid var(--border);">
+              <span style="font-size:11px;color:var(--green);">Current photo</span>
+            </div>
         </div>
         <textarea id="edit-notes-${id}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;color:var(--ink);background:var(--cream);resize:vertical;min-height:80px;outline:none;margin-bottom:10px;">${r.notes||''}</textarea>
         <div style="display:flex;gap:8px;">
