@@ -246,13 +246,14 @@
   .week-btn { height:34px; padding:0 14px; border-radius:8px; border:0.5px solid var(--border); background:var(--white); color:var(--ink-soft); font-size:0.8125rem; cursor:pointer; transition:background 0.15s; }
   .week-btn:hover { background:var(--green-light); color:var(--green-dark); }
   .prep-category { background:var(--white); border-radius:16px; border:0.5px solid var(--border); margin-bottom:16px; overflow:hidden; }
-  .prep-cat-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; cursor:pointer; user-select:none; transition:background 0.15s; }
+  .prep-cat-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; cursor:pointer; user-select:none; transition:background 0.15s; border-radius:16px; }
+  .prep-cat-chevron { font-size:18px; color:var(--ink-muted); transition:transform 0.2s; font-weight:300; }
+  .prep-cat-chevron.open { transform:rotate(90deg); color:var(--green); }
   .prep-cat-header:hover { background:var(--cream); }
   .prep-cat-title { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:10px; }
   .prep-cat-meta { display:flex; align-items:center; gap:10px; }
   .prep-cat-progress { font-size:0.8rem; color:var(--ink-muted); }
-  .prep-cat-chevron { font-size:12px; color:var(--ink-muted); transition:transform 0.2s; }
-  .prep-cat-chevron.open { transform:rotate(90deg); }
+
   .prep-cat-body { border-top:0.5px solid var(--border); }
   .prep-cat-assign { padding:10px 18px; background:var(--cream); display:flex; align-items:center; gap:10px; border-bottom:0.5px solid var(--border); flex-wrap:wrap; }
   .prep-cat-assign-label { font-size:0.8rem; color:var(--ink-muted); }
@@ -1192,12 +1193,12 @@ async function loadPrepCategories(userData) {
               ${items.filter(i=>i.critical).length > 0 ? `<span style="font-size:0.7rem;background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:20px;font-weight:500;">🚨 ${items.filter(i=>i.critical).length} critical</span>` : ''}
             </div>
             <div class="prep-cat-meta">
-              <span class="prep-cat-progress">${doneToday}/${totalItems} today</span>
+              <span class="prep-cat-progress" style="color:${doneToday===totalItems && totalItems>0 ? 'var(--green)' : 'var(--ink-muted)'};">${doneToday===totalItems && totalItems>0 ? '✅' : ''} ${doneToday}/${totalItems} today</span>
               ${approved ? `<span style="font-size:0.75rem;color:var(--green);font-weight:500;">✓ Approved</span>` : ''}
-              <span class="prep-cat-chevron open" id="chevron-${cat.id}">›</span>
+              <span class="prep-cat-chevron" id="chevron-${cat.id}">›</span>
             </div>
           </div>
-          <div class="prep-cat-body" id="cat-body-${cat.id}">
+          <div class="prep-cat-body" id="cat-body-${cat.id}" style="display:none;">
             <div class="prep-cat-assign">
               <span class="prep-cat-assign-label">Assigned to:</span>
               <span class="prep-cat-assign-name">${cat.assignedTo || 'Not assigned'}</span>
@@ -1339,7 +1340,7 @@ window.deletePrepItem = async function(id) {
 window.toggleCat = function(id) {
   const body = document.getElementById('cat-body-'+id);
   const chev = document.getElementById('chevron-'+id);
-  const isOpen = body.style.display !== 'none';
+  const isOpen = body.style.display === 'block';
   body.style.display = isOpen ? 'none' : 'block';
   chev.classList.toggle('open', !isOpen);
 }
