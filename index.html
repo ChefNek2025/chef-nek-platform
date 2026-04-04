@@ -1134,7 +1134,7 @@ async function loadPrepCategories(userData) {
 
   try {
     const q = isAdmin
-      ? query(collection(db, 'prepCategories'), orderBy('order'))
+      ? collection(db, 'prepCategories')
       : query(collection(db, 'prepCategories'), where('restaurantId','==', userData.uid));
     const catSnap = await getDocs(q);
 
@@ -1147,7 +1147,7 @@ async function loadPrepCategories(userData) {
       return;
     }
 
-    const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0) - (b.order||0));
     let criticalMissed = [];
     let html = '';
 
@@ -1163,20 +1163,20 @@ async function loadPrepCategories(userData) {
       // Get checks for this week
       const checksSnap = await getDocs(
         query(collection(db, 'prepChecks'),
-          where('categoryId','==', cat.id),
-          where('weekStart','==', weekStart))
+          where('categoryId','==', cat.id))
       );
+      // Filter by weekStart in JS
+      const allCheckDocs = checksSnap.docs.filter(d => d.data().weekStart === weekStart);
       const checks = {};
-      checksSnap.docs.forEach(d => { checks[d.data().itemId + '_' + d.data().dayIdx] = d.data(); });
+      allCheckDocs.forEach(d => { checks[d.data().itemId + '_' + d.data().dayIdx] = d.data(); });
 
       // Get approval
       const approvalSnap = await getDocs(
         query(collection(db, 'prepApprovals'),
-          where('categoryId','==', cat.id),
-          where('weekStart','==', weekStart),
-          where('dayIdx','==', todayCol))
+          where('categoryId','==', cat.id))
       );
-      const approved = !approvalSnap.empty ? approvalSnap.docs[0].data() : null;
+      const approvalDocs = approvalSnap.docs.filter(d => d.data().weekStart === weekStart && d.data().dayIdx === todayCol);
+      const approved = approvalDocs.length > 0 ? approvalDocs[0].data() : null;
 
       // Check critical items for today
       items.filter(i => i.critical).forEach(i => {
@@ -1306,8 +1306,10 @@ window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, wee
   try {
     if (isChecked) {
       const snap = await getDocs(query(collection(db,'prepChecks'),
-        where('itemId','==',itemId), where('dayIdx','==',dayIdx), where('weekStart','==',weekStart)));
-      for (const d of snap.docs) {
+        where('itemId','==',itemId)));
+      // filter in JS
+      const toDelete = snap.docs.filter(d => d.data().dayIdx === dayIdx && d.data().weekStart === weekStart);
+      for (const d of toDelete) {
         const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         await dd(doc(db,'prepChecks',d.id));
       }
@@ -1951,6 +1953,15 @@ if ('serviceWorker' in navigator) {
 // AUTH STATE LISTENER — app entry point
 // ============================================
 onAuthStateChanged(auth, async (user) => {
+  // Safety timeout — if loading takes more than 8 seconds, show login
+  const loadingTimeout = setTimeout(() => {
+    const root = document.getElementById('root');
+    if (root && root.querySelector('.loading-screen')) {
+      console.log('Loading timeout — showing login');
+      renderLogin();
+    }
+  }, 8000);
+
   if (user) {
     currentUser = user;
     try {
@@ -1962,6 +1973,7 @@ onAuthStateChanged(auth, async (user) => {
         userData = { uid: user.uid, email: user.email, restaurantName: 'Chef Nek Admin', isAdmin: true };
         await setDoc(doc(db, 'users', user.uid), { email: user.email, isAdmin: true, restaurantName: 'Chef Nek Admin' });
       }
+      clearTimeout(loadingTimeout);
       isAdmin = userData.isAdmin || user.email === ADMIN_EMAIL;
       renderApp(userData);
     } catch(e) {
