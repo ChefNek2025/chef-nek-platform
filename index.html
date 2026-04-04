@@ -1217,6 +1217,10 @@ async function loadPrepCategories(userData) {
                   <div class="prep-item-name">
                     ${isCritical ? '<span style="font-size:0.7rem;background:#E24B4A;color:#fff;padding:1px 6px;border-radius:10px;">🚨</span>' : ''}
                     ${item.name}
+                    ${isAdmin ? `<span style="margin-left:6px;display:inline-flex;gap:4px;">
+                      <button onclick="editPrepItem('${item.id}','${item.name}','${item.qty||''}',${item.critical||false})" style="height:20px;padding:0 8px;border-radius:5px;border:0.5px solid var(--border);background:var(--cream);color:var(--ink-soft);font-size:10px;cursor:pointer;">Edit</button>
+                      <button onclick="deletePrepItem('${item.id}')" style="height:20px;padding:0 8px;border-radius:5px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;font-size:10px;cursor:pointer;">Del</button>
+                    </span>` : ''}
                   </div>
                   <div class="prep-item-qty">${item.qty||'—'}</div>
                   ${days.map((_,dayIdx) => {
@@ -1225,6 +1229,20 @@ async function loadPrepCategories(userData) {
                       <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>`;
                   }).join('')}
+                </div>
+                <div id="edit-prep-item-${item.id}" style="display:none;padding:8px 18px;background:var(--cream);border-bottom:0.5px solid var(--border);">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+                    <input type="text" id="edit-item-name-${item.id}" value="${item.name}" class="form-input-small" placeholder="Item name">
+                    <input type="text" id="edit-item-qty-${item.id}" value="${item.qty||''}" class="form-input-small" placeholder="Qty">
+                  </div>
+                  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;">
+                      <input type="checkbox" id="edit-item-critical-${item.id}" ${item.critical?'checked':''} style="accent-color:#E24B4A;width:14px;height:14px;">
+                      <span style="color:#A32D2D;font-weight:500;">🚨 Critical</span>
+                    </label>
+                    <button onclick="savePrepItem('${item.id}')" class="form-btn-small">Save</button>
+                    <button onclick="document.getElementById('edit-prep-item-${item.id}').style.display='none'" style="height:36px;padding:0 12px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--ink-soft);font-size:0.8rem;cursor:pointer;">Cancel</button>
+                  </div>
                 </div>`;
             }).join('')}
             ${isAdmin ? `
@@ -1289,6 +1307,33 @@ async function loadPrepCategories(userData) {
         </div>`;
     }
   }
+}
+
+window.editPrepItem = function(id, name, qty, critical) {
+  const form = document.getElementById('edit-prep-item-' + id);
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+window.savePrepItem = async function(id) {
+  const name = document.getElementById('edit-item-name-' + id).value.trim();
+  const qty = document.getElementById('edit-item-qty-' + id).value.trim();
+  const critical = document.getElementById('edit-item-critical-' + id).checked;
+  if (!name) { showToast('Item name required', 'error'); return; }
+  try {
+    await setDoc(doc(db, 'prepItems', id), { name, qty, critical }, { merge: true });
+    showToast('Item updated!');
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error updating item', 'error'); }
+}
+
+window.deletePrepItem = async function(id) {
+  if (!confirm('Delete this prep item?')) return;
+  try {
+    const { deleteDoc: dd } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await dd(doc(db, 'prepItems', id));
+    showToast('Item deleted');
+    loadPrepCategories(window._userData);
+  } catch(e) { showToast('Error deleting item', 'error'); }
 }
 
 window.toggleCat = function(id) {
