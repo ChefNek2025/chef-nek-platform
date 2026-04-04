@@ -1047,7 +1047,22 @@ function renderPrepList(main, userData) {
         </div>
         <div id="add-category-form" style="display:none;border-top:0.5px solid var(--border);padding-top:14px;margin-top:4px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-            <input type="text" id="new-cat-name" class="form-input-small" placeholder="Category name (e.g. Fish prep)">
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="new-cat-name" class="form-input-small" placeholder="Category name (e.g. Fish prep)" style="flex:1;">
+              <select id="new-cat-preset" onchange="applyPreset()" style="height:42px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.8rem;background:var(--cream);color:var(--ink);outline:none;">
+                <option value="">Or pick preset...</option>
+                <option value="Protein prep">Protein prep</option>
+                <option value="Vegetable prep">Vegetable prep</option>
+                <option value="Cheese prep">Cheese prep</option>
+                <option value="Grains & Breakfast prep">Grains & Breakfast</option>
+                <option value="Sauces & Dressings prep">Sauces & Dressings</option>
+                <option value="Bread & Others prep">Bread & Others</option>
+                <option value="Frozen to Fridge">Frozen to Fridge 🧊</option>
+                <option value="Opening checklist">Opening checklist</option>
+                <option value="Closing checklist">Closing checklist</option>
+                <option value="Deep clean">Deep clean</option>
+              </select>
+            </div>
             <input type="text" id="new-cat-assignee" class="form-input-small" placeholder="Assign to staff (e.g. John)">
           </div>
           <select id="new-cat-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;width:100%;margin-bottom:10px;">
@@ -1071,6 +1086,14 @@ window.changeWeek = function(dir) {
   current.setDate(current.getDate() + dir * 7);
   window._weekStart = current.toISOString().split('T')[0];
   renderPage(window._userData);
+}
+
+window.applyPreset = function() {
+  const preset = document.getElementById('new-cat-preset').value;
+  if (preset) {
+    document.getElementById('new-cat-name').value = preset;
+    document.getElementById('new-cat-preset').value = '';
+  }
 }
 
 window.toggleAddCategory = function() {
@@ -1112,7 +1135,7 @@ async function loadPrepCategories(userData) {
   try {
     const q = isAdmin
       ? query(collection(db, 'prepCategories'), orderBy('order'))
-      : query(collection(db, 'prepCategories'), where('restaurantId','==', userData.uid), orderBy('order'));
+      : query(collection(db, 'prepCategories'), where('restaurantId','==', userData.uid));
     const catSnap = await getDocs(q);
 
     if (catSnap.empty) {
@@ -1251,8 +1274,22 @@ async function loadPrepCategories(userData) {
     }
 
   } catch(e) {
-    console.error(e);
-    listEl.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading prep list. Please refresh.</p></div>`;
+    console.error('Prep list error:', e);
+    if (e.code === 'failed-precondition' || e.message.includes('index')) {
+      listEl.innerHTML = `
+        <div class="card" style="text-align:center;padding:32px;">
+          <div style="font-size:1.1rem;font-weight:500;color:var(--ink);margin-bottom:8px;">Setting up database...</div>
+          <div style="font-size:0.875rem;color:var(--ink-muted);margin-bottom:16px;">First time setup requires a moment. Please wait 30 seconds and refresh.</div>
+          <button onclick="loadPrepCategories(window._userData)" class="form-btn-small">Try again</button>
+        </div>`;
+    } else {
+      listEl.innerHTML = `
+        <div class="card" style="text-align:center;padding:32px;">
+          <div style="font-size:1.1rem;font-weight:500;color:var(--ink);margin-bottom:8px;">Could not load prep list</div>
+          <div style="font-size:0.875rem;color:var(--ink-muted);margin-bottom:16px;">${e.message}</div>
+          <button onclick="loadPrepCategories(window._userData)" class="form-btn-small">Try again</button>
+        </div>`;
+    }
   }
 }
 
