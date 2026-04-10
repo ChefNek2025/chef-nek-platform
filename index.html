@@ -1516,7 +1516,7 @@ function renderInventory(main, userData) {
       </div>
     </div>
   `;
-  loadInvCategories(userData);
+  loadInvCategories(window._userData);
   if (isAdmin) loadRestaurantsForSelect('new-inv-cat-restaurant');
 }
 
@@ -1548,7 +1548,7 @@ window.addInvCategory = async function() {
     document.getElementById('new-inv-cat-name').value = '';
     document.getElementById('add-inv-cat-form').style.display = 'none';
     document.getElementById('add-inv-cat-btn').textContent = '+ Add category';
-    loadInvCategories(userData);
+    loadInvCategories(window._userData);
   } catch(e) { showToast('Error adding category', 'error'); }
 }
 
