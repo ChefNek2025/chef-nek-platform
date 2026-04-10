@@ -277,6 +277,30 @@
   .prep-header-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; padding:6px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
   .critical-alert { background:#FCEBEB; border:1px solid #F09595; border-radius:12px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px; }
 
+  /* ── INVENTORY PRO STYLES ── */
+  .inv-category { background:var(--white); border-radius:16px; border:0.5px solid var(--border); margin-bottom:16px; overflow:hidden; }
+  .inv-cat-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; cursor:pointer; user-select:none; transition:background 0.15s; }
+  .inv-cat-header:hover { background:var(--cream); }
+  .inv-cat-title { font-family:var(--font-display); font-size:1rem; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:10px; }
+  .inv-cat-meta { display:flex; align-items:center; gap:10px; }
+  .inv-cat-chevron { font-size:18px; color:var(--ink-muted); transition:transform 0.2s; font-weight:300; }
+  .inv-cat-chevron.open { transform:rotate(90deg); color:var(--green); }
+  .inv-cat-body { border-top:0.5px solid var(--border); display:none; }
+  .inv-item-row { display:grid; grid-template-columns:1fr 100px 120px 80px; gap:8px; align-items:center; padding:10px 18px; border-bottom:0.5px solid var(--border); }
+  .inv-item-row:last-child { border-bottom:none; }
+  .inv-item-row.low-stock { background:#FFF8EC; border-left:3px solid var(--amber); }
+  .inv-item-row.critical-stock { background:#FCEBEB; border-left:3px solid var(--red); }
+  .inv-item-name { font-size:0.875rem; color:var(--ink); font-weight:500; }
+  .inv-item-unit { font-size:0.8rem; color:var(--ink-muted); text-align:center; }
+  .inv-qty-controls { display:flex; align-items:center; gap:6px; justify-content:center; }
+  .inv-qty-btn { width:26px; height:26px; border-radius:6px; border:0.5px solid var(--border); background:var(--cream); color:var(--ink); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .inv-qty-btn:hover { background:var(--green-light); color:var(--green-dark); }
+  .inv-qty-val { font-size:0.9rem; font-weight:500; color:var(--ink); min-width:32px; text-align:center; }
+  .inv-status { font-size:0.75rem; font-weight:500; padding:3px 10px; border-radius:20px; text-align:center; }
+  .inv-header-row { display:grid; grid-template-columns:1fr 100px 120px 80px; gap:8px; padding:8px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
+  .inv-col-label { font-size:0.75rem; font-weight:500; color:var(--ink-muted); text-align:center; }
+  .inv-col-label:first-child { text-align:left; }
+
   /* ── PRINT STYLES ── */
   @media print {
     .sidebar, .mobile-header, .no-print { display: none !important; }
@@ -1443,92 +1467,290 @@ function renderInventory(main, userData) {
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
           <h1 class="page-title">Inventory</h1>
-          <p class="page-sub">Track your stock levels and get low-stock alerts</p>
+          <p class="page-sub">Track stock levels by category</p>
         </div>
-        <button class="print-btn no-print" onclick="printPage('inventory')">
-          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="10" height="7" rx="1.5"/><path d="M4 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/><line x1="4" y1="9" x2="10" y2="9"/><line x1="4" y1="11" x2="8" y2="11"/></svg>
-          Print inventory
-        </button>
+        <div style="display:flex;gap:8px;" class="no-print">
+          <button class="print-btn" onclick="printPage('inventory')">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="10" height="7" rx="1.5"/><path d="M4 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Print inventory
+          </button>
+        </div>
       </div>
     </div>
     <div class="page-body">
+      <div id="inv-alert-zone"></div>
       ${isAdmin ? `
-      <div class="card">
-        <div class="card-title">Add inventory item</div>
-        <div class="add-client-form">
-          <input type="text" id="inv-name" class="form-input-small" placeholder="Item name (e.g. Chicken)">
-          <input type="text" id="inv-unit" class="form-input-small" placeholder="Unit (lbs, cans, bottles...)">
-          <input type="number" id="inv-qty" class="form-input-small" placeholder="Current quantity">
-          <input type="number" id="inv-alert" class="form-input-small" placeholder="Low stock alert at...">
-          <select id="inv-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
-            <option value="">Assign to restaurant...</option>
-          </select>
-          <button class="form-btn-small" onclick="addInventoryItem()">Add item</button>
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">Manage inventory categories</div>
+          <button onclick="toggleAddInvCategory()" class="form-btn-small" id="add-inv-cat-btn">+ Add category</button>
+        </div>
+        <div id="add-inv-cat-form" style="display:none;border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="new-inv-cat-name" class="form-input-small" placeholder="Category name" style="flex:1;">
+              <select id="new-inv-cat-preset" onchange="applyInvPreset()" style="height:42px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.8rem;background:var(--cream);color:var(--ink);outline:none;">
+                <option value="">Preset...</option>
+                <option value="Proteins">Proteins</option>
+                <option value="Vegetables & Produce">Vegetables & Produce</option>
+                <option value="Dairy & Cheese">Dairy & Cheese</option>
+                <option value="Grains & Dry Goods">Grains & Dry Goods</option>
+                <option value="Sauces & Condiments">Sauces & Condiments</option>
+                <option value="Bread & Bakery">Bread & Bakery</option>
+                <option value="Frozen Items">Frozen Items</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Cleaning Supplies">Cleaning Supplies</option>
+                <option value="Packaging & To-Go">Packaging & To-Go</option>
+              </select>
+            </div>
+            <select id="new-inv-cat-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+              <option value="">Assign to restaurant...</option>
+            </select>
+          </div>
+          <button onclick="addInvCategory()" class="form-btn-small">Save category</button>
         </div>
       </div>
       ` : ''}
-      <div id="inventory-list">
-        <div class="empty-state"><div class="loading-spinner" style="margin:0 auto;"></div></div>
+      <div id="inv-categories-list">
+        <div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>
       </div>
     </div>
   `;
-  loadInventory(userData);
-  if (isAdmin) loadRestaurantsForSelect('inv-restaurant');
+  loadInvCategories(userData);
+  if (isAdmin) loadRestaurantsForSelect('new-inv-cat-restaurant');
 }
 
-async function loadInventory(userData) {
-  const list = document.getElementById('inventory-list');
+window.toggleAddInvCategory = function() {
+  const form = document.getElementById('add-inv-cat-form');
+  const btn = document.getElementById('add-inv-cat-btn');
+  const isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '+ Add category' : '✕ Cancel';
+}
+
+window.applyInvPreset = function() {
+  const preset = document.getElementById('new-inv-cat-preset').value;
+  if (preset) {
+    document.getElementById('new-inv-cat-name').value = preset;
+    document.getElementById('new-inv-cat-preset').value = '';
+  }
+}
+
+window.addInvCategory = async function() {
+  const name = document.getElementById('new-inv-cat-name').value.trim();
+  const restaurantId = document.getElementById('new-inv-cat-restaurant').value;
+  if (!name || !restaurantId) { showToast('Category name and restaurant required', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'invCategories'), {
+      name, restaurantId, order: Date.now(), createdAt: serverTimestamp()
+    });
+    showToast('Category added!');
+    document.getElementById('new-inv-cat-name').value = '';
+    document.getElementById('add-inv-cat-form').style.display = 'none';
+    document.getElementById('add-inv-cat-btn').textContent = '+ Add category';
+    loadInvCategories(userData);
+  } catch(e) { showToast('Error adding category', 'error'); }
+}
+
+async function loadInvCategories(userData) {
+  const listEl = document.getElementById('inv-categories-list');
+  const alertZone = document.getElementById('inv-alert-zone');
   try {
     const q = isAdmin
-      ? query(collection(db, 'inventory'), orderBy('createdAt', 'desc'))
-      : query(collection(db, 'inventory'), where('restaurantId', '==', userData.uid));
-    const snap = await getDocs(q);
-    if (snap.empty) {
-      list.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M7 6V5a5 5 0 0110 0v1"/></svg></div>
-          <div class="empty-state-title">No inventory items yet</div>
-          <div class="empty-state-sub">${isAdmin ? 'Add items above' : 'Chef Nek will set up your inventory soon'}</div>
+      ? collection(db, 'invCategories')
+      : query(collection(db, 'invCategories'), where('restaurantId','==', userData.uid));
+    const catSnap = await getDocs(q);
+
+    if (catSnap.empty) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;">
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No inventory categories yet</div>
+          <div style="font-size:0.875rem;color:var(--ink-muted);">${isAdmin ? 'Add your first category above' : 'Chef Nek will set up your inventory soon'}</div>
         </div>`;
       return;
     }
-    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const lowStock = items.filter(i => i.currentQty <= i.alertAt);
-    list.innerHTML = `
-      ${lowStock.length > 0 ? `
-        <div class="card" style="border-color:#FAC775;background:var(--amber-light);margin-bottom:16px;">
-          <div style="font-size:0.875rem;font-weight:500;color:#854F0B;margin-bottom:10px;">${lowStock.length} item${lowStock.length>1?'s':''} running low — order soon!</div>
-          ${lowStock.map(i => `<div style="font-size:0.875rem;color:#854F0B;padding:4px 0;">• ${i.name} — only ${i.currentQty} ${i.unit} left</div>`).join('')}
-        </div>` : ''}
-      <div class="card">
-        <div class="card-title">Stock levels</div>
-        ${items.map(item => {
-          const pct = Math.min(100, Math.round((item.currentQty / Math.max(item.alertAt * 3, 1)) * 100));
-          const isLow = item.currentQty <= item.alertAt;
-          return `
-            <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);">
-              <div style="width:10px;height:10px;border-radius:50%;background:${isLow ? '#E24B4A' : 'var(--green)'};flex-shrink:0;"></div>
-              <div style="flex:1;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <span style="font-size:0.9rem;font-weight:500;color:var(--ink);">${item.name}</span>
-                  <span style="font-size:0.875rem;font-weight:500;color:${isLow ? '#E24B4A' : 'var(--ink)'};">${item.currentQty} ${item.unit}</span>
-                </div>
-                <div style="background:var(--green-light);border-radius:100px;height:5px;overflow:hidden;">
-                  <div style="background:${isLow ? '#E24B4A' : 'var(--green)'};height:5px;border-radius:100px;width:${pct}%;"></div>
-                </div>
+
+    const cats = catSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.order||0)-(b.order||0));
+    let lowStockAlerts = [];
+    let html = '';
+
+    for (const cat of cats) {
+      const itemsSnap = await getDocs(
+        query(collection(db, 'invItems'), where('categoryId','==', cat.id))
+      );
+      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const lowItems = items.filter(i => i.currentQty <= i.alertAt);
+      const criticalItems = items.filter(i => i.currentQty === 0);
+      lowItems.forEach(i => lowStockAlerts.push({ name: i.name, cat: cat.name, qty: i.currentQty, unit: i.unit }));
+
+      html += `
+        <div class="inv-category" id="inv-cat-${cat.id}">
+          <div class="inv-cat-header" onclick="toggleInvCat('${cat.id}')">
+            <div class="inv-cat-title">
+              ${cat.name}
+              ${criticalItems.length > 0 ? `<span style="font-size:0.7rem;background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:20px;font-weight:500;">🚨 ${criticalItems.length} out of stock</span>` : ''}
+              ${lowItems.length > 0 && criticalItems.length === 0 ? `<span style="font-size:0.7rem;background:var(--amber-light);color:#854F0B;padding:2px 8px;border-radius:20px;font-weight:500;">⚠ ${lowItems.length} low</span>` : ''}
+            </div>
+            <div class="inv-cat-meta">
+              <span style="font-size:0.8rem;color:var(--ink-muted);">${items.length} items</span>
+              <span class="inv-cat-chevron" id="inv-chevron-${cat.id}">›</span>
+            </div>
+          </div>
+          <div class="inv-cat-body" id="inv-cat-body-${cat.id}">
+            ${isAdmin ? `
+            <div style="padding:8px 18px;background:var(--cream);border-bottom:0.5px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button onclick="deleteInvCategory('${cat.id}')" style="font-size:11px;padding:3px 10px;border-radius:6px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;cursor:pointer;">Delete category</button>
+            </div>` : ''}
+            <div class="inv-header-row">
+              <div class="inv-col-label">Item</div>
+              <div class="inv-col-label">Unit</div>
+              <div class="inv-col-label">Quantity</div>
+              <div class="inv-col-label">Status</div>
+            </div>
+            ${items.map(item => {
+              const isLow = item.currentQty <= item.alertAt;
+              const isOut = item.currentQty === 0;
+              return `
+                <div class="inv-item-row ${isOut ? 'critical-stock' : isLow ? 'low-stock' : ''}">
+                  <div>
+                    <div class="inv-item-name">${item.name}</div>
+                    ${isAdmin ? `<div style="display:flex;gap:4px;margin-top:4px;">
+                      <button onclick="editInvItem('${item.id}')" style="height:18px;padding:0 8px;border-radius:5px;border:0.5px solid var(--border);background:var(--cream);color:var(--ink-soft);font-size:10px;cursor:pointer;">Edit</button>
+                      <button onclick="deleteInvItem('${item.id}')" style="height:18px;padding:0 8px;border-radius:5px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;font-size:10px;cursor:pointer;">Del</button>
+                    </div>` : ''}
+                    <div id="edit-inv-item-${item.id}" style="display:none;margin-top:8px;">
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+                        <input type="text" id="edit-inv-name-${item.id}" value="${item.name}" class="form-input-small" placeholder="Item name">
+                        <input type="text" id="edit-inv-unit-${item.id}" value="${item.unit||''}" class="form-input-small" placeholder="Unit">
+                        <input type="number" id="edit-inv-alert-${item.id}" value="${item.alertAt||0}" class="form-input-small" placeholder="Alert at qty">
+                      </div>
+                      <div style="display:flex;gap:6px;">
+                        <button onclick="saveInvItem('${item.id}')" class="form-btn-small">Save</button>
+                        <button onclick="document.getElementById('edit-inv-item-${item.id}').style.display='none'" style="height:36px;padding:0 12px;border-radius:8px;border:0.5px solid var(--border);background:transparent;color:var(--ink-soft);font-size:0.8rem;cursor:pointer;">Cancel</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="inv-item-unit">${item.unit||'—'}</div>
+                  <div class="inv-qty-controls">
+                    <button class="inv-qty-btn" onclick="updateInvQty('${item.id}', ${(item.currentQty||0)-1})">−</button>
+                    <span class="inv-qty-val" style="color:${isOut?'var(--red)':isLow?'var(--amber)':'var(--ink)'};">${item.currentQty||0}</span>
+                    <button class="inv-qty-btn" onclick="updateInvQty('${item.id}', ${(item.currentQty||0)+1})">+</button>
+                  </div>
+                  <div>
+                    <span class="inv-status" style="background:${isOut?'#FCEBEB':isLow?'var(--amber-light)':'var(--green-light)'};color:${isOut?'#A32D2D':isLow?'#854F0B':'#0F6E56'};">
+                      ${isOut ? '🚨 Out' : isLow ? '⚠ Low' : '✓ OK'}
+                    </span>
+                  </div>
+                </div>`;
+            }).join('')}
+            ${isAdmin ? `
+            <div style="padding:12px 18px;border-top:0.5px solid var(--border);background:var(--cream);">
+              <div style="display:grid;grid-template-columns:1fr 1fr 80px 80px;gap:8px;margin-bottom:8px;">
+                <input type="text" id="new-inv-item-name-${cat.id}" class="form-input-small" placeholder="Item name (e.g. Chicken breast)">
+                <input type="text" id="new-inv-item-unit-${cat.id}" class="form-input-small" placeholder="Unit (e.g. lbs, pcs)">
+                <input type="number" id="new-inv-item-qty-${cat.id}" class="form-input-small" placeholder="Qty" min="0">
+                <input type="number" id="new-inv-item-alert-${cat.id}" class="form-input-small" placeholder="Alert" min="0">
               </div>
-              ${!isAdmin ? `
-              <div style="display:flex;gap:6px;">
-                <button onclick="updateQty('${item.id}', ${item.currentQty - 1})" style="width:28px;height:28px;border-radius:6px;border:0.5px solid var(--border);background:transparent;cursor:pointer;font-size:16px;color:var(--ink-soft);">−</button>
-                <button onclick="updateQty('${item.id}', ${item.currentQty + 1})" style="width:28px;height:28px;border-radius:6px;border:0.5px solid var(--border);background:transparent;cursor:pointer;font-size:16px;color:var(--ink-soft);">+</button>
-              </div>` : ''}
-            </div>`;
-        }).join('')}
-      </div>`;
+              <button onclick="addInvItem('${cat.id}','${cat.restaurantId}')" class="form-btn-small">+ Add item</button>
+            </div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    listEl.innerHTML = html;
+
+    // Show low stock alert banner
+    if (lowStockAlerts.length > 0 && alertZone) {
+      alertZone.innerHTML = `
+        <div style="background:var(--amber-light);border:1px solid #FAC775;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;">
+          <div style="font-size:1.5rem;flex-shrink:0;">⚠️</div>
+          <div>
+            <div style="font-size:0.9375rem;font-weight:500;color:#854F0B;margin-bottom:6px;">${lowStockAlerts.length} item${lowStockAlerts.length>1?'s':''} need restocking!</div>
+            ${lowStockAlerts.map(i=>`<div style="font-size:0.8125rem;color:#854F0B;">• ${i.name} <span style="opacity:0.7;">(${i.cat}) — ${i.qty} ${i.unit||''} left</span></div>`).join('')}
+          </div>
+        </div>`;
+    } else if (alertZone) {
+      alertZone.innerHTML = '';
+    }
+
   } catch(e) {
-    list.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading inventory.</p></div>`;
+    console.error(e);
+    listEl.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading inventory. Please refresh.</p></div>`;
   }
 }
+
+window.toggleInvCat = function(id) {
+  const body = document.getElementById('inv-cat-body-'+id);
+  const chev = document.getElementById('inv-chevron-'+id);
+  const isOpen = body.style.display === 'block';
+  body.style.display = isOpen ? 'none' : 'block';
+  chev.classList.toggle('open', !isOpen);
+}
+
+window.updateInvQty = async function(itemId, newQty) {
+  if (newQty < 0) return;
+  try {
+    await setDoc(doc(db, 'invItems', itemId), { currentQty: newQty }, { merge: true });
+    loadInvCategories(window._userData);
+  } catch(e) { showToast('Error updating quantity', 'error'); }
+}
+
+window.addInvItem = async function(catId, restaurantId) {
+  const name = document.getElementById('new-inv-item-name-'+catId).value.trim();
+  const unit = document.getElementById('new-inv-item-unit-'+catId).value.trim();
+  const currentQty = parseFloat(document.getElementById('new-inv-item-qty-'+catId).value) || 0;
+  const alertAt = parseFloat(document.getElementById('new-inv-item-alert-'+catId).value) || 0;
+  if (!name) { showToast('Item name required', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'invItems'), {
+      name, unit, currentQty, alertAt, categoryId: catId, restaurantId, createdAt: serverTimestamp()
+    });
+    showToast('Item added!');
+    document.getElementById('new-inv-item-name-'+catId).value = '';
+    document.getElementById('new-inv-item-unit-'+catId).value = '';
+    document.getElementById('new-inv-item-qty-'+catId).value = '';
+    document.getElementById('new-inv-item-alert-'+catId).value = '';
+    loadInvCategories(window._userData);
+  } catch(e) { showToast('Error adding item', 'error'); }
+}
+
+window.editInvItem = function(id) {
+  const form = document.getElementById('edit-inv-item-'+id);
+  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+window.saveInvItem = async function(id) {
+  const name = document.getElementById('edit-inv-name-'+id).value.trim();
+  const unit = document.getElementById('edit-inv-unit-'+id).value.trim();
+  const alertAt = parseFloat(document.getElementById('edit-inv-alert-'+id).value) || 0;
+  if (!name) { showToast('Item name required', 'error'); return; }
+  try {
+    await setDoc(doc(db, 'invItems', id), { name, unit, alertAt }, { merge: true });
+    showToast('Item updated!');
+    loadInvCategories(window._userData);
+  } catch(e) { showToast('Error updating item', 'error'); }
+}
+
+window.deleteInvItem = async function(id) {
+  if (!confirm('Delete this item?')) return;
+  try {
+    const { deleteDoc: dd } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await dd(doc(db, 'invItems', id));
+    showToast('Item deleted');
+    loadInvCategories(window._userData);
+  } catch(e) { showToast('Error', 'error'); }
+}
+
+window.deleteInvCategory = async function(catId) {
+  if (!confirm('Delete this category and all its items?')) return;
+  try {
+    const { deleteDoc: dd } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    await dd(doc(db, 'invCategories', catId));
+    showToast('Category deleted');
+    loadInvCategories(window._userData);
+  } catch(e) { showToast('Error', 'error'); }
+}
+
 
 window.updateQty = async function(itemId, newQty) {
   if (newQty < 0) return;
@@ -1538,23 +1760,7 @@ window.updateQty = async function(itemId, newQty) {
   } catch(e) { showToast('Error updating quantity', 'error'); }
 }
 
-window.addInventoryItem = async function() {
-  const name = document.getElementById('inv-name').value.trim();
-  const unit = document.getElementById('inv-unit').value.trim();
-  const currentQty = parseFloat(document.getElementById('inv-qty').value) || 0;
-  const alertAt = parseFloat(document.getElementById('inv-alert').value) || 0;
-  const restaurantId = document.getElementById('inv-restaurant').value;
-  if (!name || !restaurantId) { showToast('Item name and restaurant required', 'error'); return; }
-  try {
-    await addDoc(collection(db, 'inventory'), { name, unit, currentQty, alertAt, restaurantId, createdAt: serverTimestamp() });
-    showToast('Item added!');
-    loadInventory(window._userData);
-    document.getElementById('inv-name').value = '';
-    document.getElementById('inv-unit').value = '';
-    document.getElementById('inv-qty').value = '';
-    document.getElementById('inv-alert').value = '';
-  } catch(e) { showToast('Error adding item', 'error'); }
-}
+
 
 // ============================================
 // CLIENTS PAGE (ADMIN ONLY)
