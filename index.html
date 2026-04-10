@@ -1187,7 +1187,7 @@ async function loadPrepCategories(userData) {
         query(collection(db, 'prepItems'),
           where('categoryId','==', cat.id))
       );
-      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||'').localeCompare(b.name||''));
 
       // Get checks for this week
       const checksSnap = await getDocs(
@@ -1598,7 +1598,7 @@ async function loadInvCategories(userData) {
       const itemsSnap = await getDocs(
         query(collection(db, 'invItems'), where('categoryId','==', cat.id))
       );
-      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const items = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||'').localeCompare(b.name||''));
       const lowItems = items.filter(i => i.currentQty <= i.alertAt);
       const criticalItems = items.filter(i => i.currentQty === 0);
       lowItems.forEach(i => lowStockAlerts.push({ name: i.name, cat: cat.name, qty: i.currentQty, unit: i.unit }));
