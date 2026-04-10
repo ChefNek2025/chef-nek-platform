@@ -1064,10 +1064,9 @@ function renderPrepList(main, userData) {
         <button class="week-btn" onclick="changeWeek(1)">Next week →</button>
       </div>
       <div id="critical-alert-zone"></div>
-      ${isAdmin ? `
       <div class="card" style="margin-bottom:20px;" id="add-category-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
-          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">Manage prep categories</div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">${isAdmin ? 'Manage prep categories' : 'Add your own category'}</div>
           <button onclick="toggleAddCategory()" class="form-btn-small" id="add-cat-toggle-btn">+ Add category</button>
         </div>
         <div id="add-category-form" style="display:none;border-top:0.5px solid var(--border);padding-top:14px;margin-top:4px;">
@@ -1096,7 +1095,7 @@ function renderPrepList(main, userData) {
           <button onclick="addPrepCategory()" class="form-btn-small">Save category</button>
         </div>
       </div>
-      ` : ''}
+      </div>
       <div id="prep-categories-list">
         <div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>
       </div>
@@ -1132,7 +1131,9 @@ window.toggleAddCategory = function() {
 window.addPrepCategory = async function() {
   const name = document.getElementById('new-cat-name').value.trim();
   const assignee = document.getElementById('new-cat-assignee').value.trim();
-  const restaurantId = document.getElementById('new-cat-restaurant').value;
+  const restaurantId = isAdmin 
+    ? document.getElementById('new-cat-restaurant').value 
+    : window._userData.uid;
   if (!name || !restaurantId) { showToast('Category name and restaurant required', 'error'); return; }
   try {
     await addDoc(collection(db, 'prepCategories'), {
@@ -1151,6 +1152,11 @@ window.addPrepCategory = async function() {
 async function loadPrepCategories(userData) {
   const listEl = document.getElementById('prep-categories-list');
   const alertZone = document.getElementById('critical-alert-zone');
+  // Remember which categories are open
+  const openPrepCats = new Set();
+  document.querySelectorAll('[id^="cat-body-"]').forEach(el => {
+    if (el.style.display === 'block') openPrepCats.add(el.id.replace('cat-body-',''));
+  });
   const weekStart = window._weekStart;
   const today = new Date().toISOString().split('T')[0];
   const todayIdx = new Date().getDay();
@@ -1299,6 +1305,14 @@ async function loadPrepCategories(userData) {
     }
 
     listEl.innerHTML = html;
+
+    // Restore open categories
+    openPrepCats.forEach(catId => {
+      const body = document.getElementById('cat-body-'+catId);
+      const chev = document.getElementById('chevron-'+catId);
+      if (body) { body.style.display = 'block'; }
+      if (chev) { chev.classList.add('open'); }
+    });
 
     // Show critical alert
     if (criticalMissed.length > 0 && alertZone) {
@@ -1479,10 +1493,9 @@ function renderInventory(main, userData) {
     </div>
     <div class="page-body">
       <div id="inv-alert-zone"></div>
-      ${isAdmin ? `
       <div class="card" style="margin-bottom:20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">Manage inventory categories</div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);">${isAdmin ? 'Manage inventory categories' : 'Add your own category'}</div>
           <button onclick="toggleAddInvCategory()" class="form-btn-small" id="add-inv-cat-btn">+ Add category</button>
         </div>
         <div id="add-inv-cat-form" style="display:none;border-top:0.5px solid var(--border);padding-top:14px;margin-top:14px;">
@@ -1503,14 +1516,14 @@ function renderInventory(main, userData) {
                 <option value="Packaging & To-Go">Packaging & To-Go</option>
               </select>
             </div>
-            <select id="new-inv-cat-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+            ${isAdmin ? `<select id="new-inv-cat-restaurant" style="height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
               <option value="">Assign to restaurant...</option>
-            </select>
+            </select>` : `<input type="hidden" id="new-inv-cat-restaurant" value="">`}
           </div>
           <button onclick="addInvCategory()" class="form-btn-small">Save category</button>
         </div>
       </div>
-      ` : ''}
+      </div>
       <div id="inv-categories-list">
         <div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>
       </div>
@@ -1538,7 +1551,9 @@ window.applyInvPreset = function() {
 
 window.addInvCategory = async function() {
   const name = document.getElementById('new-inv-cat-name').value.trim();
-  const restaurantId = document.getElementById('new-inv-cat-restaurant').value;
+  const restaurantId = isAdmin
+    ? document.getElementById('new-inv-cat-restaurant').value
+    : window._userData.uid;
   if (!name || !restaurantId) { showToast('Category name and restaurant required', 'error'); return; }
   try {
     await addDoc(collection(db, 'invCategories'), {
@@ -1555,6 +1570,11 @@ window.addInvCategory = async function() {
 async function loadInvCategories(userData) {
   const listEl = document.getElementById('inv-categories-list');
   const alertZone = document.getElementById('inv-alert-zone');
+  // Remember which categories are open
+  const openInvCats = new Set();
+  document.querySelectorAll('[id^="inv-cat-body-"]').forEach(el => {
+    if (el.style.display === 'block') openInvCats.add(el.id.replace('inv-cat-body-',''));
+  });
   try {
     const q = isAdmin
       ? collection(db, 'invCategories')
@@ -1658,6 +1678,14 @@ async function loadInvCategories(userData) {
     }
 
     listEl.innerHTML = html;
+
+    // Restore open categories
+    openInvCats.forEach(catId => {
+      const body = document.getElementById('inv-cat-body-'+catId);
+      const chev = document.getElementById('inv-chevron-'+catId);
+      if (body) { body.style.display = 'block'; }
+      if (chev) { chev.classList.add('open'); }
+    });
 
     // Show low stock alert banner
     if (lowStockAlerts.length > 0 && alertZone) {
