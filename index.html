@@ -1633,7 +1633,10 @@ async function loadInvCategories(userData) {
               return `
                 <div class="inv-item-row ${isOut ? 'critical-stock' : isLow ? 'low-stock' : ''}">
                   <div>
-                    <div class="inv-item-name">${item.name}</div>
+                    <div class="inv-item-name">
+                      ${item.frozen ? '<span style="font-size:0.75rem;background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:20px;margin-right:6px;">❄️ Frozen</span>' : ''}
+                      ${item.name}
+                    </div>
                     ${isAdmin ? `<div style="display:flex;gap:4px;margin-top:4px;">
                       <button onclick="editInvItem('${item.id}')" style="height:18px;padding:0 8px;border-radius:5px;border:0.5px solid var(--border);background:var(--cream);color:var(--ink-soft);font-size:10px;cursor:pointer;">Edit</button>
                       <button onclick="deleteInvItem('${item.id}')" style="height:18px;padding:0 8px;border-radius:5px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;font-size:10px;cursor:pointer;">Del</button>
@@ -1643,6 +1646,10 @@ async function loadInvCategories(userData) {
                         <input type="text" id="edit-inv-name-${item.id}" value="${item.name}" class="form-input-small" placeholder="Item name">
                         <input type="text" id="edit-inv-unit-${item.id}" value="${item.unit||''}" class="form-input-small" placeholder="Unit">
                         <input type="number" id="edit-inv-alert-${item.id}" value="${item.alertAt||0}" class="form-input-small" placeholder="Alert at qty">
+                        <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;grid-column:span 2;">
+                          <input type="checkbox" id="edit-inv-frozen-${item.id}" ${item.frozen?'checked':''} style="accent-color:#185FA5;width:14px;height:14px;">
+                          <span style="color:#185FA5;font-weight:500;">❄️ Frozen item</span>
+                        </label>
                       </div>
                       <div style="display:flex;gap:6px;">
                         <button onclick="saveInvItem('${item.id}')" class="form-btn-small">Save</button>
@@ -1671,7 +1678,13 @@ async function loadInvCategories(userData) {
                 <input type="number" id="new-inv-item-qty-${cat.id}" class="form-input-small" placeholder="Qty" min="0">
                 <input type="number" id="new-inv-item-alert-${cat.id}" class="form-input-small" placeholder="Alert" min="0">
               </div>
-              <button onclick="addInvItem('${cat.id}','${cat.restaurantId}')" class="form-btn-small">+ Add item</button>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;">
+                  <input type="checkbox" id="new-inv-item-frozen-${cat.id}" style="accent-color:#185FA5;width:14px;height:14px;">
+                  <span style="color:#185FA5;font-weight:500;">❄️ Frozen item</span>
+                </label>
+                <button onclick="addInvItem('${cat.id}','${cat.restaurantId}')" class="form-btn-small">+ Add item</button>
+              </div>
             </div>` : ''}
           </div>
         </div>`;
@@ -1728,16 +1741,18 @@ window.addInvItem = async function(catId, restaurantId) {
   const unit = document.getElementById('new-inv-item-unit-'+catId).value.trim();
   const currentQty = parseFloat(document.getElementById('new-inv-item-qty-'+catId).value) || 0;
   const alertAt = parseFloat(document.getElementById('new-inv-item-alert-'+catId).value) || 0;
+  const frozen = document.getElementById('new-inv-item-frozen-'+catId) ? document.getElementById('new-inv-item-frozen-'+catId).checked : false;
   if (!name) { showToast('Item name required', 'error'); return; }
   try {
     await addDoc(collection(db, 'invItems'), {
-      name, unit, currentQty, alertAt, categoryId: catId, restaurantId, createdAt: serverTimestamp()
+      name, unit, currentQty, alertAt, frozen, categoryId: catId, restaurantId, createdAt: serverTimestamp()
     });
     showToast('Item added!');
     document.getElementById('new-inv-item-name-'+catId).value = '';
     document.getElementById('new-inv-item-unit-'+catId).value = '';
     document.getElementById('new-inv-item-qty-'+catId).value = '';
     document.getElementById('new-inv-item-alert-'+catId).value = '';
+    if (document.getElementById('new-inv-item-frozen-'+catId)) document.getElementById('new-inv-item-frozen-'+catId).checked = false;
     loadInvCategories(window._userData);
   } catch(e) { showToast('Error adding item', 'error'); }
 }
@@ -1751,9 +1766,10 @@ window.saveInvItem = async function(id) {
   const name = document.getElementById('edit-inv-name-'+id).value.trim();
   const unit = document.getElementById('edit-inv-unit-'+id).value.trim();
   const alertAt = parseFloat(document.getElementById('edit-inv-alert-'+id).value) || 0;
+  const frozen = document.getElementById('edit-inv-frozen-'+id) ? document.getElementById('edit-inv-frozen-'+id).checked : false;
   if (!name) { showToast('Item name required', 'error'); return; }
   try {
-    await setDoc(doc(db, 'invItems', id), { name, unit, alertAt }, { merge: true });
+    await setDoc(doc(db, 'invItems', id), { name, unit, alertAt, frozen }, { merge: true });
     showToast('Item updated!');
     loadInvCategories(window._userData);
   } catch(e) { showToast('Error updating item', 'error'); }
