@@ -1590,6 +1590,24 @@ function renderMenuDesign(main, userData) {
             <input type="text" id="menu-instagram" class="form-input-small" placeholder="@yourrestaurant" style="width:100%;">
           </div>
         </div>
+        <div style="grid-column:span 2;">
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Menu theme</label>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="theme-picker">
+              ${['classic-elegant','modern-minimal','bold-street','dark-luxury','cafe-warm','editorial-bold'].map(t => `
+                <div onclick="selectTheme('${t}')" id="theme-${t}" style="border:1.5px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.15s;">
+                  <div style="font-size:1.2rem;margin-bottom:4px;">${{
+                    'classic-elegant':'🏛️',
+                    'modern-minimal':'⬜',
+                    'bold-street':'🟢',
+                    'dark-luxury':'⬛',
+                    'cafe-warm':'☕',
+                    'editorial-bold':'📰'
+                  }[t]}</div>
+                  <div style="font-size:0.7rem;font-weight:500;color:var(--ink);">${t.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ')}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
         <button onclick="saveMenuSettings('${userData.uid}')" class="form-btn-small">Save settings</button>
       </div>
 
@@ -1658,6 +1676,16 @@ window.generateQR = async function(uid) {
   img.id = 'qr-canvas';
 }
 
+window.selectTheme = function(theme) {
+  document.querySelectorAll('#theme-picker > div').forEach(el => {
+    el.style.borderColor = 'var(--border)';
+    el.style.background = 'transparent';
+  });
+  const el = document.getElementById('theme-'+theme);
+  if (el) { el.style.borderColor = 'var(--green)'; el.style.background = 'var(--green-light)'; }
+  window._selectedTheme = theme;
+}
+
 window.saveMenuSettings = async function(restaurantId) {
   const tagline = document.getElementById('menu-tagline').value.trim();
   const address = document.getElementById('menu-address').value.trim();
@@ -1668,11 +1696,244 @@ window.saveMenuSettings = async function(restaurantId) {
     await setDoc(doc(db, 'menuSettings', restaurantId), {
       tagline, address, phone, hours, instagram,
       accentColor: menuAccentColor,
+      theme: window._selectedTheme || 'classic-elegant',
       updatedAt: serverTimestamp()
     }, { merge: true });
     showToast('Menu settings saved!');
     loadMenuDesign(window._userData);
   } catch(e) { showToast('Error saving settings', 'error'); }
+}
+
+
+function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
+  const name = userData.restaurantName || 'Our Menu';
+  const itemsHTML = (items) => items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item => `
+    <div class="mi-row">
+      ${item.photoUrl ? `<img src="${item.photoUrl}" class="mi-photo" onerror="this.style.display='none'">` : ''}
+      <div class="mi-info">
+        <div class="mi-name">${item.name}</div>
+        ${item.notes ? `<div class="mi-desc">${item.notes.substring(0,120)}${item.notes.length>120?'...':''}</div>` : ''}
+      </div>
+      ${item.price ? `<div class="mi-price">${item.price}</div>` : ''}
+    </div>`).join('');
+
+  const themes = {
+
+    'classic-elegant': `
+      <div id="menu-print-area" style="background:#1A1A14;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
+        <div style="padding:40px 32px;text-align:center;border-bottom:1px solid rgba(242,166,35,0.3);">
+          <div style="font-size:0.65rem;letter-spacing:0.25em;color:#F2A623;text-transform:uppercase;margin-bottom:10px;">Est. 2024</div>
+          <div style="font-size:2.2rem;font-weight:700;color:#fff;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(242,166,35,0.8);margin-top:8px;font-style:italic;">"${settings.tagline}"</div>`:''}
+          <div style="width:50px;height:1px;background:#F2A623;margin:14px auto;"></div>
+          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+            ${settings.hours?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">⏰ ${settings.hours}</span>`:''}
+            ${settings.address?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">📍 ${settings.address}</span>`:''}
+            ${settings.phone?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">📞 ${settings.phone}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:0 32px 32px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-top:28px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <div style="flex:1;height:0.5px;background:rgba(242,166,35,0.3);"></div>
+                <div style="font-size:0.65rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;">${cat}</div>
+                <div style="flex:1;height:0.5px;background:rgba(242,166,35,0.3);"></div>
+              </div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:68px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;border:0.5px solid rgba(242,166,35,0.2);" onerror="this.style.display='none'">`:''}
+                  <div style="flex:1;">
+                    <div style="display:flex;align-items:baseline;gap:6px;">
+                      <span style="font-size:0.9rem;font-weight:700;color:#fff;">${item.name}</span>
+                      <span style="flex:1;border-bottom:1px dotted rgba(242,166,35,0.25);margin-bottom:3px;"></span>
+                      ${item.price?`<span style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</span>`:''}
+                    </div>
+                    ${item.notes?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);line-height:1.6;font-style:italic;margin-top:3px;">${item.notes.substring(0,120)}...</div>`:''}
+                  </div>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center;padding:20px;border-top:1px solid rgba(242,166,35,0.2);">
+          <div style="font-size:0.7rem;letter-spacing:0.12em;color:rgba(255,255,255,0.25);text-transform:uppercase;">Powered by Chef Nek Pro</div>
+        </div>
+      </div>`,
+
+    'modern-minimal': `
+      <div id="menu-print-area" style="background:#FAFAF8;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+        <div style="padding:40px 32px;border-bottom:2px solid ${color};">
+          <div style="font-size:2rem;font-weight:700;color:#1A1A14;letter-spacing:-0.03em;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.875rem;color:#888;margin-top:6px;">${settings.tagline}</div>`:''}
+          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
+            ${settings.hours?`<span style="font-size:0.78rem;color:#888;">⏰ ${settings.hours}</span>`:''}
+            ${settings.address?`<span style="font-size:0.78rem;color:#888;">📍 ${settings.address}</span>`:''}
+            ${settings.phone?`<span style="font-size:0.78rem;color:#888;">📞 ${settings.phone}</span>`:''}
+            ${settings.instagram?`<span style="font-size:0.78rem;color:${color};">${settings.instagram}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:0 32px 32px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-top:28px;">
+              <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.12em;color:${color};text-transform:uppercase;margin-bottom:14px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #eee;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></div>
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:56px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
+                  <div style="flex:1;">
+                    <div style="font-size:0.9rem;font-weight:500;color:#1A1A14;">${item.name}</div>
+                    ${item.notes?`<div style="font-size:0.78rem;color:#999;margin-top:2px;">${item.notes.substring(0,100)}...</div>`:''}
+                  </div>
+                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#1A1A14;white-space:nowrap;">${item.price}</div>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center;padding:20px;background:#f0f0ee;border-top:0.5px solid #e0e0de;">
+          <div style="font-size:0.7rem;color:#aaa;">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
+        </div>
+      </div>`,
+
+    'bold-street': `
+      <div id="menu-print-area" style="background:#F0FFF4;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+        <div style="background:${color};padding:32px;text-align:center;">
+          <div style="font-size:2rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(255,255,255,0.8);margin-top:6px;">${settings.tagline}</div>`:''}
+          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px;">
+            ${settings.hours?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">⏰ ${settings.hours}</span>`:''}
+            ${settings.address?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">📍 ${settings.address}</span>`:''}
+            ${settings.phone?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">📞 ${settings.phone}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:20px 24px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-bottom:20px;">
+              <div style="display:inline-block;background:${color};color:#fff;font-size:0.75rem;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:12px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:54px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
+                  <div style="flex:1;">
+                    <div style="font-size:0.875rem;font-weight:600;color:#1A1A14;">${item.name}</div>
+                    ${item.notes?`<div style="font-size:0.75rem;color:#888;margin-top:2px;">${item.notes.substring(0,80)}...</div>`:''}
+                  </div>
+                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:${color};white-space:nowrap;">${item.price}</div>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center;padding:16px;background:${color}20;border-top:0.5px solid ${color}40;">
+          <div style="font-size:0.7rem;color:#888;">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
+        </div>
+      </div>`,
+
+    'dark-luxury': `
+      <div id="menu-print-area" style="background:#0A0A0A;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
+        <div style="padding:48px 32px;text-align:center;">
+          <div style="font-size:0.6rem;letter-spacing:0.3em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:14px;">Fine Dining</div>
+          <div style="font-size:2.4rem;font-weight:700;color:#fff;letter-spacing:0.03em;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(255,255,255,0.45);margin-top:10px;font-style:italic;">${settings.tagline}</div>`:''}
+          <div style="display:flex;align-items:center;gap:12px;margin:20px auto;max-width:200px;">
+            <div style="flex:1;height:0.5px;background:rgba(255,255,255,0.15);"></div>
+            <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.3);"></div>
+            <div style="flex:1;height:0.5px;background:rgba(255,255,255,0.15);"></div>
+          </div>
+          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+            ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.hours}</span>`:''}
+            ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.address}</span>`:''}
+            ${settings.phone?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.phone}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:0 40px 40px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-top:32px;">
+              <div style="font-size:0.6rem;letter-spacing:0.25em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid rgba(255,255,255,0.08);">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:64px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0;opacity:0.75;" onerror="this.style.display='none'">`:''}
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                      <span style="font-size:0.9375rem;color:#fff;font-weight:400;">${item.name}</span>
+                      ${item.price?`<span style="font-size:0.875rem;color:rgba(255,255,255,0.6);white-space:nowrap;margin-left:12px;">${item.price}</span>`:''}
+                    </div>
+                    ${item.notes?`<div style="font-size:0.775rem;color:rgba(255,255,255,0.28);margin-top:4px;font-style:italic;line-height:1.6;">${item.notes.substring(0,120)}...</div>`:''}
+                  </div>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center;padding:24px;border-top:0.5px solid rgba(255,255,255,0.06);">
+          <div style="font-size:0.65rem;letter-spacing:0.15em;color:rgba(255,255,255,0.18);text-transform:uppercase;">Powered by Chef Nek Pro</div>
+        </div>
+      </div>`,
+
+    'cafe-warm': `
+      <div id="menu-print-area" style="background:#FDF6EC;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
+        <div style="padding:36px 32px;text-align:center;border-bottom:2px solid #E8A94D;">
+          <div style="font-size:2rem;font-weight:700;color:#5C3317;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.875rem;color:#A0522D;margin-top:6px;font-style:italic;">${settings.tagline}</div>`:''}
+          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px;">
+            ${settings.hours?`<span style="font-size:0.78rem;color:#A0522D;">⏰ ${settings.hours}</span>`:''}
+            ${settings.address?`<span style="font-size:0.78rem;color:#A0522D;">📍 ${settings.address}</span>`:''}
+            ${settings.phone?`<span style="font-size:0.78rem;color:#A0522D;">📞 ${settings.phone}</span>`:''}
+          </div>
+        </div>
+        <div style="padding:0 32px 32px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-top:24px;">
+              <div style="border-left:3px solid #E8A94D;padding-left:10px;font-size:0.85rem;font-weight:700;color:#5C3317;margin-bottom:14px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:0.5px dashed #E8D5B0;">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:60px;height:50px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
+                  <div style="flex:1;">
+                    <div style="font-size:0.9rem;font-weight:600;color:#3D1A00;">${item.name}</div>
+                    ${item.notes?`<div style="font-size:0.775rem;color:#8B6640;margin-top:3px;line-height:1.5;">${item.notes.substring(0,110)}...</div>`:''}
+                  </div>
+                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#E8A94D;white-space:nowrap;">${item.price}</div>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="text-align:center;padding:18px;background:#F5E6CC;border-top:1px solid #E8D5B0;">
+          <div style="font-size:0.7rem;color:#A0522D;">Powered by <strong>Chef Nek Pro</strong></div>
+        </div>
+      </div>`,
+
+    'editorial-bold': `
+      <div id="menu-print-area" style="background:#fff;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+        <div style="background:#1A1A14;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:0.6rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;margin-bottom:4px;">Chef Nek Pro</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+            ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:4px;">${settings.tagline}</div>`:''}
+          </div>
+          <div style="text-align:right;">
+            ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:#F2A623;">📞 ${settings.phone}</div>`:''}
+            ${settings.hours?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:4px;">${settings.hours}</div>`:''}
+            ${settings.address?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px;">${settings.address}</div>`:''}
+          </div>
+        </div>
+        <div style="padding:20px 24px;">
+          ${sortedGroups.map(([cat,items],idx)=>`
+            <div style="margin-bottom:24px;">
+              <div style="background:#1A1A14;display:inline-block;padding:6px 16px;border-radius:4px;margin-bottom:14px;">
+                <span style="font-size:0.75rem;font-weight:700;color:#F2A623;letter-spacing:0.08em;text-transform:uppercase;">${cat}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:${items.length > 3 ? '1fr 1fr' : '1fr'};gap:10px;">
+                ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F8F8F6;border-radius:8px;border-left:3px solid #F2A623;">
+                    ${item.photoUrl?`<img src="${item.photoUrl}" style="width:52px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:0.85rem;font-weight:600;color:#1A1A14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                      ${item.notes?`<div style="font-size:0.72rem;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes.substring(0,60)}...</div>`:''}
+                    </div>
+                    ${item.price?`<div style="font-size:0.85rem;font-weight:700;color:#1A1A14;white-space:nowrap;">${item.price}</div>`:''}
+                  </div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+        <div style="background:#1A1A14;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          ${settings.instagram?`<div style="font-size:0.8rem;color:#F2A623;">📱 ${settings.instagram}</div>`:'<div></div>'}
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);">Powered by Chef Nek Pro</div>
+        </div>
+      </div>`
+  };
+
+  return themes[theme] || themes['classic-elegant'];
 }
 
 async function loadMenuDesign(userData) {
@@ -1685,6 +1946,10 @@ async function loadMenuDesign(userData) {
     const settings = settingsDoc.exists() ? settingsDoc.data() : {};
     const color = settings.accentColor || '#1D9E75';
     menuAccentColor = color;
+    const theme = settings.theme || 'classic-elegant';
+    window._selectedTheme = theme;
+    // Highlight selected theme
+    setTimeout(() => { if(window.selectTheme) window.selectTheme(theme); }, 100);
 
     // Pre-fill settings form
     if (document.getElementById('menu-tagline')) document.getElementById('menu-tagline').value = settings.tagline || '';
@@ -1725,40 +1990,11 @@ async function loadMenuDesign(userData) {
       return (catOrder.indexOf(a)===-1?99:catOrder.indexOf(a)) - (catOrder.indexOf(b)===-1?99:catOrder.indexOf(b));
     });
 
-    container.innerHTML = `
-      <div class="menu-preview" id="menu-print-area">
-        <!-- Header -->
-        <div class="menu-preview-header" style="background:${color};color:#fff;">
-          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;letter-spacing:-0.02em;">${userData.restaurantName || 'Our Menu'}</div>
-          ${settings.tagline ? `<div style="font-size:0.9rem;opacity:0.85;margin-top:6px;font-style:italic;">${settings.tagline}</div>` : ''}
-          ${settings.hours ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:8px;">⏰ ${settings.hours}</div>` : ''}
-          ${settings.address ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📍 ${settings.address}</div>` : ''}
-          ${settings.phone ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📞 ${settings.phone}</div>` : ''}
-          ${settings.instagram ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📱 ${settings.instagram}</div>` : ''}
-        </div>
+    // Build menu HTML based on theme
+    const menuHTML = buildMenuHTML(theme, color, userData, settings, sortedGroups);
+    container.innerHTML = menuHTML;
 
-        <!-- Menu categories -->
-        ${sortedGroups.map(([cat, items]) => `
-          <div class="menu-preview-cat">
-            <div class="menu-preview-cat-title" style="color:${color};border-color:${color};">${cat}</div>
-            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item => `
-              <div class="menu-preview-item">
-                ${item.photoUrl ? `<img src="${item.photoUrl}" class="menu-preview-item-photo" onerror="this.style.display='none'">` : ''}
-                <div class="menu-preview-item-info">
-                  <div class="menu-preview-item-name">${item.name}</div>
-                  ${item.notes ? `<div class="menu-preview-item-desc">${item.notes.substring(0,120)}${item.notes.length>120?'...':''}</div>` : ''}
-                </div>
-                ${item.price ? `<div class="menu-preview-item-price" style="color:${color};">${item.price}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-        `).join('')}
 
-        <!-- Footer -->
-        <div style="text-align:center;padding:20px;background:var(--cream);border-top:0.5px solid var(--border);">
-          <div style="font-size:0.75rem;color:var(--ink-muted);">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
-        </div>
-      </div>`;
 
   } catch(e) {
     console.error(e);
