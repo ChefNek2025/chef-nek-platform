@@ -1696,6 +1696,8 @@ window.saveMenuSettings = async function(restaurantId) {
   const phone = document.getElementById('menu-phone').value.trim();
   const hours = document.getElementById('menu-hours').value.trim();
   const instagram = document.getElementById('menu-instagram').value.trim();
+  const heroPhotoEl = document.getElementById('menu-hero-photo');
+  const heroPhoto = heroPhotoEl ? heroPhotoEl.value.trim() : '';
   try {
     await setDoc(doc(db, 'menuSettings', restaurantId), {
       tagline, address, phone, hours, instagram, heroPhoto,
