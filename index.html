@@ -1680,6 +1680,134 @@ window.generateQR = async function(uid) {
   img.id = 'qr-canvas';
 }
 
+// ── EDITOR TAB SWITCHER ──
+window.switchEditorTab = function(tab) {
+  ['info','theme','colors','fonts','layout','logo'].forEach(t => {
+    const panel = document.getElementById('panel-'+t);
+    const btn = document.getElementById('tab-'+t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.background = t === tab ? 'var(--white)' : 'transparent';
+      btn.style.color = t === tab ? 'var(--ink)' : 'var(--ink-muted)';
+    }
+  });
+}
+
+// ── COLOR SELECTORS ──
+let menuTextColor = '#FFFFFF';
+let menuHeaderBg = '#1A1A14';
+let menuTitleFont = 'Georgia,serif';
+let menuBodyFont = 'var(--font-body)';
+let menuHeaderAlign = 'center';
+let menuColumns = '1';
+let menuShowPhotos = 'yes';
+let menuPhotoShape = 'rounded';
+let menuShowDesc = 'yes';
+let menuLogoUrl = '';
+let menuLogoPos = 'top-center';
+
+window.selectTextColor = function(color) {
+  menuTextColor = color;
+  document.querySelectorAll('[id^="textcolor-"]').forEach(el => { el.style.border = '2px solid rgba(0,0,0,0.15)'; el.style.transform = 'scale(1)'; });
+  const el = document.getElementById('textcolor-'+color.replace('#',''));
+  if (el) { el.style.border = '3px solid var(--ink)'; el.style.transform = 'scale(1.2)'; }
+}
+
+window.selectHeaderBg = function(color) {
+  menuHeaderBg = color;
+  document.querySelectorAll('[id^="headerbg-"]').forEach(el => { el.style.border = '2px solid transparent'; el.style.transform = 'scale(1)'; });
+  const el = document.getElementById('headerbg-'+color.replace('#',''));
+  if (el) { el.style.border = '3px solid var(--ink)'; el.style.transform = 'scale(1.2)'; }
+}
+
+window.selectTitleFont = function(font) {
+  menuTitleFont = font;
+}
+
+window.selectBodyFont = function(font) {
+  menuBodyFont = font;
+}
+
+window.selectAlign = function(type, align) {
+  menuHeaderAlign = align;
+  ['left','center','right'].forEach(a => {
+    const btn = document.getElementById('align-'+type+'-'+a);
+    if (btn) { btn.style.background = a===align ? 'var(--green)' : 'var(--cream)'; btn.style.color = a===align ? '#fff' : 'var(--ink-soft)'; }
+  });
+}
+
+window.selectColumns = function(cols) {
+  menuColumns = cols;
+  ['1','2','3'].forEach(c => {
+    const btn = document.getElementById('cols-'+c);
+    if (btn) { btn.style.background = c===cols ? 'var(--green)' : 'var(--cream)'; btn.style.color = c===cols ? '#fff' : 'var(--ink-soft)'; }
+  });
+}
+
+window.selectShowPhotos = function(val) {
+  menuShowPhotos = val;
+  ['yes','no'].forEach(v => {
+    const btn = document.getElementById('photos-'+v);
+    if (btn) { btn.style.background = v===val ? 'var(--green)' : 'var(--cream)'; btn.style.color = v===val ? '#fff' : 'var(--ink-soft)'; }
+  });
+}
+
+window.selectPhotoShape = function(val) {
+  menuPhotoShape = val;
+  ['circle','rounded','square'].forEach(v => {
+    const btn = document.getElementById('shape-'+v);
+    if (btn) { btn.style.background = v===val ? 'var(--green)' : 'var(--cream)'; btn.style.color = v===val ? '#fff' : 'var(--ink-soft)'; }
+  });
+}
+
+window.selectShowDesc = function(val) {
+  menuShowDesc = val;
+  ['yes','no'].forEach(v => {
+    const btn = document.getElementById('desc-'+v);
+    if (btn) { btn.style.background = v===val ? 'var(--green)' : 'var(--cream)'; btn.style.color = v===val ? '#fff' : 'var(--ink-soft)'; }
+  });
+}
+
+window.uploadMenuLogo = async function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('logo-preview');
+    const img = document.getElementById('logo-preview-img');
+    if (preview) preview.style.display = 'block';
+    if (img) img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  showToast('Uploading logo...');
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch('https://api.imgbb.com/1/upload?key=2607f98fd74e91661681ef5b362c36f2', { method:'POST', body:formData });
+    const data = await res.json();
+    if (data.success) {
+      menuLogoUrl = data.data.url;
+      const urlInput = document.getElementById('menu-logo-url');
+      if (urlInput) urlInput.value = menuLogoUrl;
+      showToast('Logo uploaded!');
+    }
+  } catch(e) {
+    const img = document.getElementById('logo-preview-img');
+    if (img) menuLogoUrl = img.src;
+    showToast('Logo ready!');
+  }
+}
+
+window.previewLogoUrl = function(url) {
+  menuLogoUrl = url;
+  if (url) {
+    const preview = document.getElementById('logo-preview');
+    const img = document.getElementById('logo-preview-img');
+    if (preview) preview.style.display = 'block';
+    if (img) img.src = url;
+  }
+}
+
 window.selectTheme = function(theme) {
   document.querySelectorAll('#theme-picker > div').forEach(el => {
     el.style.borderColor = 'var(--border)';
@@ -1691,17 +1819,41 @@ window.selectTheme = function(theme) {
 }
 
 window.saveMenuSettings = async function(restaurantId) {
-  const tagline = document.getElementById('menu-tagline').value.trim();
-  const address = document.getElementById('menu-address').value.trim();
-  const phone = document.getElementById('menu-phone').value.trim();
-  const hours = document.getElementById('menu-hours').value.trim();
-  const instagram = document.getElementById('menu-instagram').value.trim();
+  const tagline = document.getElementById('menu-tagline') ? document.getElementById('menu-tagline').value.trim() : '';
+  const address = document.getElementById('menu-address') ? document.getElementById('menu-address').value.trim() : '';
+  const phone = document.getElementById('menu-phone') ? document.getElementById('menu-phone').value.trim() : '';
+  const hours = document.getElementById('menu-hours') ? document.getElementById('menu-hours').value.trim() : '';
+  const instagram = document.getElementById('menu-instagram') ? document.getElementById('menu-instagram').value.trim() : '';
+  const website = document.getElementById('menu-website') ? document.getElementById('menu-website').value.trim() : '';
+  const promo = document.getElementById('menu-promo') ? document.getElementById('menu-promo').value.trim() : '';
   const heroPhotoEl = document.getElementById('menu-hero-photo');
   const heroPhoto = heroPhotoEl ? heroPhotoEl.value.trim() : '';
+  const titleSize = document.getElementById('menu-title-size') ? document.getElementById('menu-title-size').value : '2rem';
+  const catSize = document.getElementById('menu-cat-size') ? document.getElementById('menu-cat-size').value : '0.85rem';
+  const itemSize = document.getElementById('menu-item-size') ? document.getElementById('menu-item-size').value : '0.875rem';
+  const spacing = document.getElementById('menu-spacing') ? document.getElementById('menu-spacing').value : 'normal';
+  const logoSize = document.getElementById('menu-logo-size') ? document.getElementById('menu-logo-size').value : '60px';
+  const logoPos = document.querySelector('input[name="logo-pos"]:checked') ? document.querySelector('input[name="logo-pos"]:checked').value : 'top-center';
+  const bgStyle = document.querySelector('input[name="bg-style"]:checked') ? document.querySelector('input[name="bg-style"]:checked').value : 'default';
+  const customBg = document.getElementById('menu-custom-bg') ? document.getElementById('menu-custom-bg').value : '#1A1A14';
+  const logoUrlInput = document.getElementById('menu-logo-url');
+  const finalLogoUrl = menuLogoUrl || (logoUrlInput ? logoUrlInput.value.trim() : '');
   try {
     await setDoc(doc(db, 'menuSettings', restaurantId), {
-      tagline, address, phone, hours, instagram, heroPhoto,
+      tagline, address, phone, hours, instagram, website, promo, heroPhoto,
       accentColor: menuAccentColor,
+      textColor: menuTextColor,
+      headerBg: menuHeaderBg,
+      titleFont: menuTitleFont,
+      bodyFont: menuBodyFont,
+      headerAlign: menuHeaderAlign,
+      columns: menuColumns,
+      showPhotos: menuShowPhotos,
+      photoShape: menuPhotoShape,
+      showDesc: menuShowDesc,
+      logoUrl: finalLogoUrl,
+      logoPos, logoSize, bgStyle, customBg,
+      titleSize, catSize, itemSize, spacing,
       theme: window._selectedTheme || 'dark-stone',
       updatedAt: serverTimestamp()
     }, { merge: true });
