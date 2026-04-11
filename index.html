@@ -1557,65 +1557,165 @@ function renderMenuDesign(main, userData) {
     </div>
     <div class="page-body">
 
-      <!-- MENU SETTINGS -->
+      ${isAdmin ? `
+      <!-- FULL STYLE EDITOR -->
       <div class="card" style="margin-bottom:16px;">
-        <div class="card-title">Menu settings</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Restaurant tagline</label>
-            <input type="text" id="menu-tagline" class="form-input-small" placeholder="e.g. Fresh food, made with love" style="width:100%;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Menu accent color</label>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="color-picker">
-              ${['#1D9E75','#E24B4A','#185FA5','#854F0B','#534AB7','#1A1A14'].map(c => `
-                <div onclick="selectMenuColor('${c}')" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;" id="color-${c.replace('#','')}"></div>
-              `).join('')}
-            </div>
-          </div>
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Address</label>
-            <input type="text" id="menu-address" class="form-input-small" placeholder="Your restaurant address" style="width:100%;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Phone number</label>
-            <input type="text" id="menu-phone" class="form-input-small" placeholder="(123) 456-7890" style="width:100%;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hours</label>
-            <input type="text" id="menu-hours" class="form-input-small" placeholder="Mon-Fri 8am-9pm, Sat-Sun 9am-10pm" style="width:100%;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Instagram handle</label>
-            <input type="text" id="menu-instagram" class="form-input-small" placeholder="@yourrestaurant" style="width:100%;">
-          </div>
-          <div style="grid-column:span 2;">
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero photo URL <span style="color:var(--green);">(for Dark Hero theme)</span></label>
-            <input type="text" id="menu-hero-photo" class="form-input-small" placeholder="Paste a food photo URL for the top banner" style="width:100%;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div class="card-title" style="margin-bottom:0;">Menu style editor</div>
+          <button onclick="saveMenuSettings('${userData.uid}')" style="height:36px;padding:0 20px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.875rem;font-weight:500;cursor:pointer;">💾 Save changes</button>
+        </div>
+
+        <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--cream);border-radius:10px;padding:4px;">
+          <button onclick="switchEditorTab('info')" id="tab-info" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink);">📋 Info</button>
+          <button onclick="switchEditorTab('theme')" id="tab-theme" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">🎨 Theme</button>
+          <button onclick="switchEditorTab('colors')" id="tab-colors" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">🖌 Colors</button>
+          <button onclick="switchEditorTab('fonts')" id="tab-fonts" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">✏️ Fonts</button>
+          <button onclick="switchEditorTab('layout')" id="tab-layout" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">📐 Layout</button>
+          <button onclick="switchEditorTab('logo')" id="tab-logo" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">🖼 Logo</button>
+        </div>
+
+        <div id="panel-info">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Tagline</label><input type="text" id="menu-tagline" class="form-input-small" placeholder="Fresh food, made with love" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Phone</label><input type="text" id="menu-phone" class="form-input-small" placeholder="(123) 456-7890" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Address</label><input type="text" id="menu-address" class="form-input-small" placeholder="Your restaurant address" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hours</label><input type="text" id="menu-hours" class="form-input-small" placeholder="Mon-Sun 8am-10pm" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Instagram</label><input type="text" id="menu-instagram" class="form-input-small" placeholder="@yourrestaurant" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Website</label><input type="text" id="menu-website" class="form-input-small" placeholder="www.yourrestaurant.com" style="width:100%;"></div>
+            <div style="grid-column:span 2;"><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Special offer / promo</label><input type="text" id="menu-promo" class="form-input-small" placeholder="Happy Hour 4-6pm — 20% off all drinks!" style="width:100%;"></div>
           </div>
         </div>
-        <div style="grid-column:span 2;">
-            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Menu theme</label>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="theme-picker">
-              ${['dark-stone','vintage-parchment','specials-spotlight','hero-banner','clean-professional','dark-chalkboard','photo-grid','elegant-restaurant','dark-texture','bistro-illustrated'].map(t => `
-                <div onclick="selectTheme('${t}')" id="theme-${t}" style="border:1.5px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.15s;">
-                  <div style="font-size:1.2rem;margin-bottom:4px;">${{
-                    'classic-elegant':'🏛️',
-                    'modern-minimal':'⬜',
-                    'bold-street':'🟢',
-                    'dark-luxury':'⬛',
-                    'cafe-warm':'☕',
-                    'editorial-bold':'📰'
-                  }[t]}</div>
-                  <div style="font-size:0.65rem;font-weight:500;color:var(--ink);">${{'dark-stone':'Dark Stone','vintage-parchment':'Vintage','specials-spotlight':'Specials','hero-banner':'Hero Banner','clean-professional':'Professional','dark-chalkboard':'Chalkboard','photo-grid':'Photo Grid','elegant-restaurant':'Elegant','dark-texture':'Dark Texture','bistro-illustrated':'Bistro'}[t]||t}</div>
-                </div>
-              `).join('')}
+
+        <div id="panel-theme" style="display:none;">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;" id="theme-picker">
+            <div onclick="selectTheme('dark-stone')" id="theme-dark-stone" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🪨</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Dark Stone</div><div style="font-size:0.7rem;color:var(--ink-muted);">Cards on dark texture</div></div></div>
+            <div onclick="selectTheme('vintage-parchment')" id="theme-vintage-parchment" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">📜</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Vintage</div><div style="font-size:0.7rem;color:var(--ink-muted);">Warm aged paper</div></div></div>
+            <div onclick="selectTheme('specials-spotlight')" id="theme-specials-spotlight" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">⭐</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Specials</div><div style="font-size:0.7rem;color:var(--ink-muted);">Spotlight dishes</div></div></div>
+            <div onclick="selectTheme('hero-banner')" id="theme-hero-banner" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🖼️</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Hero Banner</div><div style="font-size:0.7rem;color:var(--ink-muted);">Big food photo top</div></div></div>
+            <div onclick="selectTheme('clean-professional')" id="theme-clean-professional" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">📋</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Professional</div><div style="font-size:0.7rem;color:var(--ink-muted);">Clean white layout</div></div></div>
+            <div onclick="selectTheme('dark-chalkboard')" id="theme-dark-chalkboard" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🍫</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Chalkboard</div><div style="font-size:0.7rem;color:var(--ink-muted);">Dark 2-column</div></div></div>
+            <div onclick="selectTheme('photo-grid')" id="theme-photo-grid" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">📸</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Photo Grid</div><div style="font-size:0.7rem;color:var(--ink-muted);">3x3 photo showcase</div></div></div>
+            <div onclick="selectTheme('elegant-restaurant')" id="theme-elegant-restaurant" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🌿</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Elegant</div><div style="font-size:0.7rem;color:var(--ink-muted);">Brown gold classic</div></div></div>
+            <div onclick="selectTheme('dark-texture')" id="theme-dark-texture" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🌑</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Dark Modern</div><div style="font-size:0.7rem;color:var(--ink-muted);">Sleek dark rows</div></div></div>
+            <div onclick="selectTheme('bistro-illustrated')" id="theme-bistro-illustrated" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🎨</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Bistro</div><div style="font-size:0.7rem;color:var(--ink-muted);">Green sidebar</div></div></div>
+          </div>
+          <div style="margin-top:12px;"><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero photo URL (for Hero Banner)</label><input type="text" id="menu-hero-photo" class="form-input-small" placeholder="Paste a food photo URL" style="width:100%;"></div>
+        </div>
+
+        <div id="panel-colors" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Accent color</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;" id="color-picker">
+                ${['#1D9E75','#E24B4A','#185FA5','#F2A623','#534AB7','#1A1A14','#E8A94D','#8B4513','#2D5016','#C0392B','#2980B9','#8E44AD'].map(c=>`<div onclick="selectMenuColor('${c}')" id="color-${c.replace('#','')}" style="width:30px;height:30px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;"></div>`).join('')}
+              </div>
+              <input type="color" id="menu-custom-color" value="#1D9E75" onchange="selectMenuColor(this.value)" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;padding:2px;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Background</label>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="bg-style" value="default" checked style="accent-color:var(--green);"> Default</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="bg-style" value="dark" style="accent-color:var(--green);"> Dark</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="bg-style" value="cream" style="accent-color:var(--green);"> Cream</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="bg-style" value="white" style="accent-color:var(--green);"> White</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="bg-style" value="custom" style="accent-color:var(--green);"> Custom</label>
+                <input type="color" id="menu-custom-bg" value="#1A1A14" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;padding:2px;">
+              </div>
             </div>
           </div>
-        <button onclick="saveMenuSettings('${userData.uid}')" class="form-btn-small">Save settings</button>
-      </div>
+        </div>
 
-      <!-- QR CODE + SHARE LINK -->
+        <div id="panel-fonts" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Title font</label>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;"><input type="radio" name="title-font" value="Georgia,serif" checked style="accent-color:var(--green);"> <span style="font-family:Georgia,serif;">Georgia — Classic</span></label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;"><input type="radio" name="title-font" value="var(--font-display)" style="accent-color:var(--green);"> <span style="font-family:var(--font-display);">Playfair — Elegant</span></label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;"><input type="radio" name="title-font" value="var(--font-body)" style="accent-color:var(--green);"> <span>DM Sans — Modern</span></label>
+                <label style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;"><input type="radio" name="title-font" value="Impact,sans-serif" style="accent-color:var(--green);"> <span style="font-family:Impact,sans-serif;">Impact — Bold</span></label>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Text sizes</label>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div><label style="font-size:0.72rem;color:var(--ink-muted);">Name size</label><select id="menu-title-size" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;background:var(--cream);padding:0 8px;"><option value="1.5rem">Small</option><option value="2rem" selected>Medium</option><option value="2.5rem">Large</option><option value="3rem">Extra Large</option></select></div>
+                <div><label style="font-size:0.72rem;color:var(--ink-muted);">Item name size</label><select id="menu-item-size" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;background:var(--cream);padding:0 8px;"><option value="0.75rem">Small</option><option value="0.875rem" selected>Medium</option><option value="1rem">Large</option><option value="1.1rem">Extra Large</option></select></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-layout" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Show food photos</label>
+              <div style="display:flex;gap:8px;">
+                <button onclick="selectShowPhotos('yes')" id="photos-yes" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--green);color:#fff;cursor:pointer;font-size:0.875rem;">Show</button>
+                <button onclick="selectShowPhotos('no')" id="photos-no" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream);color:var(--ink-soft);cursor:pointer;font-size:0.875rem;">Hide</button>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Photo shape</label>
+              <div style="display:flex;gap:8px;">
+                <button onclick="selectPhotoShape('circle')" id="shape-circle" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream);color:var(--ink-soft);cursor:pointer;font-size:0.75rem;">Circle</button>
+                <button onclick="selectPhotoShape('rounded')" id="shape-rounded" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--green);color:#fff;cursor:pointer;font-size:0.75rem;">Rounded</button>
+                <button onclick="selectPhotoShape('square')" id="shape-square" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream);color:var(--ink-soft);cursor:pointer;font-size:0.75rem;">Square</button>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Show descriptions</label>
+              <div style="display:flex;gap:8px;">
+                <button onclick="selectShowDesc('yes')" id="desc-yes" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--green);color:#fff;cursor:pointer;font-size:0.875rem;">Show</button>
+                <button onclick="selectShowDesc('no')" id="desc-no" style="flex:1;height:36px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream);color:var(--ink-soft);cursor:pointer;font-size:0.875rem;">Hide</button>
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Item spacing</label>
+              <select id="menu-spacing" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;background:var(--cream);padding:0 8px;">
+                <option value="compact">Compact</option>
+                <option value="normal" selected>Normal</option>
+                <option value="relaxed">Relaxed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="panel-logo" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Logo / banner image</label>
+              <div style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;margin-bottom:10px;">
+                <div style="font-size:2rem;margin-bottom:6px;">🖼️</div>
+                <div style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;">Upload your logo</div>
+                <label style="cursor:pointer;"><span style="height:34px;padding:0 14px;background:var(--green);color:#fff;border-radius:8px;font-size:0.8rem;font-weight:500;display:inline-flex;align-items:center;">Choose image</span><input type="file" id="menu-logo-file" accept="image/*" style="display:none;" onchange="uploadMenuLogo(this)"></label>
+              </div>
+              <div id="logo-preview" style="display:none;text-align:center;margin-bottom:10px;"><img id="logo-preview-img" style="max-width:100%;max-height:80px;border-radius:8px;"><div style="font-size:0.75rem;color:var(--green);margin-top:4px;">Logo ready</div></div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Or paste URL</label>
+              <input type="text" id="menu-logo-url" class="form-input-small" placeholder="https://..." style="width:100%;" oninput="previewLogoUrl(this.value)">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Logo position</label>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="logo-pos" value="top-center" checked style="accent-color:var(--green);"> Top center</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="logo-pos" value="top-left" style="accent-color:var(--green);"> Top left</label>
+                <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="logo-pos" value="beside-name" style="accent-color:var(--green);"> Beside name</label>
+              </div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Logo size</label>
+              <select id="menu-logo-size" style="width:100%;height:36px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8rem;background:var(--cream);padding:0 8px;">
+                <option value="40px">Small</option>
+                <option value="60px" selected>Medium</option>
+                <option value="80px">Large</option>
+                <option value="100px">Extra Large</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      ` : ''}
+
+      <!-- QR CODE + SHARE LINK -->      <!-- QR CODE + SHARE LINK -->
       <div class="qr-box no-print" style="margin-bottom:16px;${isAdmin ? '' : 'display:none;'}">
         <div style="font-size:0.875rem;font-weight:500;color:var(--ink);margin-bottom:8px;">Your public menu link</div>
         <div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--green);font-weight:500;margin-bottom:12px;word-break:break-all;" id="menu-public-link">
