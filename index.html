@@ -1180,6 +1180,40 @@ window.applyPreset = function() {
   }
 }
 
+// ── MENU RESTAURANT SWITCHER ──
+let menuViewingRestaurantId = null;
+
+window.switchMenuRestaurant = async function(restaurantId) {
+  if (!restaurantId) return;
+  menuViewingRestaurantId = restaurantId;
+  // Update share link
+  const linkEl = document.getElementById('menu-public-link');
+  if (linkEl) linkEl.textContent = window.location.origin + '/menu/' + restaurantId;
+  // Reload menu preview for selected restaurant
+  const container = document.getElementById('menu-preview-container');
+  if (container) container.innerHTML = '<div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>';
+  // Load their settings and recipes
+  try {
+    const settingsDoc = await getDoc(doc(db, 'menuSettings', restaurantId));
+    const settings = settingsDoc.exists() ? settingsDoc.data() : {};
+    const theme = settings.theme || 'dark-stone';
+    const color = settings.accentColor || '#1D9E75';
+    // Get their user data
+    const userDoc = await getDoc(doc(db, 'users', restaurantId));
+    const clientData = userDoc.exists() ? { uid: restaurantId, ...userDoc.data() } : { uid: restaurantId, restaurantName: 'Restaurant' };
+    // Load their recipes
+    const recipesSnap = await getDocs(query(collection(db, 'recipes'), where('restaurantId','==', restaurantId)));
+    const recipes = recipesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const catOrder = ['Wraps','Salads','Breakfast','Sandwiches','Burgers','Mains','Sides','Sauces','Vegan','Vegetarian','Desserts','Drinks'];
+    const groups = {};
+    recipes.forEach(r => { const cat = r.category||'Other'; if(!groups[cat]) groups[cat]=[]; groups[cat].push(r); });
+    const sortedGroups = Object.entries(groups).sort(([a],[b]) => (catOrder.indexOf(a)===-1?99:catOrder.indexOf(a))-(catOrder.indexOf(b)===-1?99:catOrder.indexOf(b)));
+    if (container) container.innerHTML = buildMenuHTML(theme, color, clientData, settings, sortedGroups);
+  } catch(e) {
+    console.error(e);
+  }
+}
+
 window.toggleAddCategory = function() {
   const form = document.getElementById('add-category-form');
   const btn = document.getElementById('add-cat-toggle-btn');
@@ -1715,7 +1749,18 @@ function renderMenuDesign(main, userData) {
       </div>
       ` : ''}
 
-      <!-- QR CODE + SHARE LINK -->      <!-- QR CODE + SHARE LINK -->
+      <!-- QR CODE + SHARE LINK -->      <!-- ADMIN: SELECT RESTAURANT TO PREVIEW -->
+      ${isAdmin ? `
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:0.875rem;font-weight:500;color:var(--ink);">Viewing menu for:</div>
+          <select id="menu-restaurant-select" onchange="switchMenuRestaurant(this.value)" style="flex:1;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+            <option value="">Select a restaurant...</option>
+          </select>
+        </div>
+      </div>` : ''}
+
+      <!-- QR CODE + SHARE LINK -->
       <div class="qr-box no-print" style="margin-bottom:16px;${isAdmin ? '' : 'display:none;'}">
         <div style="font-size:0.875rem;font-weight:500;color:var(--ink);margin-bottom:8px;">Your public menu link</div>
         <div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--green);font-weight:500;margin-bottom:12px;word-break:break-all;" id="menu-public-link">
@@ -1928,6 +1973,9 @@ window.selectTheme = function(theme) {
 }
 
 window.saveMenuSettings = async function(restaurantId) {
+  // If admin has selected a client restaurant, save for them
+  const selectEl = document.getElementById('menu-restaurant-select');
+  if (isAdmin && selectEl && selectEl.value) restaurantId = selectEl.value;
   const tagline = document.getElementById('menu-tagline') ? document.getElementById('menu-tagline').value.trim() : '';
   const address = document.getElementById('menu-address') ? document.getElementById('menu-address').value.trim() : '';
   const phone = document.getElementById('menu-phone') ? document.getElementById('menu-phone').value.trim() : '';
