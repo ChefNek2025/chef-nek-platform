@@ -1597,7 +1597,7 @@ function renderMenuDesign(main, userData) {
         <div style="grid-column:span 2;">
             <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Menu theme</label>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="theme-picker">
-              ${['classic-elegant','modern-minimal','bold-street','dark-luxury','cafe-warm','editorial-bold','dark-hero'].map(t => `
+              ${['dark-stone','vintage-parchment','specials-spotlight','hero-banner','clean-professional','dark-chalkboard','photo-grid','elegant-restaurant','dark-texture','bistro-illustrated'].map(t => `
                 <div onclick="selectTheme('${t}')" id="theme-${t}" style="border:1.5px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.15s;">
                   <div style="font-size:1.2rem;margin-bottom:4px;">${{
                     'classic-elegant':'🏛️',
@@ -1607,7 +1607,7 @@ function renderMenuDesign(main, userData) {
                     'cafe-warm':'☕',
                     'editorial-bold':'📰'
                   }[t]}</div>
-                  <div style="font-size:0.7rem;font-weight:500;color:var(--ink);">${t.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ')}</div>
+                  <div style="font-size:0.65rem;font-weight:500;color:var(--ink);">${{'dark-stone':'Dark Stone','vintage-parchment':'Vintage','specials-spotlight':'Specials','hero-banner':'Hero Banner','clean-professional':'Professional','dark-chalkboard':'Chalkboard','photo-grid':'Photo Grid','elegant-restaurant':'Elegant','dark-texture':'Dark Texture','bistro-illustrated':'Bistro'}[t]||t}</div>
                 </div>
               `).join('')}
             </div>
@@ -1700,7 +1700,7 @@ window.saveMenuSettings = async function(restaurantId) {
     await setDoc(doc(db, 'menuSettings', restaurantId), {
       tagline, address, phone, hours, instagram, heroPhoto,
       accentColor: menuAccentColor,
-      theme: window._selectedTheme || 'classic-elegant',
+      theme: window._selectedTheme || 'dark-stone',
       updatedAt: serverTimestamp()
     }, { merge: true });
     showToast('Menu settings saved!');
@@ -1711,310 +1711,442 @@ window.saveMenuSettings = async function(restaurantId) {
 
 function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
   const name = userData.restaurantName || 'Our Menu';
-  const itemsHTML = (items) => items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item => `
-    <div class="mi-row">
-      ${item.photoUrl ? `<img src="${item.photoUrl}" class="mi-photo" onerror="this.style.display='none'">` : ''}
-      <div class="mi-info">
-        <div class="mi-name">${item.name}</div>
-        ${item.notes ? `<div class="mi-desc">${item.notes.substring(0,120)}${item.notes.length>120?'...':''}</div>` : ''}
-      </div>
-      ${item.price ? `<div class="mi-price">${item.price}</div>` : ''}
-    </div>`).join('');
-
-  const themes = {
-
-    'classic-elegant': `
-      <div id="menu-print-area" style="background:#1A1A14;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
-        <div style="padding:40px 32px;text-align:center;border-bottom:1px solid rgba(242,166,35,0.3);">
-          <div style="font-size:0.65rem;letter-spacing:0.25em;color:#F2A623;text-transform:uppercase;margin-bottom:10px;">Est. 2024</div>
-          <div style="font-size:2.2rem;font-weight:700;color:#fff;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(242,166,35,0.8);margin-top:8px;font-style:italic;">"${settings.tagline}"</div>`:''}
-          <div style="width:50px;height:1px;background:#F2A623;margin:14px auto;"></div>
-          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
-            ${settings.hours?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">⏰ ${settings.hours}</span>`:''}
-            ${settings.address?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">📍 ${settings.address}</span>`:''}
-            ${settings.phone?`<span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">📞 ${settings.phone}</span>`:''}
-          </div>
-        </div>
-        <div style="padding:0 32px 32px;">
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-top:28px;">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                <div style="flex:1;height:0.5px;background:rgba(242,166,35,0.3);"></div>
-                <div style="font-size:0.65rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;">${cat}</div>
-                <div style="flex:1;height:0.5px;background:rgba(242,166,35,0.3);"></div>
-              </div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid rgba(255,255,255,0.06);">
-                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:68px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0;border:0.5px solid rgba(242,166,35,0.2);" onerror="this.style.display='none'">`:''}
-                  <div style="flex:1;">
-                    <div style="display:flex;align-items:baseline;gap:6px;">
-                      <span style="font-size:0.9rem;font-weight:700;color:#fff;">${item.name}</span>
-                      <span style="flex:1;border-bottom:1px dotted rgba(242,166,35,0.25);margin-bottom:3px;"></span>
-                      ${item.price?`<span style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</span>`:''}
-                    </div>
-                    ${item.notes?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.45);line-height:1.6;font-style:italic;margin-top:3px;">${item.notes.substring(0,120)}...</div>`:''}
-                  </div>
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center;padding:20px;border-top:1px solid rgba(242,166,35,0.2);">
-          <div style="font-size:0.7rem;letter-spacing:0.12em;color:rgba(255,255,255,0.25);text-transform:uppercase;">Powered by Chef Nek Pro</div>
-        </div>
-      </div>`,
-
-    'modern-minimal': `
-      <div id="menu-print-area" style="background:#FAFAF8;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
-        <div style="padding:40px 32px;border-bottom:2px solid ${color};">
-          <div style="font-size:2rem;font-weight:700;color:#1A1A14;letter-spacing:-0.03em;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.875rem;color:#888;margin-top:6px;">${settings.tagline}</div>`:''}
-          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;">
-            ${settings.hours?`<span style="font-size:0.78rem;color:#888;">⏰ ${settings.hours}</span>`:''}
-            ${settings.address?`<span style="font-size:0.78rem;color:#888;">📍 ${settings.address}</span>`:''}
-            ${settings.phone?`<span style="font-size:0.78rem;color:#888;">📞 ${settings.phone}</span>`:''}
-            ${settings.instagram?`<span style="font-size:0.78rem;color:${color};">${settings.instagram}</span>`:''}
-          </div>
-        </div>
-        <div style="padding:0 32px 32px;">
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-top:28px;">
-              <div style="font-size:0.7rem;font-weight:500;letter-spacing:0.12em;color:${color};text-transform:uppercase;margin-bottom:14px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid #eee;">
-                  <div style="width:6px;height:6px;border-radius:50%;background:${color};flex-shrink:0;"></div>
-                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:56px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
-                  <div style="flex:1;">
-                    <div style="font-size:0.9rem;font-weight:500;color:#1A1A14;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.78rem;color:#999;margin-top:2px;">${item.notes.substring(0,100)}...</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#1A1A14;white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center;padding:20px;background:#f0f0ee;border-top:0.5px solid #e0e0de;">
-          <div style="font-size:0.7rem;color:#aaa;">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
-        </div>
-      </div>`,
-
-    'bold-street': `
-      <div id="menu-print-area" style="background:#F0FFF4;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
-        <div style="background:${color};padding:32px;text-align:center;">
-          <div style="font-size:2rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(255,255,255,0.8);margin-top:6px;">${settings.tagline}</div>`:''}
-          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:10px;">
-            ${settings.hours?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">⏰ ${settings.hours}</span>`:''}
-            ${settings.address?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">📍 ${settings.address}</span>`:''}
-            ${settings.phone?`<span style="font-size:0.78rem;color:rgba(255,255,255,0.7);">📞 ${settings.phone}</span>`:''}
-          </div>
-        </div>
-        <div style="padding:20px 24px;">
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-bottom:20px;">
-              <div style="display:inline-block;background:${color};color:#fff;font-size:0.75rem;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:12px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
-                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:54px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
-                  <div style="flex:1;">
-                    <div style="font-size:0.875rem;font-weight:600;color:#1A1A14;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.75rem;color:#888;margin-top:2px;">${item.notes.substring(0,80)}...</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:${color};white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center;padding:16px;background:${color}20;border-top:0.5px solid ${color}40;">
-          <div style="font-size:0.7rem;color:#888;">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
-        </div>
-      </div>`,
-
-    'dark-luxury': `
-      <div id="menu-print-area" style="background:#0A0A0A;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
-        <div style="padding:48px 32px;text-align:center;">
-          <div style="font-size:0.6rem;letter-spacing:0.3em;color:rgba(255,255,255,0.35);text-transform:uppercase;margin-bottom:14px;">Fine Dining</div>
-          <div style="font-size:2.4rem;font-weight:700;color:#fff;letter-spacing:0.03em;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(255,255,255,0.45);margin-top:10px;font-style:italic;">${settings.tagline}</div>`:''}
-          <div style="display:flex;align-items:center;gap:12px;margin:20px auto;max-width:200px;">
-            <div style="flex:1;height:0.5px;background:rgba(255,255,255,0.15);"></div>
-            <div style="width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.3);"></div>
-            <div style="flex:1;height:0.5px;background:rgba(255,255,255,0.15);"></div>
-          </div>
-          <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
-            ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.hours}</span>`:''}
-            ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.address}</span>`:''}
-            ${settings.phone?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.3);">${settings.phone}</span>`:''}
-          </div>
-        </div>
-        <div style="padding:0 40px 40px;">
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-top:32px;">
-              <div style="font-size:0.6rem;letter-spacing:0.25em;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid rgba(255,255,255,0.08);">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;">
-                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:64px;height:52px;object-fit:cover;border-radius:4px;flex-shrink:0;opacity:0.75;" onerror="this.style.display='none'">`:''}
-                  <div style="flex:1;">
-                    <div style="display:flex;justify-content:space-between;align-items:baseline;">
-                      <span style="font-size:0.9375rem;color:#fff;font-weight:400;">${item.name}</span>
-                      ${item.price?`<span style="font-size:0.875rem;color:rgba(255,255,255,0.6);white-space:nowrap;margin-left:12px;">${item.price}</span>`:''}
-                    </div>
-                    ${item.notes?`<div style="font-size:0.775rem;color:rgba(255,255,255,0.28);margin-top:4px;font-style:italic;line-height:1.6;">${item.notes.substring(0,120)}...</div>`:''}
-                  </div>
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center;padding:24px;border-top:0.5px solid rgba(255,255,255,0.06);">
-          <div style="font-size:0.65rem;letter-spacing:0.15em;color:rgba(255,255,255,0.18);text-transform:uppercase;">Powered by Chef Nek Pro</div>
-        </div>
-      </div>`,
-
-    'cafe-warm': `
-      <div id="menu-print-area" style="background:#FDF6EC;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
-        <div style="padding:36px 32px;text-align:center;border-bottom:2px solid #E8A94D;">
-          <div style="font-size:2rem;font-weight:700;color:#5C3317;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.875rem;color:#A0522D;margin-top:6px;font-style:italic;">${settings.tagline}</div>`:''}
-          <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px;">
-            ${settings.hours?`<span style="font-size:0.78rem;color:#A0522D;">⏰ ${settings.hours}</span>`:''}
-            ${settings.address?`<span style="font-size:0.78rem;color:#A0522D;">📍 ${settings.address}</span>`:''}
-            ${settings.phone?`<span style="font-size:0.78rem;color:#A0522D;">📞 ${settings.phone}</span>`:''}
-          </div>
-        </div>
-        <div style="padding:0 32px 32px;">
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-top:24px;">
-              <div style="border-left:3px solid #E8A94D;padding-left:10px;font-size:0.85rem;font-weight:700;color:#5C3317;margin-bottom:14px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:0.5px dashed #E8D5B0;">
-                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:60px;height:50px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
-                  <div style="flex:1;">
-                    <div style="font-size:0.9rem;font-weight:600;color:#3D1A00;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.775rem;color:#8B6640;margin-top:3px;line-height:1.5;">${item.notes.substring(0,110)}...</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#E8A94D;white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
-        <div style="text-align:center;padding:18px;background:#F5E6CC;border-top:1px solid #E8D5B0;">
-          <div style="font-size:0.7rem;color:#A0522D;">Powered by <strong>Chef Nek Pro</strong></div>
-        </div>
-      </div>`,
-
-    'editorial-bold': `
-      <div id="menu-print-area" style="background:#fff;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
-        <div style="background:#1A1A14;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-          <div>
-            <div style="font-size:0.6rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;margin-bottom:4px;">Chef Nek Pro</div>
-            <div style="font-size:1.8rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
-            ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.5);margin-top:4px;">${settings.tagline}</div>`:''}
-          </div>
-          <div style="text-align:right;">
-            ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:#F2A623;">📞 ${settings.phone}</div>`:''}
-            ${settings.hours?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:4px;">${settings.hours}</div>`:''}
-            ${settings.address?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px;">${settings.address}</div>`:''}
-          </div>
-        </div>
-        <div style="padding:20px 24px;">
-          ${sortedGroups.map(([cat,items],idx)=>`
-            <div style="margin-bottom:24px;">
-              <div style="background:#1A1A14;display:inline-block;padding:6px 16px;border-radius:4px;margin-bottom:14px;">
-                <span style="font-size:0.75rem;font-weight:700;color:#F2A623;letter-spacing:0.08em;text-transform:uppercase;">${cat}</span>
-              </div>
-              <div style="display:grid;grid-template-columns:${items.length > 3 ? '1fr 1fr' : '1fr'};gap:10px;">
-                ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                  <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F8F8F6;border-radius:8px;border-left:3px solid #F2A623;">
-                    ${item.photoUrl?`<img src="${item.photoUrl}" style="width:52px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:''}
-                    <div style="flex:1;min-width:0;">
-                      <div style="font-size:0.85rem;font-weight:600;color:#1A1A14;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
-                      ${item.notes?`<div style="font-size:0.72rem;color:#888;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.notes.substring(0,60)}...</div>`:''}
-                    </div>
-                    ${item.price?`<div style="font-size:0.85rem;font-weight:700;color:#1A1A14;white-space:nowrap;">${item.price}</div>`:''}
-                  </div>`).join('')}
-              </div>
-            </div>`).join('')}
-        </div>
-        <div style="background:#1A1A14;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-          ${settings.instagram?`<div style="font-size:0.8rem;color:#F2A623;">📱 ${settings.instagram}</div>`:'<div></div>'}
-          <div style="font-size:0.7rem;color:rgba(255,255,255,0.3);">Powered by Chef Nek Pro</div>
-        </div>
-      </div>`
-  };
-
-  if (theme === 'dark-hero') return buildDarkHeroHTML(userData, settings, sortedGroups);
-  return themes[theme] || themes['classic-elegant'];
-}
-
-// Dark Hero theme added separately due to complexity
-function buildDarkHeroHTML(userData, settings, sortedGroups) {
-  const name = userData.restaurantName || 'Our Menu';
-  const allItems = sortedGroups.flatMap(([cat, items]) => 
+  const allItems = sortedGroups.flatMap(([cat, items]) =>
     items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(i => ({...i, cat}))
   );
-  const half = Math.ceil(allItems.length / 2);
-  const col1 = allItems.slice(0, half);
-  const col2 = allItems.slice(half);
 
-  const itemCard = (item) => `
-    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
-      ${item.photoUrl 
-        ? `<img src="${item.photoUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;flex-shrink:0;border:2px solid #F2A623;" onerror="this.style.background='#333';this.style.display='flex';">`
-        : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(242,166,35,0.15);border:2px solid rgba(242,166,35,0.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.2rem;">🍽️</span></div>`
-      }
-      <div style="flex:1;">
-        <div style="font-size:0.9rem;font-weight:600;color:#fff;margin-bottom:3px;">${item.name}</div>
-        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:5px;">${(item.notes||'').substring(0,70)}${(item.notes||'').length>70?'...':''}</div>
-        <div style="font-size:0.75rem;font-style:italic;color:#F2A623;">Price — ${item.price || '—'}</div>
+  // ── THEME 1: DARK STONE CARD GRID ──
+  // Inspired by: dark textured background, white rounded cards, circular photos
+  if (theme === 'dark-stone') {
+    return `<div id="menu-print-area" style="background:#1C1C1C;border-radius:16px;overflow:hidden;font-family:var(--font-body);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50%);">
+      <div style="padding:32px 28px 20px;">
+        <div style="font-size:2rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+        ${settings.tagline?`<div style="font-size:0.85rem;color:rgba(255,255,255,0.45);margin-top:4px;">${settings.tagline}</div>`:''}
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.35);">⏰ ${settings.hours}</span>`:''}
+          ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.35);">📍 ${settings.address}</span>`:''}
+          ${settings.phone?`<span style="font-size:0.72rem;color:${color};">📞 ${settings.phone}</span>`:''}
+        </div>
+      </div>
+      ${sortedGroups.map(([cat, items]) => `
+        <div style="padding:0 28px 24px;">
+          <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:16px;padding-bottom:8px;border-bottom:0.5px solid rgba(255,255,255,0.1);">${cat}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="background:#fff;border-radius:14px;overflow:hidden;padding:14px;text-align:center;">
+                ${item.photoUrl?`<img src="${item.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto 8px;display:block;" onerror="this.style.display='none'">`:
+                `<div style="width:80px;height:80px;border-radius:50%;background:#f5f5f5;border:3px solid ${color};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
+                <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name}</div>
+                ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes.substring(0,60)}...</div>`:''}
+                ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div style="text-align:center;padding:16px;border-top:0.5px solid rgba(255,255,255,0.08);">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.2);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
       </div>
     </div>`;
+  }
 
-  return `
-    <div id="menu-print-area" style="background:#1A1A0F;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
-      
-      <!-- Hero photo section -->
-      <div style="position:relative;height:200px;overflow:hidden;">
-        ${settings.heroPhoto 
-          ? `<img src="${settings.heroPhoto}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
-          : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#2A2A1A,#1A1A0F);display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;">🍽️</span></div>`
-        }
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3),rgba(26,26,15,0.95));"></div>
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px;">
-          <div style="font-size:0.6rem;letter-spacing:0.15em;color:#F2A623;text-transform:uppercase;margin-bottom:4px;">Chef Nek Pro</div>
-          <div style="font-family:Georgia,serif;font-size:2rem;font-weight:700;color:#fff;font-style:italic;">✦ ${name}</div>
-          ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">${settings.tagline}</div>`:''}
+  // ── THEME 2: VINTAGE PARCHMENT ──
+  // Inspired by: warm aged paper texture, ornate borders, circular photos alternating sides
+  if (theme === 'vintage-parchment') {
+    return `<div id="menu-print-area" style="background:#F5E6C8;border-radius:16px;overflow:hidden;font-family:Georgia,serif;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><circle cx=%2220%22 cy=%2220%22 r=%2218%22 fill=%22none%22 stroke=%22%23C9A96E%22 stroke-width=%220.3%22 opacity=%220.3%22/></svg>');">
+      <div style="background:linear-gradient(180deg,#8B4513,#6B3410);padding:28px;text-align:center;">
+        <div style="font-size:0.65rem;letter-spacing:0.2em;color:#F5E6C8;text-transform:uppercase;opacity:0.7;margin-bottom:6px;">✦ Est. 2024 ✦</div>
+        <div style="font-size:2rem;font-weight:700;color:#F5E6C8;">${name}</div>
+        ${settings.tagline?`<div style="font-size:0.85rem;color:rgba(245,230,200,0.7);margin-top:6px;font-style:italic;">"${settings.tagline}"</div>`:''}
+        <div style="width:50px;height:1px;background:rgba(245,230,200,0.4);margin:14px auto;"></div>
+        <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;">
+          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(245,230,200,0.6);">${settings.hours}</span>`:''}
+          ${settings.phone?`<span style="font-size:0.72rem;color:rgba(245,230,200,0.6);">${settings.phone}</span>`:''}
         </div>
       </div>
-
-      <!-- Info strip -->
-      <div style="background:rgba(242,166,35,0.08);border-top:0.5px solid rgba(242,166,35,0.2);border-bottom:0.5px solid rgba(242,166,35,0.2);padding:10px 28px;display:flex;gap:20px;flex-wrap:wrap;">
-        ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.45);">⏰ ${settings.hours}</span>`:''}
-        ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.45);">📍 ${settings.address}</span>`:''}
-        ${settings.phone?`<span style="font-size:0.72rem;color:#F2A623;">📞 ${settings.phone}</span>`:''}
-        ${settings.instagram?`<span style="font-size:0.72rem;color:#F2A623;">${settings.instagram}</span>`:''}
+      <div style="padding:24px;">
+        ${allItems.map((item, i) => `
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;${i%2===1?'flex-direction:row-reverse;':''}">
+            ${item.photoUrl?
+              `<img src="${item.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid #8B4513;box-shadow:0 2px 8px rgba(139,69,19,0.3);" onerror="this.style.display='none'">`:
+              `<div style="width:80px;height:80px;border-radius:50%;background:#D4A853;flex-shrink:0;border:3px solid #8B4513;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
+            <div style="flex:1;background:rgba(255,255,255,0.6);border-radius:10px;padding:12px 16px;border:0.5px solid rgba(139,69,19,0.2);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                <div style="font-size:0.95rem;font-weight:700;color:#5C3317;">${item.name}</div>
+                ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#8B4513;">${item.price}</div>`:''}
+              </div>
+              <div style="font-size:0.7rem;color:rgba(92,51,23,0.6);margin-bottom:3px;font-style:italic;">${item.cat}</div>
+              ${item.notes?`<div style="font-size:0.75rem;color:#7A5C3A;line-height:1.5;">${item.notes.substring(0,90)}...</div>`:''}
+            </div>
+          </div>`).join('')}
       </div>
-
-      <!-- Two column menu -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
-        
-        <!-- Column 1 -->
-        <div style="padding:24px 20px 24px 28px;border-right:0.5px solid rgba(242,166,35,0.15);">
-          <div style="font-family:Georgia,serif;font-size:1.1rem;font-style:italic;color:#F2A623;margin-bottom:20px;padding-bottom:10px;border-bottom:0.5px solid rgba(242,166,35,0.2);">Regular</div>
-          ${col1.map(item => itemCard(item)).join('')}
-        </div>
-
-        <!-- Column 2 -->
-        <div style="padding:24px 28px 24px 20px;">
-          <div style="font-family:Georgia,serif;font-size:1.1rem;font-style:italic;color:#F2A623;margin-bottom:20px;padding-bottom:10px;border-bottom:0.5px solid rgba(242,166,35,0.2);">Best</div>
-          ${col2.map(item => itemCard(item)).join('')}
-        </div>
-
+      <div style="background:#8B4513;text-align:center;padding:14px;">
+        <div style="font-size:0.68rem;color:rgba(245,230,200,0.5);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
       </div>
+    </div>`;
+  }
 
-      <!-- Footer -->
-      <div style="background:rgba(0,0,0,0.4);border-top:0.5px solid rgba(242,166,35,0.15);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  // ── THEME 3: SPECIALS SPOTLIGHT ──
+  // Inspired by: dark bg, large scattered food photos with price bubbles, script font
+  if (theme === 'specials-spotlight') {
+    const featured = allItems.slice(0, 6);
+    return `<div id="menu-print-area" style="background:#111;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+      <div style="padding:32px 28px 16px;">
+        <div style="font-size:0.75rem;font-style:italic;color:rgba(255,255,255,0.4);margin-bottom:4px;">${name}</div>
+        <div style="font-family:Georgia,serif;font-size:2.5rem;font-weight:700;color:#fff;font-style:italic;line-height:1;">Our Specials</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;">
+          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${settings.hours}</span>`:''}
+          ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${settings.address}</span>`:''}
+        </div>
+      </div>
+      <div style="padding:0 28px;">
+        ${featured.map((item,i) => `
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:20px;border-bottom:0.5px solid rgba(255,255,255,0.08);">
+            <div style="width:36px;height:36px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;color:#fff;flex-shrink:0;">${i+1}</div>
+            ${item.photoUrl?`<img src="${item.photoUrl}" style="width:90px;height:80px;object-fit:cover;border-radius:12px;flex-shrink:0;" onerror="this.style.display='none'">`:
+            `<div style="width:90px;height:80px;border-radius:12px;background:#222;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:2rem;">🍽️</span></div>`}
+            <div style="flex:1;">
+              <div style="font-family:Georgia,serif;font-size:0.95rem;font-style:italic;color:#fff;margin-bottom:3px;">${item.name}</div>
+              ${item.notes?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">${item.notes.substring(0,80)}...</div>`:''}
+            </div>
+            ${item.price?`<div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:700;color:#fff;text-align:center;">${item.price}</div>`:''}
+          </div>`).join('')}
+      </div>
+      <div style="padding:16px 28px;border-top:0.5px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);">We are open every day<br><strong style="color:#fff;">${settings.hours||'Mon-Sun 8am-10pm'}</strong></div>
+        ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:${color};">📞 ${settings.phone}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 4: HERO PHOTO BANNER ──
+  // Inspired by: big food photo top, cream/dark split, multi-column list
+  if (theme === 'hero-banner') {
+    return `<div id="menu-print-area" style="background:#1A1208;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+      <div style="position:relative;height:180px;overflow:hidden;">
+        ${settings.heroPhoto?
+          `<img src="${settings.heroPhoto}" style="width:100%;height:100%;object-fit:cover;">`:
+          `<div style="width:100%;height:100%;background:linear-gradient(135deg,#8B6914,#3D2B0A);display:flex;align-items:center;justify-content:center;"><span style="font-size:3rem;">🍽️</span></div>`}
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(26,18,8,0.95));"></div>
+        <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;">
+          <div style="background:#F5E6C8;border-radius:100px;padding:8px 28px;display:inline-block;">
+            <div style="font-size:0.65rem;font-weight:700;color:#8B6914;letter-spacing:0.05em;">FOOD MENU</div>
+            <div style="font-size:1.1rem;font-weight:700;color:#3D2B0A;">${name}</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;">
+          ${allItems.slice(0,6).map(item=>`
+            <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:8px;">
+              ${item.photoUrl?`<img src="${item.photoUrl}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`:
+              `<div style="width:40px;height:40px;border-radius:6px;background:rgba(255,255,255,0.1);flex-shrink:0;"></div>`}
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:0.75rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+                ${item.price?`<div style="font-size:0.72rem;color:#F2A623;">${item.price}</div>`:''}
+              </div>
+            </div>`).join('')}
+        </div>
+        ${sortedGroups.map(([cat,items])=>`
+          <div style="margin-bottom:16px;">
+            <div style="background:#F2A623;display:inline-block;padding:3px 12px;border-radius:4px;font-size:0.68rem;font-weight:700;color:#1A1208;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">${cat}</div>
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+                <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
+                ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+      <div style="background:rgba(0,0,0,0.3);padding:12px 24px;text-align:center;">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.2);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 5: CLEAN PROFESSIONAL ──
+  // Inspired by: white bg, orange accent header, 3-column text layout
+  if (theme === 'clean-professional') {
+    return `<div id="menu-print-area" style="background:#fff;border-radius:16px;overflow:hidden;font-family:var(--font-body);border:0.5px solid #eee;">
+      <div style="background:${color};padding:20px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
-          <div style="font-size:0.7rem;letter-spacing:0.1em;color:rgba(255,255,255,0.2);text-transform:uppercase;">Powered by Chef Nek Pro</div>
+          <div style="font-size:1.5rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.75);margin-top:2px;">${settings.tagline}</div>`:''}
         </div>
-        ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:#F2A623;">📞 ${settings.phone}</div>`:''}
+        <div style="text-align:right;">
+          ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:#fff;">📞 ${settings.phone}</div>`:''}
+          ${settings.hours?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.7);margin-top:2px;">${settings.hours}</div>`:''}
+          ${settings.address?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.7);">${settings.address}</div>`:''}
+        </div>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+          ${sortedGroups.slice(0, Math.ceil(sortedGroups.length/2)).map(([cat,items])=>`
+            <div>
+              <div style="font-size:0.8rem;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid ${color};padding-bottom:6px;margin-bottom:10px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px dashed #eee;">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:
+                  `<div style="width:44px;height:44px;background:#f5f5f5;border-radius:6px;flex-shrink:0;"></div>`}
+                  <div style="flex:1;">
+                    <div style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</div>
+                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;">${item.notes.substring(0,50)}...</div>`:''}
+                    ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:2px;">${item.price}</div>`:''}
+                  </div>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="background:#f8f8f8;padding:12px 24px;text-align:center;border-top:0.5px solid #eee;">
+        <div style="font-size:0.68rem;color:#ccc;letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
       </div>
     </div>`;
+  }
+
+  // ── THEME 6: DARK CHALKBOARD ──
+  // Inspired by: dark bg, yellow accent boxes, food photos scattered, chalkboard texture
+  if (theme === 'dark-chalkboard') {
+    return `<div id="menu-print-area" style="background:#1A1A14;border-radius:16px;overflow:hidden;font-family:var(--font-body);background-image:repeating-linear-gradient(0deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 32px),repeating-linear-gradient(90deg,rgba(255,255,255,0.02) 0,rgba(255,255,255,0.02) 1px,transparent 1px,transparent 32px);">
+      <div style="padding:28px;text-align:center;border-bottom:2px solid rgba(242,166,35,0.3);">
+        <div style="font-size:2rem;font-weight:700;color:#F2A623;letter-spacing:0.05em;text-transform:uppercase;">FOOD MENU</div>
+        <div style="font-size:1rem;color:#fff;">${name}</div>
+        <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px;">
+          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.4);">${settings.hours}</span>`:''}
+          ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.4);">${settings.address}</span>`:''}
+          ${settings.phone?`<span style="font-size:0.72rem;color:#F2A623;">${settings.phone}</span>`:''}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        <div style="padding:20px 16px 20px 24px;border-right:0.5px solid rgba(242,166,35,0.15);">
+          ${sortedGroups.filter((_,i)=>i%2===0).map(([cat,items])=>`
+            <div style="margin-bottom:20px;">
+              <div style="background:#F2A623;padding:4px 12px;border-radius:4px;display:inline-block;font-size:0.72rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px dashed rgba(255,255,255,0.08);">
+                  <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
+                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="padding:20px 24px 20px 16px;">
+          ${sortedGroups.filter((_,i)=>i%2===1).map(([cat,items])=>`
+            <div style="margin-bottom:20px;">
+              <div style="background:#F2A623;padding:4px 12px;border-radius:4px;display:inline-block;font-size:0.72rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px dashed rgba(255,255,255,0.08);">
+                  <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
+                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 16px 16px;">
+        ${allItems.filter(i=>i.photoUrl).slice(0,4).map(item=>`
+          <div style="text-align:center;">
+            <img src="${item.photoUrl}" style="width:100%;height:60px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:4px;text-align:center;">${item.name}</div>
+          </div>`).join('')}
+      </div>
+      <div style="text-align:center;padding:12px;border-top:0.5px solid rgba(242,166,35,0.1);">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.15);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 7: PHOTO GRID SHOWCASE ──
+  // Inspired by: 3x3 photo grid, each item gets a card with big photo
+  if (theme === 'photo-grid') {
+    return `<div id="menu-print-area" style="background:#0D0D0D;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+      <div style="padding:24px 24px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-size:1.8rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+            ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.4);">${settings.tagline}</div>`:''}
+          </div>
+          <div>
+            ${settings.phone?`<div style="font-size:0.85rem;color:${color};font-weight:600;">📞 ${settings.phone}</div>`:''}
+            ${settings.hours?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);">${settings.hours}</div>`:''}
+          </div>
+        </div>
+      </div>
+      ${sortedGroups.map(([cat,items])=>`
+        <div style="padding:0 16px 20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:0 8px;">
+            <div style="font-size:0.75rem;font-weight:600;color:${color};letter-spacing:0.08em;text-transform:uppercase;">${cat}</div>
+            <div style="flex:1;height:0.5px;background:rgba(255,255,255,0.08);"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="background:#1A1A1A;border-radius:10px;overflow:hidden;">
+                ${item.photoUrl?`<img src="${item.photoUrl}" style="width:100%;height:80px;object-fit:cover;" onerror="this.style.background='#2A2A2A'">`:
+                `<div style="width:100%;height:80px;background:#2A2A2A;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
+                <div style="padding:8px 10px;">
+                  <div style="font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:2px;">${item.name}</div>
+                  ${item.notes?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.4;">${item.notes.substring(0,45)}...</div>`:''}
+                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:4px;">${item.price}</div>`:''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+      <div style="text-align:center;padding:12px;border-top:0.5px solid rgba(255,255,255,0.05);">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.15);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 8: ELEGANT RESTAURANT ──
+  // Inspired by: brown/gold, food photo border bottom, 4 columns
+  if (theme === 'elegant-restaurant') {
+    return `<div id="menu-print-area" style="background:#FDF4E3;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
+      <div style="background:linear-gradient(180deg,#3D1A00,#5C2800);padding:28px;text-align:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;inset:0;opacity:0.05;background:repeating-linear-gradient(45deg,#F2A623 0,#F2A623 1px,transparent 1px,transparent 20px);"></div>
+        <div style="font-size:0.65rem;letter-spacing:0.3em;color:rgba(242,193,80,0.7);text-transform:uppercase;margin-bottom:8px;">✦ ✦ ✦</div>
+        <div style="font-family:Georgia,serif;font-size:2.2rem;font-weight:700;color:#F5E6C8;font-style:italic;">${name}</div>
+        ${settings.tagline?`<div style="font-size:0.85rem;color:rgba(242,193,80,0.75);margin-top:6px;">${settings.tagline}</div>`:''}
+        <div style="width:60px;height:1px;background:rgba(242,193,80,0.4);margin:14px auto;"></div>
+        <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(245,230,200,0.55);">${settings.hours}</span>`:''}
+          ${settings.address?`<span style="font-size:0.72rem;color:rgba(245,230,200,0.55);">${settings.address}</span>`:''}
+          ${settings.phone?`<span style="font-size:0.72rem;color:#F2C150;">${settings.phone}</span>`:''}
+        </div>
+      </div>
+      <div style="padding:20px 24px;">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div>
+              <div style="font-family:Georgia,serif;font-size:0.9rem;font-style:italic;color:#8B4513;border-bottom:1px solid rgba(139,69,19,0.25);padding-bottom:6px;margin-bottom:12px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="margin-bottom:10px;">
+                  <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                    <span style="font-size:0.85rem;font-weight:600;color:#3D1A00;">${item.name}</span>
+                    ${item.price?`<span style="font-size:0.8rem;color:#8B4513;font-weight:700;margin-left:8px;white-space:nowrap;">${item.price}</span>`:''}
+                  </div>
+                  ${item.notes?`<div style="font-size:0.72rem;color:#8B6640;line-height:1.5;margin-top:2px;font-style:italic;">${item.notes.substring(0,80)}...</div>`:''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:0 8px 8px;">
+        ${allItems.filter(i=>i.photoUrl).slice(0,4).map(item=>`
+          <img src="${item.photoUrl}" style="width:100%;height:70px;object-fit:cover;border-radius:6px;" onerror="this.style.display='none'">`).join('')}
+      </div>
+      <div style="background:#3D1A00;text-align:center;padding:12px;">
+        <div style="font-size:0.68rem;color:rgba(245,230,200,0.3);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 9: DARK FOOD TEXTURE ──
+  // Inspired by: real food collage as background, content overlaid
+  if (theme === 'dark-texture') {
+    return `<div id="menu-print-area" style="background:#1A1208;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+      <div style="background:#1A1208;padding:28px 24px 20px;border-bottom:1px solid rgba(242,166,35,0.2);">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:0.6rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;margin-bottom:4px;">Restaurant Menu</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#fff;letter-spacing:-0.02em;">${name}</div>
+            ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:4px;font-style:italic;">${settings.tagline}</div>`:''}
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            ${settings.phone?`<div style="font-size:0.85rem;color:#F2A623;font-weight:600;">📞 ${settings.phone}</div>`:''}
+            ${settings.hours?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:4px;">${settings.hours}</div>`:''}
+            ${settings.instagram?`<div style="font-size:0.72rem;color:rgba(242,166,35,0.6);">${settings.instagram}</div>`:''}
+          </div>
+        </div>
+      </div>
+      <div style="padding:20px 24px;">
+        ${sortedGroups.map(([cat,items])=>`
+          <div style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <div style="width:4px;height:20px;background:#F2A623;border-radius:2px;"></div>
+              <div style="font-size:0.9rem;font-weight:700;color:#F2A623;text-transform:uppercase;letter-spacing:0.06em;">${cat}</div>
+            </div>
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 12px;border-left:2px solid rgba(242,166,35,0.3);">
+                ${item.photoUrl?`<img src="${item.photoUrl}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`:
+                `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,0.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.2rem;">🍽️</span></div>`}
+                <div style="flex:1;">
+                  <div style="font-size:0.875rem;font-weight:600;color:#fff;">${item.name}</div>
+                  ${item.notes?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;margin-top:2px;">${item.notes.substring(0,70)}...</div>`:''}
+                </div>
+                ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</div>`:''}
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+      <div style="text-align:center;padding:14px;border-top:0.5px solid rgba(242,166,35,0.12);">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.18);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 10: BISTRO ILLUSTRATED ──
+  // Inspired by: white/cream, large illustrations, two-column with chef picks
+  if (theme === 'bistro-illustrated') {
+    return `<div id="menu-print-area" style="background:#FAFAF8;border-radius:16px;overflow:hidden;font-family:var(--font-body);border:0.5px solid #e8e8e8;">
+      <div style="display:grid;grid-template-columns:1fr 2fr;">
+        <div style="background:#2D5016;padding:28px 20px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
+          <div style="font-size:1.2rem;font-weight:700;color:#fff;text-align:center;margin-bottom:4px;">${name}</div>
+          ${settings.tagline?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.6);text-align:center;font-style:italic;margin-bottom:16px;">${settings.tagline}</div>`:'<div style="margin-bottom:16px;"></div>'}
+          ${allItems.filter(i=>i.photoUrl).slice(0,3).map(item=>`
+            <div style="margin-bottom:12px;text-align:center;">
+              <img src="${item.photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:2px solid rgba(255,255,255,0.3);" onerror="this.style.display='none'">
+              <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);margin-top:4px;">${item.name}</div>
+            </div>`).join('')}
+          <div style="margin-top:auto;padding-top:16px;border-top:0.5px solid rgba(255,255,255,0.15);width:100%;text-align:center;">
+            ${settings.phone?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">📞 ${settings.phone}</div>`:''}
+            ${settings.hours?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-top:4px;">${settings.hours}</div>`:''}
+          </div>
+        </div>
+        <div style="padding:20px;">
+          ${sortedGroups.map(([cat,items])=>`
+            <div style="margin-bottom:16px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="font-size:0.75rem;font-weight:700;color:#2D5016;text-transform:uppercase;letter-spacing:0.08em;">${cat}</div>
+                <div style="flex:1;height:0.5px;background:#e0e0e0;"></div>
+              </div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px dashed #eee;">
+                  ${item.photoUrl?`<img src="${item.photoUrl}" style="width:42px;height:42px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:
+                  `<div style="width:42px;height:42px;background:#f0f0f0;border-radius:6px;flex-shrink:0;"></div>`}
+                  <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;">
+                      <span style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</span>
+                      ${item.price?`<span style="font-size:0.8rem;font-weight:700;color:#2D5016;">${item.price}</span>`:''}
+                    </div>
+                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;margin-top:2px;">${item.notes.substring(0,55)}...</div>`:''}
+                  </div>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div style="background:#2D5016;padding:10px;text-align:center;">
+        <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // Default fallback
+  return buildClassicElegant(name, settings, sortedGroups, color);
 }
+
+function buildClassicElegant(name, settings, sortedGroups, color) {
+  return `<div id="menu-print-area" style="background:#1A1A14;border-radius:16px;overflow:hidden;font-family:Georgia,serif;">
+    <div style="padding:40px 32px;text-align:center;border-bottom:1px solid rgba(242,166,35,0.3);">
+      <div style="font-size:2rem;font-weight:700;color:#fff;">${name}</div>
+      ${settings.tagline?`<div style="font-size:0.875rem;color:rgba(242,166,35,0.8);margin-top:8px;font-style:italic;">"${settings.tagline}"</div>`:''}
+    </div>
+    <div style="padding:20px 32px;">
+      ${sortedGroups.map(([cat,items])=>`
+        <div style="margin-bottom:20px;">
+          <div style="font-size:0.65rem;letter-spacing:0.2em;color:#F2A623;text-transform:uppercase;margin-bottom:12px;">${cat}</div>
+          ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
+              <span style="color:#fff;">${item.name}</span>
+              ${item.price?`<span style="color:#F2A623;">${item.price}</span>`:''}
+            </div>`).join('')}
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+
 
 async function loadMenuDesign(userData) {
   const container = document.getElementById('menu-preview-container');
@@ -2026,7 +2158,7 @@ async function loadMenuDesign(userData) {
     const settings = settingsDoc.exists() ? settingsDoc.data() : {};
     const color = settings.accentColor || '#1D9E75';
     menuAccentColor = color;
-    const theme = settings.theme || 'classic-elegant';
+    const theme = settings.theme || 'dark-stone';
     window._selectedTheme = theme;
     // Highlight selected theme
     setTimeout(() => { if(window.selectTheme) window.selectTheme(theme); }, 100);
