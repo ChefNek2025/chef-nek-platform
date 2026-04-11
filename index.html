@@ -1186,6 +1186,7 @@ let menuViewingRestaurantId = null;
 window.switchMenuRestaurant = async function(restaurantId) {
   if (!restaurantId) return;
   menuViewingRestaurantId = restaurantId;
+  updateMenuPreview(); return;
   // Update share link
   const linkEl = document.getElementById('menu-public-link');
   if (linkEl) linkEl.textContent = window.location.origin + '/menu/' + restaurantId;
@@ -1810,9 +1811,7 @@ window.selectMenuColor = function(color) {
   });
   const el = document.getElementById('color-'+color.replace('#',''));
   if (el) { el.style.border = '3px solid var(--ink)'; el.style.transform = 'scale(1.2)'; }
-  // Update preview colors
-  document.querySelectorAll('.menu-preview-cat-title').forEach(t => t.style.borderColor = color);
-  document.querySelectorAll('.menu-preview-item-price').forEach(p => p.style.color = color);
+  updateMenuPreview();
 }
 
 window.copyMenuLink = function(uid) {
@@ -1843,12 +1842,15 @@ window.switchEditorTab = function(tab) {
   ['info','theme','colors','fonts','layout','logo'].forEach(t => {
     const panel = document.getElementById('panel-'+t);
     const btn = document.getElementById('tab-'+t);
-    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (panel) { panel.style.display = t === tab ? 'block' : 'none'; }
     if (btn) {
       btn.style.background = t === tab ? 'var(--white)' : 'transparent';
       btn.style.color = t === tab ? 'var(--ink)' : 'var(--ink-muted)';
+      btn.style.fontWeight = t === tab ? '500' : '400';
     }
   });
+  // Update menu preview live when switching back to see changes
+  if (tab === 'info') updateMenuPreview();
 }
 
 // ── COLOR SELECTORS ──
@@ -1966,6 +1968,30 @@ window.previewLogoUrl = function(url) {
   }
 }
 
+// ── LIVE PREVIEW UPDATE ──
+window.updateMenuPreview = async function() {
+  const selectEl = document.getElementById('menu-restaurant-select');
+  const restaurantId = (isAdmin && selectEl && selectEl.value) ? selectEl.value : window._userData.uid;
+  if (!restaurantId) return;
+  const container = document.getElementById('menu-preview-container');
+  if (!container) return;
+  try {
+    const settingsDoc = await getDoc(doc(db, 'menuSettings', restaurantId));
+    const settings = settingsDoc.exists() ? settingsDoc.data() : {};
+    const theme = window._selectedTheme || settings.theme || 'dark-stone';
+    const color = menuAccentColor || settings.accentColor || '#1D9E75';
+    const userDoc = await getDoc(doc(db, 'users', restaurantId));
+    const clientData = userDoc.exists() ? { uid: restaurantId, ...userDoc.data() } : { uid: restaurantId, restaurantName: 'Restaurant' };
+    const recipesSnap = await getDocs(query(collection(db, 'recipes'), where('restaurantId','==', restaurantId)));
+    const recipes = recipesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const catOrder = ['Wraps','Salads','Breakfast','Sandwiches','Burgers','Mains','Sides','Sauces','Vegan','Vegetarian','Desserts','Drinks'];
+    const groups = {};
+    recipes.forEach(r => { const cat = r.category||'Other'; if(!groups[cat]) groups[cat]=[]; groups[cat].push(r); });
+    const sortedGroups = Object.entries(groups).sort(([a],[b]) => (catOrder.indexOf(a)===-1?99:catOrder.indexOf(a))-(catOrder.indexOf(b)===-1?99:catOrder.indexOf(b)));
+    container.innerHTML = buildMenuHTML(theme, color, clientData, settings, sortedGroups);
+  } catch(e) { console.error('Preview update error:', e); }
+}
+
 window.selectTheme = function(theme) {
   document.querySelectorAll('#theme-picker > div').forEach(el => {
     el.style.borderColor = 'var(--border)';
@@ -1974,6 +2000,7 @@ window.selectTheme = function(theme) {
   const el = document.getElementById('theme-'+theme);
   if (el) { el.style.borderColor = 'var(--green)'; el.style.background = 'var(--green-light)'; }
   window._selectedTheme = theme;
+  updateMenuPreview();
 }
 
 window.saveMenuSettings = async function(restaurantId) {
@@ -2019,7 +2046,7 @@ window.saveMenuSettings = async function(restaurantId) {
       updatedAt: serverTimestamp()
     }, { merge: true });
     showToast('Menu settings saved!');
-    loadMenuDesign(window._userData);
+    updateMenuPreview();
   } catch(e) { showToast('Error saving settings', 'error'); }
 }
 
