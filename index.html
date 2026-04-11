@@ -1589,11 +1589,15 @@ function renderMenuDesign(main, userData) {
             <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Instagram handle</label>
             <input type="text" id="menu-instagram" class="form-input-small" placeholder="@yourrestaurant" style="width:100%;">
           </div>
+          <div style="grid-column:span 2;">
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero photo URL <span style="color:var(--green);">(for Dark Hero theme)</span></label>
+            <input type="text" id="menu-hero-photo" class="form-input-small" placeholder="Paste a food photo URL for the top banner" style="width:100%;">
+          </div>
         </div>
         <div style="grid-column:span 2;">
             <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Menu theme</label>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="theme-picker">
-              ${['classic-elegant','modern-minimal','bold-street','dark-luxury','cafe-warm','editorial-bold'].map(t => `
+              ${['classic-elegant','modern-minimal','bold-street','dark-luxury','cafe-warm','editorial-bold','dark-hero'].map(t => `
                 <div onclick="selectTheme('${t}')" id="theme-${t}" style="border:1.5px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.15s;">
                   <div style="font-size:1.2rem;margin-bottom:4px;">${{
                     'classic-elegant':'🏛️',
@@ -1694,7 +1698,7 @@ window.saveMenuSettings = async function(restaurantId) {
   const instagram = document.getElementById('menu-instagram').value.trim();
   try {
     await setDoc(doc(db, 'menuSettings', restaurantId), {
-      tagline, address, phone, hours, instagram,
+      tagline, address, phone, hours, instagram, heroPhoto,
       accentColor: menuAccentColor,
       theme: window._selectedTheme || 'classic-elegant',
       updatedAt: serverTimestamp()
@@ -1933,7 +1937,83 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
       </div>`
   };
 
+  if (theme === 'dark-hero') return buildDarkHeroHTML(userData, settings, sortedGroups);
   return themes[theme] || themes['classic-elegant'];
+}
+
+// Dark Hero theme added separately due to complexity
+function buildDarkHeroHTML(userData, settings, sortedGroups) {
+  const name = userData.restaurantName || 'Our Menu';
+  const allItems = sortedGroups.flatMap(([cat, items]) => 
+    items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(i => ({...i, cat}))
+  );
+  const half = Math.ceil(allItems.length / 2);
+  const col1 = allItems.slice(0, half);
+  const col2 = allItems.slice(half);
+
+  const itemCard = (item) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
+      ${item.photoUrl 
+        ? `<img src="${item.photoUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:50%;flex-shrink:0;border:2px solid #F2A623;" onerror="this.style.background='#333';this.style.display='flex';">`
+        : `<div style="width:64px;height:64px;border-radius:50%;background:rgba(242,166,35,0.15);border:2px solid rgba(242,166,35,0.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.2rem;">🍽️</span></div>`
+      }
+      <div style="flex:1;">
+        <div style="font-size:0.9rem;font-weight:600;color:#fff;margin-bottom:3px;">${item.name}</div>
+        <div style="font-size:0.7rem;color:rgba(255,255,255,0.4);line-height:1.5;margin-bottom:5px;">${(item.notes||'').substring(0,70)}${(item.notes||'').length>70?'...':''}</div>
+        <div style="font-size:0.75rem;font-style:italic;color:#F2A623;">Price — ${item.price || '—'}</div>
+      </div>
+    </div>`;
+
+  return `
+    <div id="menu-print-area" style="background:#1A1A0F;border-radius:16px;overflow:hidden;font-family:var(--font-body);">
+      
+      <!-- Hero photo section -->
+      <div style="position:relative;height:200px;overflow:hidden;">
+        ${settings.heroPhoto 
+          ? `<img src="${settings.heroPhoto}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+          : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#2A2A1A,#1A1A0F);display:flex;align-items:center;justify-content:center;"><span style="font-size:4rem;">🍽️</span></div>`
+        }
+        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.3),rgba(26,26,15,0.95));"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 28px;">
+          <div style="font-size:0.6rem;letter-spacing:0.15em;color:#F2A623;text-transform:uppercase;margin-bottom:4px;">Chef Nek Pro</div>
+          <div style="font-family:Georgia,serif;font-size:2rem;font-weight:700;color:#fff;font-style:italic;">✦ ${name}</div>
+          ${settings.tagline?`<div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-top:4px;">${settings.tagline}</div>`:''}
+        </div>
+      </div>
+
+      <!-- Info strip -->
+      <div style="background:rgba(242,166,35,0.08);border-top:0.5px solid rgba(242,166,35,0.2);border-bottom:0.5px solid rgba(242,166,35,0.2);padding:10px 28px;display:flex;gap:20px;flex-wrap:wrap;">
+        ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.45);">⏰ ${settings.hours}</span>`:''}
+        ${settings.address?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.45);">📍 ${settings.address}</span>`:''}
+        ${settings.phone?`<span style="font-size:0.72rem;color:#F2A623;">📞 ${settings.phone}</span>`:''}
+        ${settings.instagram?`<span style="font-size:0.72rem;color:#F2A623;">${settings.instagram}</span>`:''}
+      </div>
+
+      <!-- Two column menu -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+        
+        <!-- Column 1 -->
+        <div style="padding:24px 20px 24px 28px;border-right:0.5px solid rgba(242,166,35,0.15);">
+          <div style="font-family:Georgia,serif;font-size:1.1rem;font-style:italic;color:#F2A623;margin-bottom:20px;padding-bottom:10px;border-bottom:0.5px solid rgba(242,166,35,0.2);">Regular</div>
+          ${col1.map(item => itemCard(item)).join('')}
+        </div>
+
+        <!-- Column 2 -->
+        <div style="padding:24px 28px 24px 20px;">
+          <div style="font-family:Georgia,serif;font-size:1.1rem;font-style:italic;color:#F2A623;margin-bottom:20px;padding-bottom:10px;border-bottom:0.5px solid rgba(242,166,35,0.2);">Best</div>
+          ${col2.map(item => itemCard(item)).join('')}
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="background:rgba(0,0,0,0.4);border-top:0.5px solid rgba(242,166,35,0.15);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:0.7rem;letter-spacing:0.1em;color:rgba(255,255,255,0.2);text-transform:uppercase;">Powered by Chef Nek Pro</div>
+        </div>
+        ${settings.phone?`<div style="font-size:0.85rem;font-weight:600;color:#F2A623;">📞 ${settings.phone}</div>`:''}
+      </div>
+    </div>`;
 }
 
 async function loadMenuDesign(userData) {
@@ -1957,6 +2037,7 @@ async function loadMenuDesign(userData) {
     if (document.getElementById('menu-phone')) document.getElementById('menu-phone').value = settings.phone || '';
     if (document.getElementById('menu-hours')) document.getElementById('menu-hours').value = settings.hours || '';
     if (document.getElementById('menu-instagram')) document.getElementById('menu-instagram').value = settings.instagram || '';
+    if (document.getElementById('menu-hero-photo')) document.getElementById('menu-hero-photo').value = settings.heroPhoto || '';
 
     // Highlight selected color
     const colorEl = document.getElementById('color-'+color.replace('#',''));
