@@ -277,6 +277,20 @@
   .prep-header-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; padding:6px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
   .critical-alert { background:#FCEBEB; border:1px solid #F09595; border-radius:12px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px; }
 
+  /* ── MENU DESIGN STYLES ── */
+  .menu-preview { background:var(--white); border-radius:16px; border:0.5px solid var(--border); overflow:hidden; }
+  .menu-preview-header { padding:32px; text-align:center; }
+  .menu-preview-cat { padding:0 24px 24px; }
+  .menu-preview-cat-title { font-family:var(--font-display); font-size:1.1rem; font-weight:700; padding:12px 0; border-bottom:2px solid; margin-bottom:16px; }
+  .menu-preview-item { display:flex; align-items:flex-start; gap:14px; padding:12px 0; border-bottom:0.5px solid var(--border); }
+  .menu-preview-item:last-child { border-bottom:none; }
+  .menu-preview-item-photo { width:70px; height:60px; object-fit:cover; border-radius:8px; flex-shrink:0; }
+  .menu-preview-item-info { flex:1; }
+  .menu-preview-item-name { font-weight:600; font-size:0.9rem; color:var(--ink); margin-bottom:3px; }
+  .menu-preview-item-desc { font-size:0.8rem; color:var(--ink-muted); line-height:1.5; }
+  .menu-preview-item-price { font-weight:700; font-size:1rem; white-space:nowrap; flex-shrink:0; }
+  .qr-box { background:var(--white); border:0.5px solid var(--border); border-radius:16px; padding:24px; text-align:center; }
+
   /* ── INVENTORY PRO STYLES ── */
   .inv-category { background:var(--white); border-radius:16px; border:0.5px solid var(--border); margin-bottom:16px; overflow:hidden; }
   .inv-cat-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; cursor:pointer; user-select:none; transition:background 0.15s; }
@@ -580,6 +594,7 @@ function renderPage(userData) {
     case 'recipes':   renderRecipes(main, userData); break;
     case 'preplist':  renderPrepList(main, userData); break;
     case 'inventory': renderInventory(main, userData); break;
+    case 'menudesign': renderMenuDesign(main, userData); break;
     case 'clients':   renderClients(main, userData); break;
     default:          renderDashboard(main, userData);
   }
@@ -662,14 +677,14 @@ function renderDashboard(main, userData) {
               <div style="margin-top:6px;font-size:0.7rem;font-weight:500;color:#854F0B;background:var(--amber-light);padding:2px 8px;border-radius:20px;display:inline-block;">Core service</div>
             </div>
           </div>
-          <div style="background:var(--cream);border-radius:14px;border:0.5px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start;">
-            <div style="width:40px;height:40px;border-radius:10px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="3" width="16" height="11" rx="2"/><line x1="1" y1="7" x2="17" y2="7"/><line x1="4" y1="11" x2="8" y2="11"/></svg>
+          <div onclick="navigate('menudesign')" style="background:var(--green-light);border-radius:14px;border:1px solid var(--green);padding:16px;display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="3" width="16" height="11" rx="2"/><line x1="1" y1="7" x2="17" y2="7"/><line x1="4" y1="11" x2="8" y2="11"/></svg>
             </div>
             <div>
-              <div style="font-size:0.875rem;font-weight:600;color:var(--ink);margin-bottom:3px;">Menu design</div>
-              <div style="font-size:0.78rem;color:var(--ink-muted);line-height:1.5;">Professional menu with photos and prices</div>
-              <div style="margin-top:6px;font-size:0.7rem;font-weight:500;color:#0F6E56;background:var(--green-light);padding:2px 8px;border-radius:20px;display:inline-block;">Coming soon</div>
+              <div style="font-size:0.875rem;font-weight:600;color:var(--green-dark);margin-bottom:3px;">Menu design</div>
+              <div style="font-size:0.78rem;color:var(--green-dark);line-height:1.5;opacity:0.8;">Digital + printable menu</div>
+              <div style="margin-top:6px;font-size:0.7rem;font-weight:500;color:#fff;background:var(--green);padding:2px 8px;border-radius:20px;display:inline-block;">✓ Active — tap to open</div>
             </div>
           </div>
           <div style="background:var(--cream);border-radius:14px;border:0.5px solid var(--border);padding:16px;display:flex;gap:12px;align-items:flex-start;">
@@ -1516,6 +1531,251 @@ window.deletePrepCategory = async function(catId) {
 
 
 
+
+// ============================================
+// MENU DESIGN PAGE
+// ============================================
+function renderMenuDesign(main, userData) {
+  main.innerHTML = `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 class="page-title">Menu design</h1>
+          <p class="page-sub">Your digital and printable restaurant menu</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
+          <button class="print-btn" onclick="printMenuPage()">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="5" width="10" height="7" rx="1.5"/><path d="M4 5V3a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+            Print menu
+          </button>
+          <button class="print-btn" onclick="viewPublicMenu('${userData.uid}')">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><line x1="7" y1="4" x2="7" y2="7"/><line x1="7" y1="9.5" x2="7.5" y2="9.5"/></svg>
+            View public menu
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- MENU SETTINGS -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Menu settings</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Restaurant tagline</label>
+            <input type="text" id="menu-tagline" class="form-input-small" placeholder="e.g. Fresh food, made with love" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Menu accent color</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="color-picker">
+              ${['#1D9E75','#E24B4A','#185FA5','#854F0B','#534AB7','#1A1A14'].map(c => `
+                <div onclick="selectMenuColor('${c}')" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;" id="color-${c.replace('#','')}"></div>
+              `).join('')}
+            </div>
+          </div>
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Address</label>
+            <input type="text" id="menu-address" class="form-input-small" placeholder="Your restaurant address" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Phone number</label>
+            <input type="text" id="menu-phone" class="form-input-small" placeholder="(123) 456-7890" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hours</label>
+            <input type="text" id="menu-hours" class="form-input-small" placeholder="Mon-Fri 8am-9pm, Sat-Sun 9am-10pm" style="width:100%;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Instagram handle</label>
+            <input type="text" id="menu-instagram" class="form-input-small" placeholder="@yourrestaurant" style="width:100%;">
+          </div>
+        </div>
+        <button onclick="saveMenuSettings('${userData.uid}')" class="form-btn-small">Save settings</button>
+      </div>
+
+      <!-- QR CODE + SHARE LINK -->
+      <div class="qr-box no-print" style="margin-bottom:16px;">
+        <div style="font-size:0.875rem;font-weight:500;color:var(--ink);margin-bottom:8px;">Your public menu link</div>
+        <div style="background:var(--cream);border-radius:10px;padding:10px 14px;font-size:0.8rem;color:var(--green);font-weight:500;margin-bottom:12px;word-break:break-all;" id="menu-public-link">
+          ${window.location.origin}/menu/${userData.uid}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <button onclick="copyMenuLink('${userData.uid}')" class="form-btn-small">📋 Copy link</button>
+          <button onclick="generateQR('${userData.uid}')" class="form-btn-small">📲 Show QR code</button>
+        </div>
+        <div id="qr-display" style="margin-top:16px;display:none;">
+          <canvas id="qr-canvas" style="border-radius:12px;"></canvas>
+          <div style="font-size:0.8rem;color:var(--ink-muted);margin-top:8px;">Scan to view your menu</div>
+        </div>
+      </div>
+
+      <!-- MENU PREVIEW -->
+      <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:12px;">Menu preview</div>
+      <div id="menu-preview-container">
+        <div style="text-align:center;padding:40px;"><div class="loading-spinner" style="margin:0 auto;"></div></div>
+      </div>
+    </div>
+  `;
+
+  loadMenuDesign(userData);
+}
+
+let menuAccentColor = '#1D9E75';
+
+window.selectMenuColor = function(color) {
+  menuAccentColor = color;
+  document.querySelectorAll('#color-picker div').forEach(el => {
+    el.style.border = '2px solid transparent';
+    el.style.transform = 'scale(1)';
+  });
+  const el = document.getElementById('color-'+color.replace('#',''));
+  if (el) { el.style.border = '3px solid var(--ink)'; el.style.transform = 'scale(1.2)'; }
+  // Update preview colors
+  document.querySelectorAll('.menu-preview-cat-title').forEach(t => t.style.borderColor = color);
+  document.querySelectorAll('.menu-preview-item-price').forEach(p => p.style.color = color);
+}
+
+window.copyMenuLink = function(uid) {
+  const link = window.location.origin + '/menu/' + uid;
+  navigator.clipboard.writeText(link).then(() => showToast('Link copied!'));
+}
+
+window.viewPublicMenu = function(uid) {
+  window.open(window.location.origin + '/menu/' + uid, '_blank');
+}
+
+window.generateQR = async function(uid) {
+  const qrDiv = document.getElementById('qr-display');
+  const canvas = document.getElementById('qr-canvas');
+  qrDiv.style.display = 'block';
+  
+  // Simple QR code using Google Charts API
+  const link = window.location.origin + '/menu/' + uid;
+  const img = document.createElement('img');
+  img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(link);
+  img.style.cssText = 'width:200px;height:200px;border-radius:12px;';
+  canvas.replaceWith(img);
+  img.id = 'qr-canvas';
+}
+
+window.saveMenuSettings = async function(restaurantId) {
+  const tagline = document.getElementById('menu-tagline').value.trim();
+  const address = document.getElementById('menu-address').value.trim();
+  const phone = document.getElementById('menu-phone').value.trim();
+  const hours = document.getElementById('menu-hours').value.trim();
+  const instagram = document.getElementById('menu-instagram').value.trim();
+  try {
+    await setDoc(doc(db, 'menuSettings', restaurantId), {
+      tagline, address, phone, hours, instagram,
+      accentColor: menuAccentColor,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    showToast('Menu settings saved!');
+    loadMenuDesign(window._userData);
+  } catch(e) { showToast('Error saving settings', 'error'); }
+}
+
+async function loadMenuDesign(userData) {
+  const container = document.getElementById('menu-preview-container');
+  const restaurantId = userData.uid;
+
+  try {
+    // Load settings
+    const settingsDoc = await getDoc(doc(db, 'menuSettings', restaurantId));
+    const settings = settingsDoc.exists() ? settingsDoc.data() : {};
+    const color = settings.accentColor || '#1D9E75';
+    menuAccentColor = color;
+
+    // Pre-fill settings form
+    if (document.getElementById('menu-tagline')) document.getElementById('menu-tagline').value = settings.tagline || '';
+    if (document.getElementById('menu-address')) document.getElementById('menu-address').value = settings.address || '';
+    if (document.getElementById('menu-phone')) document.getElementById('menu-phone').value = settings.phone || '';
+    if (document.getElementById('menu-hours')) document.getElementById('menu-hours').value = settings.hours || '';
+    if (document.getElementById('menu-instagram')) document.getElementById('menu-instagram').value = settings.instagram || '';
+
+    // Highlight selected color
+    const colorEl = document.getElementById('color-'+color.replace('#',''));
+    if (colorEl) { colorEl.style.border = '3px solid var(--ink)'; colorEl.style.transform = 'scale(1.2)'; }
+
+    // Load recipes
+    const recipesSnap = await getDocs(
+      query(collection(db, 'recipes'), where('restaurantId','==', restaurantId))
+    );
+    const recipes = recipesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (recipes.length === 0) {
+      container.innerHTML = `
+        <div class="menu-preview" style="padding:40px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:12px;">🍽️</div>
+          <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:8px;">No recipes yet</div>
+          <div style="font-size:0.875rem;color:var(--ink-muted);">Add recipes to your recipe book first — they'll appear here automatically</div>
+        </div>`;
+      return;
+    }
+
+    // Group by category
+    const catOrder = ['Wraps','Salads','Breakfast','Sandwiches','Burgers','Mains','Sides','Sauces','Vegan','Vegetarian','Desserts','Drinks'];
+    const groups = {};
+    recipes.forEach(r => {
+      const cat = r.category || 'Other';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+    const sortedGroups = Object.entries(groups).sort(([a],[b]) => {
+      return (catOrder.indexOf(a)===-1?99:catOrder.indexOf(a)) - (catOrder.indexOf(b)===-1?99:catOrder.indexOf(b));
+    });
+
+    container.innerHTML = `
+      <div class="menu-preview" id="menu-print-area">
+        <!-- Header -->
+        <div class="menu-preview-header" style="background:${color};color:#fff;">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;letter-spacing:-0.02em;">${userData.restaurantName || 'Our Menu'}</div>
+          ${settings.tagline ? `<div style="font-size:0.9rem;opacity:0.85;margin-top:6px;font-style:italic;">${settings.tagline}</div>` : ''}
+          ${settings.hours ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:8px;">⏰ ${settings.hours}</div>` : ''}
+          ${settings.address ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📍 ${settings.address}</div>` : ''}
+          ${settings.phone ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📞 ${settings.phone}</div>` : ''}
+          ${settings.instagram ? `<div style="font-size:0.8rem;opacity:0.75;margin-top:4px;">📱 ${settings.instagram}</div>` : ''}
+        </div>
+
+        <!-- Menu categories -->
+        ${sortedGroups.map(([cat, items]) => `
+          <div class="menu-preview-cat">
+            <div class="menu-preview-cat-title" style="color:${color};border-color:${color};">${cat}</div>
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item => `
+              <div class="menu-preview-item">
+                ${item.photoUrl ? `<img src="${item.photoUrl}" class="menu-preview-item-photo" onerror="this.style.display='none'">` : ''}
+                <div class="menu-preview-item-info">
+                  <div class="menu-preview-item-name">${item.name}</div>
+                  ${item.notes ? `<div class="menu-preview-item-desc">${item.notes.substring(0,120)}${item.notes.length>120?'...':''}</div>` : ''}
+                </div>
+                ${item.price ? `<div class="menu-preview-item-price" style="color:${color};">${item.price}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+
+        <!-- Footer -->
+        <div style="text-align:center;padding:20px;background:var(--cream);border-top:0.5px solid var(--border);">
+          <div style="font-size:0.75rem;color:var(--ink-muted);">Powered by <strong style="color:${color};">Chef Nek Pro</strong></div>
+        </div>
+      </div>`;
+
+  } catch(e) {
+    console.error(e);
+    container.innerHTML = `<div class="card"><p style="color:var(--ink-muted);">Error loading menu. Please refresh.</p></div>`;
+  }
+}
+
+window.printMenuPage = function() {
+  const menuArea = document.getElementById('menu-print-area');
+  if (!menuArea) return;
+  const win = window.open('', '_blank');
+  win.document.write('<html><head><title>Menu</title><style>body{font-family:sans-serif;margin:0;} img{max-width:70px;} </style></head><body>');
+  win.document.write(menuArea.outerHTML);
+  win.document.write('</body></html>');
+  win.document.close();
+  win.print();
+}
 
 // ============================================
 // INVENTORY PAGE
