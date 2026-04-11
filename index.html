@@ -1794,6 +1794,10 @@ function renderMenuDesign(main, userData) {
   `;
 
   loadMenuDesign(userData);
+  if (isAdmin) {
+    // Small delay to ensure DOM is ready
+    setTimeout(() => loadRestaurantsForSelect('menu-restaurant-select'), 100);
+  }
 }
 
 let menuAccentColor = '#1D9E75';
