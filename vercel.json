@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/site/:restaurantId", "destination": "/site.html" },
+    { "source": "/menu/:restaurantId", "destination": "/index.html" }
+  ]
+}
