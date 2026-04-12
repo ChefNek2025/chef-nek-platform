@@ -1389,9 +1389,18 @@ async function loadPrepCategories(userData) {
                   <div class="prep-item-qty">${item.qty||'—'}</div>
                   ${days.map((_,dayIdx) => {
                     const chk = checks[item.id+'_'+dayIdx];
-                    return `<div class="day-check ${chk?'checked':''} ${dayIdx===todayCol?'today':''}" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="${chk ? 'Done by '+chk.by+' at '+chk.time : ''}">
-                      <svg viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>`;
+                    const isToday = dayIdx === todayCol;
+                    if (chk) {
+                      const firstName = (chk.by||'').split(' ')[0].substring(0,8);
+                      return `<div class="day-check-done" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="Done by ${chk.by} at ${chk.time} — click to uncheck" data-checked="true">
+                        <div class="chk-tick">✓</div>
+                        <div class="chk-name">${firstName}</div>
+                        <div class="chk-time">${chk.time}</div>
+                      </div>`;
+                    } else {
+                      return `<div class="day-check-empty ${isToday?'today':''}" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="${isToday?'Tap to check off today':''}">
+                      </div>`;
+                    }
                   }).join('')}
                 </div>
                 <div id="edit-prep-item-${item.id}" style="display:none;padding:8px 18px;background:var(--cream);border-bottom:0.5px solid var(--border);">
@@ -1535,7 +1544,7 @@ window.toggleCat = function(id) {
 let _pendingCheck = null;
 
 window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, weekStart, el) {
-  const isChecked = el.classList.contains('checked');
+  const isChecked = el.classList.contains('checked') || el.dataset.checked === 'true' || el.classList.contains('day-check-done');
   if (isChecked) {
     try {
       const snap = await getDocs(query(collection(db,'prepChecks'), where('itemId','==',itemId)));
