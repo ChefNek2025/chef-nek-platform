@@ -1582,22 +1582,348 @@ window.deletePrepCategory = async function(catId) {
 function renderWebsite(main, userData) {
   main.innerHTML = `
     <div class="page-header">
-      <h1 class="page-title">Restaurant website</h1>
-      <p class="page-sub">Build your client's professional restaurant website</p>
-    </div>
-    <div class="page-body">
-      <div class="card" style="text-align:center;padding:48px 32px;">
-        <div style="font-size:3rem;margin-bottom:16px;">🌐</div>
-        <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--ink);margin-bottom:10px;">Restaurant Website Builder</div>
-        <div style="font-size:0.9rem;color:var(--ink-muted);max-width:400px;margin:0 auto 24px;line-height:1.7;">
-          Build a stunning professional website for your restaurant clients — with their menu, story, photos, hours and location. Coming soon!
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 class="page-title">Restaurant website</h1>
+          <p class="page-sub">Build and publish a stunning website for each client</p>
         </div>
-        <div style="display:inline-flex;align-items:center;gap:8px;background:var(--amber-light);color:#854F0B;font-size:0.8rem;font-weight:500;padding:8px 16px;border-radius:20px;">
-          🔨 In development — launching soon
-        </div>
+        ${isAdmin ? `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="previewClientSite()" class="print-btn">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><line x1="7" y1="4" x2="7" y2="7"/></svg>
+            Preview site
+          </button>
+          <button onclick="publishSite()" style="height:36px;padding:0 18px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.875rem;font-weight:500;cursor:pointer;">
+            🚀 Publish site
+          </button>
+        </div>` : ''}
       </div>
     </div>
+    <div class="page-body">
+
+      ${isAdmin ? `
+      <!-- RESTAURANT SELECTOR -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="font-size:0.875rem;font-weight:500;color:var(--ink);">Building website for:</div>
+          <select id="website-restaurant-select" onchange="switchWebsiteRestaurant(this.value)" style="flex:1;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none;">
+            <option value="">Select a restaurant...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- WEBSITE BUILDER TABS -->
+      <div class="card" style="margin-bottom:16px;" id="website-builder" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div class="card-title" style="margin-bottom:0;">Website builder</div>
+          <div id="site-url-badge" style="display:none;font-size:0.75rem;color:var(--green);background:var(--green-light);padding:4px 12px;border-radius:20px;"></div>
+        </div>
+
+        <!-- BUILDER TABS -->
+        <div style="display:flex;gap:4px;margin-bottom:16px;background:var(--cream);border-radius:10px;padding:4px;">
+          <button onclick="switchSiteTab('hero')" id="stab-hero" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:var(--white);color:var(--ink);">🎬 Hero</button>
+          <button onclick="switchSiteTab('story')" id="stab-story" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">📖 Story</button>
+          <button onclick="switchSiteTab('style')" id="stab-style" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">🎨 Style</button>
+          <button onclick="switchSiteTab('info')" id="stab-info" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">📋 Info</button>
+          <button onclick="switchSiteTab('photos')" id="stab-photos" style="flex:1;height:32px;border-radius:7px;border:none;font-family:var(--font-body);font-size:0.72rem;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-muted);">🖼️ Photos</button>
+        </div>
+
+        <!-- HERO TAB -->
+        <div id="spanel-hero">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div style="grid-column:span 2;">
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">YouTube video URL (hero background)</label>
+              <input type="text" id="site-yt-url" class="form-input-small" placeholder="https://youtube.com/watch?v=..." style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero headline</label>
+              <input type="text" id="site-hero-name" class="form-input-small" placeholder="Black Lion Kitchen" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Eyebrow tag</label>
+              <input type="text" id="site-hero-tag" class="form-input-small" placeholder="Now Serving the DMV" style="width:100%;">
+            </div>
+            <div style="grid-column:span 2;">
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero description</label>
+              <input type="text" id="site-hero-desc" class="form-input-small" placeholder="From bold wraps to authentic Ethiopian breakfast..." style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Button 1 text</label>
+              <input type="text" id="site-btn1" class="form-input-small" placeholder="View Menu" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Button 2 text</label>
+              <input type="text" id="site-btn2" class="form-input-small" placeholder="Reserve a Table" style="width:100%;">
+            </div>
+          </div>
+        </div>
+
+        <!-- STORY TAB -->
+        <div id="spanel-story" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Story section eyebrow</label>
+              <input type="text" id="site-story-eyebrow" class="form-input-small" placeholder="Our Story" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Story title</label>
+              <input type="text" id="site-story-title" class="form-input-small" placeholder="Built on real food & real systems" style="width:100%;">
+            </div>
+            <div style="grid-column:span 2;">
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Story body text</label>
+              <textarea id="site-story-body" class="form-input-small" style="width:100%;height:80px;resize:vertical;" placeholder="Your restaurant story here..."></textarea>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Catering section title</label>
+              <input type="text" id="site-catering-title" class="form-input-small" placeholder="Elegant Catering For Every Occasion" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Catering description</label>
+              <input type="text" id="site-catering-desc" class="form-input-small" placeholder="Transform your gatherings..." style="width:100%;">
+            </div>
+          </div>
+        </div>
+
+        <!-- STYLE TAB -->
+        <div id="spanel-style" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Website template</label>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                ${[
+                  {val:'dark-luxury',label:'🏛️ Dark Luxury — Black + Gold'},
+                  {val:'modern-fresh',label:'🌿 Modern Fresh — Green + White'},
+                  {val:'bold-urban',label:'🔴 Bold Urban — Black + Red'},
+                  {val:'warm-heritage',label:'☕ Warm Heritage — Brown + Cream'},
+                  {val:'tech-modern',label:'💚 Tech Modern — Dark + Neon'},
+                ].map(t=>`
+                  <label style="display:flex;align-items:center;gap:8px;font-size:0.8rem;cursor:pointer;padding:8px;border-radius:8px;border:1.5px solid var(--border);">
+                    <input type="radio" name="site-template" value="${t.val}" ${t.val==='dark-luxury'?'checked':''} style="accent-color:var(--green);">
+                    <span>${t.label}</span>
+                  </label>`).join('')}
+              </div>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:8px;display:block;">Accent color</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                ${['#C9A84C','#1D9E75','#E24B4A','#185FA5','#63E996','#A855F7','#F97316','#FFFFFF'].map(c=>`
+                  <div onclick="selectSiteColor('${c}',this)" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;border:2px solid transparent;" id="sitecolor-${c.replace('#','')}"></div>
+                `).join('')}
+              </div>
+              <input type="color" id="site-custom-color" value="#C9A84C" onchange="selectSiteColor(this.value,null)" style="width:36px;height:36px;border:none;border-radius:6px;cursor:pointer;padding:2px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO TAB -->
+        <div id="spanel-info" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Restaurant name</label><input type="text" id="site-info-name" class="form-input-small" placeholder="Black Lion Kitchen" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Location tag</label><input type="text" id="site-info-location" class="form-input-small" placeholder="DMV" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Address</label><input type="text" id="site-info-address" class="form-input-small" placeholder="5601 Seminary Road" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Phone</label><input type="text" id="site-info-phone" class="form-input-small" placeholder="720-278-1164" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hours</label><input type="text" id="site-info-hours" class="form-input-small" placeholder="Mon–Sun 7am–6pm" style="width:100%;"></div>
+            <div><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Instagram</label><input type="text" id="site-info-instagram" class="form-input-small" placeholder="@blacklionkitchen" style="width:100%;"></div>
+            <div style="grid-column:span 2;"><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Website tagline</label><input type="text" id="site-info-tagline" class="form-input-small" placeholder="Real food, made right." style="width:100%;"></div>
+          </div>
+        </div>
+
+        <!-- PHOTOS TAB -->
+        <div id="spanel-photos" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div style="grid-column:span 2;">
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero photo / video thumbnail URL</label>
+              <input type="text" id="site-hero-photo" class="form-input-small" placeholder="https://... (food photo for hero background)" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Story section photo URL</label>
+              <input type="text" id="site-story-photo" class="form-input-small" placeholder="https://..." style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Catering photo URL</label>
+              <input type="text" id="site-catering-photo" class="form-input-small" placeholder="https://..." style="width:100%;">
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:0.5px solid var(--border);">
+          <button onclick="saveSiteSettings()" style="flex:1;height:40px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.875rem;font-weight:500;cursor:pointer;">💾 Save changes</button>
+          <button onclick="previewClientSite()" style="height:40px;padding:0 16px;background:var(--cream);color:var(--ink);border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.875rem;cursor:pointer;">👁 Preview</button>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- CLIENT VIEW — their live site link -->
+      ${!isAdmin ? `
+      <div class="card" style="margin-bottom:16px;text-align:center;padding:32px;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🌐</div>
+        <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:8px;">Your Restaurant Website</div>
+        <div style="font-size:0.875rem;color:var(--ink-muted);margin-bottom:16px;">Share this link with your customers!</div>
+        <div style="background:var(--cream);border-radius:10px;padding:12px 16px;font-size:0.85rem;color:var(--green);font-weight:500;word-break:break-all;margin-bottom:16px;">${window.location.origin}/site/${userData.uid}</div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <button onclick="navigator.clipboard.writeText('${window.location.origin}/site/${userData.uid}').then(()=>showToast('Link copied!'))" style="height:36px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;cursor:pointer;">📋 Copy link</button>
+          <button onclick="window.open('${window.location.origin}/site/${userData.uid}','_blank')" style="height:36px;padding:0 16px;background:var(--cream);border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.8rem;cursor:pointer;">🔗 Open site</button>
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- LIVE SITE PREVIEW FRAME -->
+      <div class="card" style="padding:0;overflow:hidden;" id="site-preview-wrap" style="display:none;">
+        <div style="padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:0.8rem;font-weight:500;color:var(--ink);">Live preview</div>
+          <div style="font-size:0.75rem;color:var(--ink-muted);" id="preview-url-label"></div>
+        </div>
+        <iframe id="site-preview-frame" style="width:100%;height:600px;border:none;" src="about:blank"></iframe>
+      </div>
+
+    </div>
   `;
+
+  if (isAdmin) {
+    setTimeout(() => {
+      loadRestaurantsForSelect('website-restaurant-select');
+    }, 100);
+  }
+}
+
+// ── WEBSITE BUILDER FUNCTIONS ──
+let currentSiteRestaurantId = null;
+let siteAccentColor = '#C9A84C';
+
+window.switchWebsiteRestaurant = async function(restaurantId) {
+  if (!restaurantId) return;
+  currentSiteRestaurantId = restaurantId;
+
+  // Show builder
+  const builder = document.getElementById('website-builder');
+  if (builder) builder.style.display = 'block';
+
+  // Show site URL badge
+  const badge = document.getElementById('site-url-badge');
+  if (badge) {
+    badge.style.display = 'block';
+    badge.textContent = window.location.origin + '/site/' + restaurantId;
+  }
+
+  // Load existing site settings
+  try {
+    const snap = await getDoc(doc(db, 'siteSettings', restaurantId));
+    if (snap.exists()) {
+      const s = snap.data();
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+      set('site-yt-url', s.ytUrl);
+      set('site-hero-name', s.heroName);
+      set('site-hero-tag', s.heroTag);
+      set('site-hero-desc', s.heroDesc);
+      set('site-btn1', s.btn1);
+      set('site-btn2', s.btn2);
+      set('site-story-eyebrow', s.storyEyebrow);
+      set('site-story-title', s.storyTitle);
+      set('site-story-body', s.storyBody);
+      set('site-catering-title', s.cateringTitle);
+      set('site-catering-desc', s.cateringDesc);
+      set('site-info-name', s.name);
+      set('site-info-location', s.location);
+      set('site-info-address', s.address);
+      set('site-info-phone', s.phone);
+      set('site-info-hours', s.hours);
+      set('site-info-instagram', s.instagram);
+      set('site-info-tagline', s.tagline);
+      set('site-hero-photo', s.heroPhoto);
+      set('site-story-photo', s.storyPhoto);
+      set('site-catering-photo', s.cateringPhoto);
+      if (s.accentColor) selectSiteColor(s.accentColor, null);
+      if (s.template) {
+        const radio = document.querySelector(`input[name="site-template"][value="${s.template}"]`);
+        if (radio) radio.checked = true;
+      }
+    } else {
+      // Pre-fill with user data
+      const userDoc = await getDoc(doc(db, 'users', restaurantId));
+      if (userDoc.exists()) {
+        const u = userDoc.data();
+        const nameEl = document.getElementById('site-info-name');
+        if (nameEl) nameEl.value = u.restaurantName || '';
+        const heroEl = document.getElementById('site-hero-name');
+        if (heroEl) heroEl.value = u.restaurantName || '';
+      }
+    }
+  } catch(e) { console.error(e); }
+}
+
+window.switchSiteTab = function(tab) {
+  ['hero','story','style','info','photos'].forEach(t => {
+    const panel = document.getElementById('spanel-'+t);
+    const btn = document.getElementById('stab-'+t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.background = t === tab ? 'var(--white)' : 'transparent';
+      btn.style.color = t === tab ? 'var(--ink)' : 'var(--ink-muted)';
+    }
+  });
+}
+
+window.selectSiteColor = function(color, el) {
+  siteAccentColor = color;
+  document.querySelectorAll('[id^="sitecolor-"]').forEach(e => e.style.border = '2px solid transparent');
+  const target = el || document.getElementById('sitecolor-'+color.replace('#',''));
+  if (target) { target.style.border = '3px solid var(--ink)'; target.style.transform = 'scale(1.2)'; }
+}
+
+window.saveSiteSettings = async function() {
+  const restaurantId = currentSiteRestaurantId;
+  if (!restaurantId) { showToast('Please select a restaurant first', 'error'); return; }
+  const get = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const template = document.querySelector('input[name="site-template"]:checked')?.value || 'dark-luxury';
+  try {
+    await setDoc(doc(db, 'siteSettings', restaurantId), {
+      ytUrl: get('site-yt-url'),
+      heroName: get('site-hero-name'),
+      heroTag: get('site-hero-tag'),
+      heroDesc: get('site-hero-desc'),
+      btn1: get('site-btn1'),
+      btn2: get('site-btn2'),
+      storyEyebrow: get('site-story-eyebrow'),
+      storyTitle: get('site-story-title'),
+      storyBody: get('site-story-body'),
+      cateringTitle: get('site-catering-title'),
+      cateringDesc: get('site-catering-desc'),
+      name: get('site-info-name'),
+      location: get('site-info-location'),
+      address: get('site-info-address'),
+      phone: get('site-info-phone'),
+      hours: get('site-info-hours'),
+      instagram: get('site-info-instagram'),
+      tagline: get('site-info-tagline'),
+      heroPhoto: get('site-hero-photo'),
+      storyPhoto: get('site-story-photo'),
+      cateringPhoto: get('site-catering-photo'),
+      accentColor: siteAccentColor,
+      template,
+      published: true,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    showToast('Site saved & published! 🚀');
+  } catch(e) { showToast('Error saving site', 'error'); }
+}
+
+window.publishSite = async function() {
+  await saveSiteSettings();
+  const restaurantId = currentSiteRestaurantId;
+  if (!restaurantId) return;
+  const url = window.location.origin + '/site/' + restaurantId;
+  navigator.clipboard.writeText(url).then(() => showToast('Published! Link copied: ' + url));
+}
+
+window.previewClientSite = function() {
+  const restaurantId = currentSiteRestaurantId || window._userData?.uid;
+  if (!restaurantId) return;
+  const wrap = document.getElementById('site-preview-wrap');
+  const frame = document.getElementById('site-preview-frame');
+  const label = document.getElementById('preview-url-label');
+  if (wrap) wrap.style.display = 'block';
+  if (label) label.textContent = window.location.origin + '/site/' + restaurantId;
+  if (frame) frame.src = window.location.origin + '/site/' + restaurantId;
 }
 
 // ============================================
