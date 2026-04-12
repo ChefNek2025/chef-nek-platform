@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold2:#E8C87A;--gold-dim:rgba(201,168,76,0.12);--gold-border:rgba(201,168,76,0.28);--black:#0A0A0A;--black2:#111;--black3:#1A1A1A;--white:#F5F0E8;--muted:rgba(245,240,232,0.6);--dimmer:rgba(245,240,232,0.3);--font-display:'Cinzel',serif;--font-script:'Cormorant Garamond',serif;--font-body:'Jost',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:var(--font-body);overflow-x:hidden;}
+.deco-bg{background-color:var(--black);background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(201,168,76,0.04) 39px,rgba(201,168,76,0.04) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(201,168,76,0.04) 39px,rgba(201,168,76,0.04) 40px);}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(10,10,10,0.92);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--gold-border);padding:0 40px;height:70px;display:flex;align-items:center;justify-content:space-between;}
+.nav-left,.nav-right{display:flex;gap:28px;}
+.nav-center{text-align:center;}
+.nav-logo-sub{font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.25em;color:var(--gold);display:block;}
+.nav-logo-main{font-family:var(--font-script);font-size:1.6rem;font-weight:400;color:var(--white);font-style:italic;line-height:1;display:block;}
+.nav-logo-line{width:100%;height:0.5px;background:var(--gold-border);margin-top:3px;}
+.nav-link{font-family:var(--font-display);font-size:0.6rem;font-weight:600;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;cursor:pointer;background:none;border:none;transition:color 0.2s;}
+.nav-link:hover{color:var(--gold);}
+.hero{height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.hero-bg{position:absolute;inset:0;background:var(--black3);}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(10,10,10,0.5),rgba(10,10,10,0.3) 40%,rgba(10,10,10,0.75));}
+.hero-yt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:177.78vh;height:100vh;min-width:100%;pointer-events:none;}
+.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5;}
+.hero-content{position:relative;z-index:3;text-align:center;padding:0 140px;}
+.hero-eyebrow{font-family:var(--font-display);font-size:0.65rem;letter-spacing:0.3em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:16px;}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';flex:0 0 40px;height:0.5px;background:var(--gold-border);}
+.hero-title{font-family:var(--font-script);font-size:clamp(4rem,10vw,8rem);font-weight:300;font-style:italic;color:var(--white);line-height:0.9;margin-bottom:8px;}
+.hero-title strong{font-weight:600;font-style:normal;display:block;font-size:0.45em;font-family:var(--font-display);letter-spacing:0.3em;color:var(--gold);}
+.hero-divider{display:flex;align-items:center;justify-content:center;gap:12px;margin:24px 0;}
+.hero-divider-line{flex:0 0 80px;height:0.5px;background:var(--gold-border);}
+.hero-divider-diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);}
+.hero-sub{font-family:var(--font-script);font-size:1.1rem;font-weight:300;font-style:italic;color:var(--muted);margin-bottom:40px;}
+.hero-btns{display:flex;gap:16px;justify-content:center;}
+.btn-gold{height:48px;padding:0 36px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:var(--font-display);font-size:0.6rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.btn-gold:hover{background:var(--gold);color:var(--black);}
+.btn-gold-filled{height:48px;padding:0 36px;background:var(--gold);border:1px solid var(--gold);color:var(--black);font-family:var(--font-display);font-size:0.6rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.3s;}
+.btn-gold-filled:hover{background:var(--gold2);}
+.deco-arch{width:80px;height:200px;border:0.5px solid var(--gold-border);border-radius:40px 40px 0 0;position:relative;}
+.deco-arch::before{content:'';position:absolute;inset:8px;border:0.5px solid rgba(201,168,76,0.12);border-radius:32px 32px 0 0;}
+.section{padding:100px 80px;}
+.section-eyebrow{font-family:var(--font-display);font-size:0.6rem;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.section-eyebrow::before{content:'';width:30px;height:0.5px;background:var(--gold-border);}
+.section-title{font-family:var(--font-script);font-size:clamp(2.5rem,5vw,4rem);font-weight:300;font-style:italic;color:var(--white);line-height:1.1;margin-bottom:20px;}
+.section-title strong{font-weight:600;font-style:normal;color:var(--gold);}
+.section-body{font-size:1rem;color:var(--muted);line-height:1.8;font-weight:300;max-width:520px;}
+.split{display:grid;grid-template-columns:1fr 1fr;min-height:70vh;}
+.split-content{padding:80px;display:flex;flex-direction:column;justify-content:center;}
+.split-image{position:relative;overflow:hidden;background:var(--black3);}
+.split-image img{width:100%;height:100%;object-fit:cover;}
+.menu-hero{padding:140px 80px 60px;text-align:center;border-bottom:0.5px solid var(--gold-border);}
+.menu-deco{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:16px;}
+.menu-deco-line{width:60px;height:0.5px;background:var(--gold-border);}
+.menu-deco-icon{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);}
+.menu-cats{display:flex;justify-content:center;border-top:0.5px solid var(--gold-border);border-bottom:0.5px solid var(--gold-border);flex-wrap:wrap;}
+.mcat{padding:16px 24px;font-family:var(--font-display);font-size:0.58rem;letter-spacing:0.18em;color:var(--dimmer);text-transform:uppercase;cursor:pointer;background:none;border:none;border-right:0.5px solid var(--gold-border);transition:all 0.2s;}
+.mcat:hover,.mcat.active{color:var(--gold);background:var(--gold-dim);}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gold-border);border:0.5px solid var(--gold-border);}
+.mitem{background:var(--black2);padding:28px;transition:background 0.2s;display:flex;flex-direction:column;gap:6px;}
+.mitem:hover{background:var(--black3);}
+.mitem-img{width:100%;height:130px;object-fit:cover;border:0.5px solid var(--gold-border);margin-bottom:6px;}
+.mitem-img-ph{width:100%;height:130px;background:var(--black3);border:0.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;margin-bottom:6px;}
+.mitem-cat{font-family:var(--font-display);font-size:0.5rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;}
+.mitem-name{font-family:var(--font-script);font-size:1.1rem;color:var(--white);}
+.mitem-desc{font-size:0.78rem;color:var(--muted);line-height:1.5;font-weight:300;flex:1;}
+.mitem-price{font-family:var(--font-script);font-size:1rem;color:var(--gold);font-weight:600;padding-top:6px;border-top:0.5px solid rgba(201,168,76,0.15);}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;}
+.contact-info{padding:80px;border-right:0.5px solid var(--gold-border);}
+.contact-form-wrap{padding:80px;}
+.info-block{margin-bottom:36px;}
+.info-label{font-family:var(--font-display);font-size:0.58rem;letter-spacing:0.22em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.info-val{font-family:var(--font-script);font-size:1.2rem;color:var(--white);font-weight:300;}
+.info-sub{font-size:0.8rem;color:var(--muted);margin-top:4px;}
+.form-label{font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.18em;color:var(--dimmer);text-transform:uppercase;display:block;margin-bottom:8px;}
+.form-input{width:100%;height:48px;background:transparent;border:none;border-bottom:0.5px solid var(--gold-border);color:var(--white);font-family:var(--font-body);font-size:0.9rem;padding:0;outline:none;transition:border-color 0.2s;margin-bottom:28px;}
+.form-input:focus{border-color:var(--gold);}
+.form-input::placeholder{color:var(--dimmer);}
+textarea.form-input{height:80px;resize:none;padding-top:8px;}
+.page{display:none;}.page.active{display:block;}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gold-border);border:0.5px solid var(--gold-border);}
+.team-card{background:var(--black2);padding:40px 32px;}
+.team-num{font-family:var(--font-script);font-size:2.5rem;font-weight:300;font-style:italic;color:var(--gold);opacity:0.4;margin-bottom:12px;}
+.team-title{font-family:var(--font-display);font-size:0.65rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;}
+.team-desc{font-size:0.875rem;color:var(--muted);line-height:1.7;font-weight:300;}
+footer{background:var(--black2);border-top:0.5px solid var(--gold-border);padding:48px 80px 32px;}
+.footer-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:60px;margin-bottom:40px;}
+.footer-logo-main{font-family:var(--font-script);font-size:1.8rem;font-style:italic;color:var(--white);}
+.footer-logo-sub{font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-top:4px;}
+.footer-col-title{font-family:var(--font-display);font-size:0.58rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:14px;}
+.fcol-item{font-size:0.85rem;color:var(--muted);margin-bottom:8px;cursor:pointer;background:none;border:none;font-family:var(--font-body);display:block;text-align:left;font-weight:300;transition:color 0.15s;}
+.fcol-item:hover{color:var(--gold);}
+.footer-bottom{border-top:0.5px solid var(--gold-border);padding-top:20px;display:flex;align-items:center;justify-content:space-between;}
+.footer-credit{font-size:0.75rem;color:var(--dimmer);}
+.footer-credit span{color:var(--gold);}
+.loading-screen{position:fixed;inset:0;background:var(--black);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;}
+.loading-logo{font-family:var(--font-script);font-size:2.5rem;font-style:italic;color:var(--white);margin-bottom:16px;}
+.loading-bar{width:120px;height:1px;background:rgba(201,168,76,0.2);position:relative;overflow:hidden;}
+.loading-bar::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:var(--gold);animation:loadBar 1.5s ease infinite;}
+@keyframes loadBar{0%{left:-100%;}100%{left:100%;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeIn 0.8s ease forwards;}
+.fi1{animation-delay:0.1s;opacity:0;}.fi2{animation-delay:0.3s;opacity:0;}.fi3{animation-delay:0.5s;opacity:0;}.fi4{animation-delay:0.7s;opacity:0;}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--gold-border),transparent);animation:sDown 2s ease infinite;}
+@keyframes sDown{0%{opacity:0;transform:scaleY(0);transform-origin:top;}50%{opacity:1;transform:scaleY(1);}100%{opacity:0;transform:scaleY(1);transform-origin:bottom;}}
+@media(max-width:900px){
+  .split,.contact-grid,.footer-top,.team-grid{grid-template-columns:1fr;}
+  .hero-content{padding:0 32px;}
+  .nav-left,.nav-right{display:none;}
+  .section,.menu-hero,.contact-info,.contact-form-wrap{padding-left:24px;padding-right:24px;}
+  .menu-grid{grid-template-columns:1fr;}
+  footer{padding:40px 24px;}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading">
+  <div class="loading-logo" id="loading-name">Loading...</div>
+  <div class="loading-bar"></div>
+</div>
+
+<nav>
+  <div class="nav-left">
+    <button class="nav-link" onclick="showPage('menu')">Menu</button>
+    <button class="nav-link" onclick="showPage('specials')">Specials</button>
+    <button class="nav-link" onclick="showPage('about')">About</button>
+  </div>
+  <div class="nav-center">
+    <span class="nav-logo-sub">— The —</span>
+    <span class="nav-logo-main" id="nav-name">Restaurant</span>
+    <div class="nav-logo-line"></div>
+    <span class="nav-logo-sub" id="nav-location">DMV</span>
+  </div>
+  <div class="nav-right">
+    <button class="nav-link" onclick="showPage('contact')">Catering</button>
+    <button class="nav-link" onclick="showPage('contact')">Events</button>
+    <button class="nav-link" onclick="showPage('contact')">Contact</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-bg deco-bg" id="hero-bg">
+      <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:2px;opacity:0.3;" id="hero-mosaic"></div>
+    </div>
+    <div style="position:absolute;top:0;bottom:0;left:0;width:120px;display:flex;align-items:center;justify-content:center;z-index:2;"><div class="deco-arch"></div></div>
+    <div style="position:absolute;top:0;bottom:0;right:0;width:120px;display:flex;align-items:center;justify-content:center;z-index:2;"><div class="deco-arch"></div></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow fi1 fade-in" id="hero-tag">Now Serving</div>
+      <h1 class="hero-title fi2 fade-in"><strong id="hero-strong">Restaurant</strong><span id="hero-name-rest">Name</span></h1>
+      <div class="hero-divider fi2 fade-in"><div class="hero-divider-line"></div><div class="hero-divider-diamond"></div><div class="hero-divider-line"></div></div>
+      <p class="hero-sub fi3 fade-in" id="hero-desc">Delicious food served fresh daily.</p>
+      <div class="hero-btns fi4 fade-in">
+        <button class="btn-gold-filled" onclick="showPage('menu')" id="hero-btn1">View Menu</button>
+        <button class="btn-gold" onclick="showPage('contact')" id="hero-btn2">Reserve a Table</button>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <span style="font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.2em;color:var(--dimmer);text-transform:uppercase;">Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+
+  <!-- STORY SPLIT -->
+  <div class="split" style="border-top:0.5px solid var(--gold-border);">
+    <div class="split-content deco-bg">
+      <div class="section-eyebrow" id="s-story-eyebrow">Our Story</div>
+      <h2 class="section-title" id="s-story-title">Built on <strong>real food</strong></h2>
+      <p class="section-body" id="s-story-body" style="margin-bottom:32px;">Every dish is crafted fresh — no shortcuts, no compromises.</p>
+      <button class="btn-gold" onclick="showPage('about')">Our Story</button>
+    </div>
+    <div class="split-image" id="story-img-wrap">
+      <div style="width:100%;height:100%;min-height:400px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;" id="story-img-ph">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.25" stroke-linecap="round"><rect x="4" y="4" width="40" height="40" rx="6"/><circle cx="16" cy="16" r="5"/><path d="M4 32l12-12 8 8 6-6 14 14"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURED -->
+  <div class="section" style="border-top:0.5px solid var(--gold-border);background:var(--black3);">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;">
+      <div>
+        <div class="section-eyebrow">Featured Dishes</div>
+        <h2 class="section-title">Customer <strong>Favorites</strong></h2>
+        <p class="section-body" style="margin-bottom:32px;">Hand-picked — these are the dishes customers come back for.</p>
+        <button class="btn-gold-filled" onclick="showPage('menu')">Full Menu</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px;background:var(--gold-border);border:0.5px solid var(--gold-border);" id="home-featured"></div>
+    </div>
+  </div>
+
+  <!-- CATERING SPLIT -->
+  <div class="split" style="border-top:0.5px solid var(--gold-border);">
+    <div class="split-image" id="catering-img-wrap">
+      <div style="width:100%;height:100%;min-height:400px;display:flex;align-items:center;justify-content:center;" id="catering-img-ph">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.25" stroke-linecap="round"><rect x="4" y="4" width="40" height="40" rx="6"/><circle cx="16" cy="16" r="5"/><path d="M4 32l12-12 8 8 6-6 14 14"/></svg>
+      </div>
+    </div>
+    <div class="split-content" style="background:var(--black3);">
+      <div class="section-eyebrow">Catering & Events</div>
+      <h2 class="section-title" id="s-catering-title">Elegant Catering<br>For Every <strong>Occasion</strong></h2>
+      <p class="section-body" id="s-catering-desc" style="margin-bottom:32px;">Transform your gatherings into unforgettable experiences with premium catering.</p>
+      <button class="btn-gold" onclick="showPage('contact')">Book Catering</button>
+    </div>
+  </div>
+
+  <!-- HOURS STRIP -->
+  <div style="background:var(--gold);padding:28px 80px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+    <div style="font-family:var(--font-display);font-size:0.6rem;letter-spacing:0.2em;color:var(--black);text-transform:uppercase;">Hours of Operation</div>
+    <div id="hours-strip" style="font-family:var(--font-script);font-size:1.3rem;color:var(--black);font-weight:600;">Monday – Sunday · Open Daily</div>
+    <div id="address-strip" style="font-family:var(--font-display);font-size:0.6rem;letter-spacing:0.2em;color:var(--black);text-transform:uppercase;">DMV Area</div>
+  </div>
+
+  <footer class="deco-bg">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo-main" id="footer-name">Restaurant</div>
+        <div class="footer-logo-sub">Powered by Chef Nek Pro</div>
+        <p style="font-size:0.8rem;color:var(--dimmer);margin-top:14px;font-weight:300;line-height:1.7;" id="footer-tagline">Real food, real systems.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Navigate</div>
+        <button class="fcol-item" onclick="showPage('home')">Home</button>
+        <button class="fcol-item" onclick="showPage('menu')">Menu</button>
+        <button class="fcol-item" onclick="showPage('specials')">Specials</button>
+        <button class="fcol-item" onclick="showPage('about')">About Us</button>
+        <button class="fcol-item" onclick="showPage('contact')">Contact</button>
+      </div>
+      <div>
+        <div class="footer-col-title">Contact Us</div>
+        <div id="footer-address" style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;font-weight:300;"></div>
+        <div id="footer-phone" style="font-size:0.85rem;color:var(--gold);margin-bottom:8px;"></div>
+        <div id="footer-instagram" style="font-size:0.85rem;color:var(--gold);"></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-credit">© 2026 <span id="footer-credit-name">Restaurant</span>. Powered by <span>Chef Nek Pro</span></div>
+      <div style="font-family:var(--font-display);font-size:0.55rem;letter-spacing:0.15em;color:var(--dimmer);text-transform:uppercase;">From Struggling to Thriving</div>
+    </div>
+  </footer>
+</div>
+
+<!-- MENU PAGE -->
+<div id="page-menu" class="page">
+  <div class="menu-hero deco-bg">
+    <div class="menu-deco"><div class="menu-deco-line"></div><div class="menu-deco-icon"></div><div class="menu-deco-line"></div></div>
+    <h1 class="section-title" style="font-size:clamp(3rem,7vw,5rem);">Our Menu</h1>
+    <p style="font-family:var(--font-script);font-size:1.1rem;font-style:italic;color:var(--muted);">Fresh. Bold. Made to order.</p>
+  </div>
+  <div class="menu-cats" id="menu-cats"></div>
+  <div style="padding:60px 80px;"><div class="menu-grid" id="menu-grid"></div></div>
+  <footer class="deco-bg"><div class="footer-bottom" style="border-top:0.5px solid var(--gold-border);padding:18px 80px;"><div class="footer-credit">Powered by <span>Chef Nek Pro</span></div></div></footer>
+</div>
+
+<!-- SPECIALS PAGE -->
+<div id="page-specials" class="page">
+  <div class="menu-hero deco-bg">
+    <div class="menu-deco"><div class="menu-deco-line"></div><div class="menu-deco-icon"></div><div class="menu-deco-line"></div></div>
+    <h1 class="section-title" style="font-size:clamp(3rem,7vw,5rem);">Specials</h1>
+    <p style="font-family:var(--font-script);font-size:1.1rem;font-style:italic;color:var(--muted);">Chef's personal picks.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--gold-border);border:0.5px solid var(--gold-border);margin:0 80px 80px;" id="specials-grid"></div>
+  <footer class="deco-bg"><div class="footer-bottom" style="border-top:0.5px solid var(--gold-border);padding:18px 80px;"><div class="footer-credit">Powered by <span>Chef Nek Pro</span></div></div></footer>
+</div>
+
+<!-- ABOUT PAGE -->
+<div id="page-about" class="page">
+  <div style="height:40vh;display:flex;align-items:flex-end;padding:60px 80px 60px;background:var(--black3);padding-top:140px;" class="deco-bg">
+    <div><div class="section-eyebrow">Our Story</div><h1 class="section-title" style="font-size:clamp(3rem,7vw,5rem);">Who We Are</h1></div>
+  </div>
+  <div class="split" style="border-top:0.5px solid var(--gold-border);">
+    <div class="split-content" style="background:var(--black3);">
+      <div class="section-eyebrow">Our Mission</div>
+      <h2 class="section-title">Real food for <strong>real people</strong></h2>
+      <p class="section-body" style="margin-bottom:20px;" id="about-body1">We built this restaurant on a simple belief — great food needs to be real. Every dish is made fresh, from scratch, by people who care.</p>
+      <p class="section-body" id="about-body2">Powered by Chef Nek Pro, our kitchen runs on professional systems that keep everything consistent — same quality, every single visit.</p>
+    </div>
+    <div class="split-image"><div style="width:100%;height:100%;min-height:400px;display:flex;align-items:center;justify-content:center;background:var(--black3);"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.2" stroke-linecap="round"><rect x="4" y="4" width="40" height="40" rx="6"/><circle cx="16" cy="16" r="5"/><path d="M4 32l12-12 8 8 6-6 14 14"/></svg></div></div>
+  </div>
+  <div style="padding:80px;border-top:0.5px solid var(--gold-border);" class="deco-bg">
+    <div class="section-eyebrow">Our Values</div>
+    <h2 class="section-title" style="margin-bottom:48px;">What we <strong>stand for</strong></h2>
+    <div class="team-grid">
+      <div class="team-card"><div class="team-num">01</div><div class="team-title">Quality First</div><div class="team-desc">We never compromise on ingredients. Every item is made fresh, every single day.</div></div>
+      <div class="team-card"><div class="team-num">02</div><div class="team-title">Consistency</div><div class="team-desc">Same great taste, every visit. Our systems guarantee your food is always on point.</div></div>
+      <div class="team-card"><div class="team-num">03</div><div class="team-title">Community</div><div class="team-desc">We serve our community — our menu reflects the diverse cultures and flavors around us.</div></div>
+    </div>
+  </div>
+  <footer class="deco-bg"><div class="footer-bottom" style="border-top:0.5px solid var(--gold-border);padding:18px 80px;"><div class="footer-credit">Powered by <span>Chef Nek Pro</span></div></div></footer>
+</div>
+
+<!-- CONTACT PAGE -->
+<div id="page-contact" class="page">
+  <div style="height:40vh;display:flex;align-items:center;justify-content:center;text-align:center;padding-top:70px;border-bottom:0.5px solid var(--gold-border);background:var(--black3);" class="deco-bg">
+    <div><div class="menu-deco"><div class="menu-deco-line"></div><div class="menu-deco-icon"></div><div class="menu-deco-line"></div></div>
+    <h1 class="section-title" style="font-size:clamp(2.5rem,6vw,4.5rem);">Get in Touch</h1></div>
+  </div>
+  <div class="contact-grid">
+    <div class="contact-info deco-bg">
+      <div class="section-eyebrow">Find Us</div>
+      <div class="info-block"><div class="info-label">Location</div><div class="info-val" id="c-address">—</div></div>
+      <div class="info-block"><div class="info-label">Hours</div><div class="info-val">Open Daily</div><div class="info-sub" id="c-hours">—</div></div>
+      <div class="info-block"><div class="info-label">Phone</div><div class="info-val" id="c-phone" style="color:var(--gold);">—</div></div>
+      <div class="info-block"><div class="info-label">Social</div><div class="info-val" id="c-instagram" style="color:var(--gold);">—</div></div>
+    </div>
+    <div class="contact-form-wrap">
+      <div class="section-eyebrow">Send a Message</div>
+      <h2 class="section-title" style="font-size:2rem;margin-bottom:36px;">We'll get back to you within <strong>24 hours</strong></h2>
+      <label class="form-label">Full Name</label><input type="text" class="form-input" placeholder="Your name">
+      <label class="form-label">Email</label><input type="email" class="form-input" placeholder="your@email.com">
+      <label class="form-label">Phone</label><input type="tel" class="form-input" placeholder="(123) 456-7890">
+      <label class="form-label">Message</label><textarea class="form-input" placeholder="Reservations, catering, events..."></textarea>
+      <button class="btn-gold-filled" style="width:100%;margin-top:8px;" onclick="this.textContent='✓ Sent!';setTimeout(()=>this.textContent='Send Message',3000)">Send Message</button>
+    </div>
+  </div>
+  <footer class="deco-bg"><div class="footer-bottom" style="border-top:0.5px solid var(--gold-border);padding:18px 80px;"><div class="footer-credit">Powered by <span>Chef Nek Pro</span></div></div></footer>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCbX-lJSCX2XU4UKOA-6RvvOdBiU_CFTl0",
+  authDomain: "chef-nek-pro-dad86.firebaseapp.com",
+  projectId: "chef-nek-pro-dad86",
+  messagingSenderId: "469202547359",
+  appId: "1:469202547359:web:214359c14023908961e8aa"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Get restaurant ID from URL: /site/RESTAURANT_ID
+const pathParts = window.location.pathname.split('/');
+const siteIdx = pathParts.indexOf('site');
+const restaurantId = siteIdx !== -1 ? pathParts[siteIdx + 1] : null;
+
+async function loadSite() {
+  if (!restaurantId) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('hero-strong').textContent = 'Site Not';
+    document.getElementById('hero-name-rest').textContent = 'Found';
+    return;
+  }
+
+  try {
+    // Load site settings
+    const siteSnap = await getDoc(doc(db, 'siteSettings', restaurantId));
+    const s = siteSnap.exists() ? siteSnap.data() : {};
+
+    // Load recipes
+    const recipesSnap = await getDocs(query(collection(db, 'recipes'), where('restaurantId','==', restaurantId)));
+    const recipes = recipesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Apply accent color
+    if (s.accentColor) {
+      document.documentElement.style.setProperty('--gold', s.accentColor);
+    }
+
+    // Apply name
+    const name = s.name || s.heroName || 'Restaurant';
+    const nameParts = name.split(' ');
+    const strong = nameParts.slice(0, -1).join(' ') || nameParts[0];
+    const rest = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    document.getElementById('hero-strong').textContent = strong;
+    document.getElementById('hero-name-rest').textContent = rest;
+    document.getElementById('nav-name').textContent = name;
+    document.getElementById('footer-name').textContent = name;
+    document.getElementById('footer-credit-name').textContent = name;
+    document.getElementById('loading-name').textContent = name;
+    document.title = name;
+
+    // Nav location
+    if (s.location) document.getElementById('nav-location').textContent = s.location;
+
+    // Hero content
+    if (s.heroTag) document.getElementById('hero-tag').textContent = s.heroTag;
+    if (s.heroDesc) document.getElementById('hero-desc').textContent = s.heroDesc;
+    if (s.btn1) document.getElementById('hero-btn1').textContent = s.btn1;
+    if (s.btn2) document.getElementById('hero-btn2').textContent = s.btn2;
+
+    // YouTube video
+    if (s.ytUrl) {
+      const m = s.ytUrl.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+      if (m) {
+        const bg = document.getElementById('hero-bg');
+        const iframe = document.createElement('iframe');
+        iframe.className = 'hero-yt';
+        iframe.src = `https://www.youtube.com/embed/${m[1]}?autoplay=1&mute=1&loop=1&playlist=${m[1]}&controls=0&showinfo=0&rel=0`;
+        iframe.allow = 'autoplay;encrypted-media';
+        iframe.frameBorder = '0';
+        bg.appendChild(iframe);
+        document.getElementById('hero-mosaic').style.display = 'none';
+      }
+    } else if (s.heroPhoto) {
+      const bg = document.getElementById('hero-bg');
+      const img = document.createElement('img');
+      img.src = s.heroPhoto; img.className = 'hero-photo';
+      bg.appendChild(img);
+    }
+
+    // Story section
+    if (s.storyEyebrow) document.getElementById('s-story-eyebrow').textContent = s.storyEyebrow;
+    if (s.storyTitle) document.getElementById('s-story-title').innerHTML = s.storyTitle;
+    if (s.storyBody) document.getElementById('s-story-body').textContent = s.storyBody;
+    if (s.storyPhoto) {
+      const wrap = document.getElementById('story-img-wrap');
+      document.getElementById('story-img-ph').style.display = 'none';
+      const img = document.createElement('img');
+      img.src = s.storyPhoto; img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      wrap.appendChild(img);
+    }
+
+    // Catering section
+    if (s.cateringTitle) document.getElementById('s-catering-title').innerHTML = s.cateringTitle;
+    if (s.cateringDesc) document.getElementById('s-catering-desc').textContent = s.cateringDesc;
+    if (s.cateringPhoto) {
+      const wrap = document.getElementById('catering-img-wrap');
+      document.getElementById('catering-img-ph').style.display = 'none';
+      const img = document.createElement('img');
+      img.src = s.cateringPhoto; img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+      wrap.appendChild(img);
+    }
+
+    // Hours strip
+    if (s.hours) document.getElementById('hours-strip').textContent = 'Mon – Sun · ' + s.hours;
+    if (s.address) document.getElementById('address-strip').textContent = s.address;
+
+    // Footer & contact
+    if (s.address) { document.getElementById('footer-address').textContent = s.address; document.getElementById('c-address').textContent = s.address; }
+    if (s.phone) { document.getElementById('footer-phone').textContent = s.phone; document.getElementById('c-phone').textContent = s.phone; }
+    if (s.instagram) { document.getElementById('footer-instagram').textContent = s.instagram; document.getElementById('c-instagram').textContent = s.instagram; }
+    if (s.hours) document.getElementById('c-hours').textContent = s.hours;
+    if (s.tagline) document.getElementById('footer-tagline').textContent = s.tagline;
+
+    // Build menu
+    window._recipes = recipes;
+    window._restaurantId = restaurantId;
+    buildMenu(recipes, 'All');
+    buildSpecials(recipes);
+    buildFeatured(recipes);
+    buildMosaic(recipes);
+
+  } catch(e) {
+    console.error(e);
+  }
+
+  // Hide loading
+  setTimeout(() => {
+    const loading = document.getElementById('loading');
+    loading.style.opacity = '0';
+    loading.style.transition = 'opacity 0.5s';
+    setTimeout(() => loading.style.display = 'none', 500);
+  }, 800);
+}
+
+function phSvg() {
+  return `<div class="mitem-img-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="0.8" opacity="0.3" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="7" cy="7" r="2"/><path d="M2 15l5-5 3 3 3-3 6 6"/></svg></div>`;
+}
+
+function buildMenu(recipes, cat) {
+  const cats = ['All', ...new Set(recipes.map(r => r.category || 'Other'))];
+  const catsEl = document.getElementById('menu-cats');
+  if (catsEl) catsEl.innerHTML = cats.map(c => `<button class="mcat ${c===cat?'active':''}" onclick="buildMenu(window._recipes,'${c}')">${c}</button>`).join('');
+  const filtered = cat === 'All' ? recipes : recipes.filter(r => (r.category||'Other') === cat);
+  const grid = document.getElementById('menu-grid');
+  if (grid) grid.innerHTML = filtered.length ? filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(r => `
+    <div class="mitem">
+      ${r.photoUrl ? `<img src="${r.photoUrl}" class="mitem-img" onerror="this.outerHTML='${phSvg()}'">` : phSvg()}
+      <div class="mitem-cat">${r.category||'Other'}</div>
+      <div class="mitem-name">${r.name||''}</div>
+      <div class="mitem-desc">${r.notes||''}</div>
+      <div class="mitem-price">${r.price||''}</div>
+    </div>`).join('') : '<div style="padding:60px;text-align:center;color:rgba(245,240,232,0.3);font-family:Cormorant Garamond,serif;font-style:italic;">No items in this category</div>';
+  window.buildMenu = buildMenu;
+}
+
+function buildSpecials(recipes) {
+  const grid = document.getElementById('specials-grid');
+  if (!grid) return;
+  const picks = recipes.slice(0, 6);
+  grid.innerHTML = picks.map(r => `
+    <div style="background:var(--black2);overflow:hidden;">
+      ${r.photoUrl ? `<img src="${r.photoUrl}" style="width:100%;height:260px;object-fit:cover;border-bottom:0.5px solid var(--gold-border);">` : `<div style="width:100%;height:260px;background:var(--black3);border-bottom:0.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;">${phSvg()}</div>`}
+      <div style="padding:28px;">
+        <div style="font-family:var(--font-display);font-size:0.5rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">Chef's Pick · ${r.category||'Featured'}</div>
+        <div style="font-family:var(--font-script);font-size:1.4rem;color:var(--white);margin-bottom:6px;">${r.name||''}</div>
+        <div style="font-size:0.8rem;color:var(--muted);line-height:1.6;font-weight:300;">${r.notes||''}</div>
+        <div style="font-family:var(--font-script);font-size:1.1rem;color:var(--gold);font-weight:600;margin-top:14px;">${r.price||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function buildFeatured(recipes) {
+  const el = document.getElementById('home-featured');
+  if (!el) return;
+  const picks = recipes.slice(0, 4);
+  el.innerHTML = picks.map(r => `
+    <div style="background:var(--black2);padding:18px 22px;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:background 0.2s;" onmouseover="this.style.background='var(--black3)'" onmouseout="this.style.background='var(--black2)'">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.5rem;letter-spacing:0.2em;color:var(--gold);text-transform:uppercase;margin-bottom:3px;">${r.category||''}</div>
+        <div style="font-family:var(--font-script);font-size:1.1rem;color:var(--white);">${r.name||''}</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:2px;font-weight:300;">${(r.notes||'').substring(0,55)}${(r.notes||'').length>55?'...':''}</div>
+      </div>
+      <div style="font-family:var(--font-script);font-size:1.1rem;color:var(--gold);font-weight:600;white-space:nowrap;">${r.price||''}</div>
+    </div>`).join('');
+}
+
+function buildMosaic(recipes) {
+  const mosaic = document.getElementById('hero-mosaic');
+  if (!mosaic) return;
+  const withPhotos = recipes.filter(r => r.photoUrl);
+  for (let i = 0; i < 12; i++) {
+    const cell = document.createElement('div');
+    cell.style.cssText = 'overflow:hidden;background:#1A1A1A;';
+    if (withPhotos[i]) {
+      cell.innerHTML = `<img src="${withPhotos[i].photoUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+    }
+    mosaic.appendChild(cell);
+  }
+}
+
+// Page nav
+window.showPage = function(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  window.scrollTo(0,0);
+  if (page === 'menu' && window._recipes) buildMenu(window._recipes, 'All');
+};
+
+loadSite();
+</script>
+</body>
+</html>
