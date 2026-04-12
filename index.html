@@ -258,23 +258,31 @@
   .prep-cat-assign { padding:10px 18px; background:var(--cream); display:flex; align-items:center; gap:10px; border-bottom:0.5px solid var(--border); flex-wrap:wrap; }
   .prep-cat-assign-label { font-size:0.8rem; color:var(--ink-muted); }
   .prep-cat-assign-name { font-size:0.8rem; font-weight:500; color:var(--ink); }
-  .prep-item-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; align-items:center; padding:8px 18px; border-bottom:0.5px solid var(--border); }
+  .prep-item-row { display:grid; grid-template-columns:1fr 80px repeat(7,54px); gap:4px; align-items:center; padding:8px 18px; border-bottom:0.5px solid var(--border); }
   .prep-item-row:last-child { border-bottom:none; }
   .prep-item-row.critical-row { background:#FCEBEB; border-left:3px solid #E24B4A; }
   .prep-item-name { font-size:0.875rem; color:var(--ink); display:flex; align-items:center; gap:6px; }
   .prep-item-qty { font-size:0.8rem; color:var(--ink-muted); text-align:center; }
   .day-header { font-size:0.7rem; font-weight:500; color:var(--ink-muted); text-align:center; text-transform:uppercase; }
-  .day-check { width:28px; height:28px; border-radius:6px; border:1.5px solid var(--border); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin:0 auto; }
+  .day-check-empty { width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border); background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin:0 auto; }
+  .day-check-empty.today { border-color:var(--green); border-width:2px; background:rgba(29,158,117,0.05); }
+  .day-check-empty:hover { border-color:var(--green); background:var(--green-light); }
+  .day-check-done { display:flex; flex-direction:column; align-items:center; justify-content:center; width:50px; height:46px; background:var(--green); border:1.5px solid var(--green); border-radius:8px; cursor:pointer; padding:2px; transition:all 0.15s; margin:0 auto; }
+  .day-check-done:hover { background:#0F6E56; }
+  .day-check-done .chk-tick { font-size:0.65rem; color:#fff; line-height:1.2; }
+  .day-check-done .chk-name { font-size:0.6rem; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:46px; line-height:1.2; text-align:center; }
+  .day-check-done .chk-time { font-size:0.52rem; color:rgba(255,255,255,0.85); line-height:1.2; text-align:center; }
+  .day-check { width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border); background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin:0 auto; }
   .day-check.checked { background:var(--green); border-color:var(--green); }
-  .day-check.checked svg { display:block; }
   .day-check.today { border-color:var(--green); border-width:2px; }
   .day-check svg { display:none; width:12px; height:12px; }
+  .day-check.checked svg { display:block; }
   .prep-cat-footer { padding:12px 18px; background:var(--cream); border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
   .approve-btn { height:36px; padding:0 18px; background:var(--green); color:#fff; border:none; border-radius:8px; font-size:0.8125rem; font-weight:500; cursor:pointer; transition:background 0.15s; }
   .approve-btn:hover { background:var(--green-dark); }
   .approve-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .approved-stamp { display:flex; align-items:center; gap:6px; font-size:0.8rem; color:var(--green-dark); font-weight:500; }
-  .prep-header-row { display:grid; grid-template-columns:1fr 80px repeat(7,32px); gap:4px; padding:6px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
+  .prep-header-row { display:grid; grid-template-columns:1fr 80px repeat(7,54px); gap:4px; padding:6px 18px; background:var(--cream); border-bottom:0.5px solid var(--border); }
   .critical-alert { background:#FCEBEB; border:1px solid #F09595; border-radius:12px; padding:14px 18px; margin-bottom:16px; display:flex; align-items:flex-start; gap:12px; }
 
   /* ── MENU DESIGN STYLES ── */
@@ -3505,3 +3513,4 @@ onAuthStateChanged(auth, async (user) => {
 </script>
 </body>
 </html>
+
