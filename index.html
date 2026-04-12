@@ -291,6 +291,16 @@
   .menu-preview-item-price { font-weight:700; font-size:1rem; white-space:nowrap; flex-shrink:0; }
   .qr-box { background:var(--white); border:0.5px solid var(--border); border-radius:16px; padding:24px; text-align:center; }
 
+  /* ── STAFF PICKER STYLES ── */
+  .staff-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:999; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .staff-picker-modal { background:var(--white); border-radius:20px; padding:24px; width:100%; max-width:320px; box-shadow:0 8px 40px rgba(0,0,0,0.15); }
+  .staff-picker-title { font-family:var(--font-display); font-size:0.9rem; font-weight:700; color:var(--ink); margin-bottom:4px; }
+  .staff-picker-sub { font-size:0.78rem; color:var(--ink-muted); margin-bottom:16px; line-height:1.5; }
+  .staff-picker-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+  .staff-btn { padding:14px 8px; border-radius:12px; border:1.5px solid var(--border); background:var(--cream); color:var(--ink); font-family:var(--font-body); font-size:0.85rem; font-weight:500; cursor:pointer; text-align:center; transition:all 0.15s; }
+  .staff-btn:hover { border-color:var(--green); background:var(--green-light); color:var(--green-dark); transform:scale(1.02); }
+  .staff-picker-cancel { width:100%; height:40px; border-radius:10px; border:0.5px solid var(--border); background:transparent; color:var(--ink-muted); font-family:var(--font-body); font-size:0.875rem; cursor:pointer; margin-top:8px; }
+
   /* ── PREP CRITICAL STYLES ── */
   @keyframes criticalPulse { 0%,100%{background:rgba(252,235,235,0.5);} 50%{background:rgba(252,235,235,1);} }
   .critical-missed-banner { background:linear-gradient(135deg,#FCEBEB,#FFF0F0); border:1px solid #F09595; border-radius:12px; padding:14px 18px; margin-bottom:16px; }
@@ -1522,36 +1532,99 @@ window.toggleCat = function(id) {
   chev.classList.toggle('open', !isOpen);
 }
 
+let _pendingCheck = null;
+
 window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, weekStart, el) {
   const isChecked = el.classList.contains('checked');
-  try {
-    if (isChecked) {
-      const snap = await getDocs(query(collection(db,'prepChecks'),
-        where('itemId','==',itemId)));
-      // filter in JS
+  if (isChecked) {
+    try {
+      const snap = await getDocs(query(collection(db,'prepChecks'), where('itemId','==',itemId)));
       const toDelete = snap.docs.filter(d => d.data().dayIdx === dayIdx && d.data().weekStart === weekStart);
       for (const d of toDelete) {
         const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         await dd(doc(db,'prepChecks',d.id));
       }
       el.classList.remove('checked');
+      el.title = '';
+      loadPrepCategories(window._userData);
+    } catch(e) { showToast('Error updating check', 'error'); }
+  } else {
+    // Store pending check data and show staff picker
+    _pendingCheck = { itemId, catId, restaurantId, dayIdx, weekStart, el };
+    const nameEl = el.closest('.prep-item-row');
+    const itemLabel = nameEl ? nameEl.querySelector('.prep-item-name') : null;
+    const itemText = itemLabel ? itemLabel.textContent.trim().replace(/Edit|Del|🚨|✅|⚠.*today/g,'').trim().substring(0,50) : 'this item';
+    document.getElementById('staff-picker-item-name').textContent = itemText;
+    document.getElementById('staff-custom-name').value = '';
+    loadStaffNames(restaurantId);
+    document.getElementById('staff-picker-overlay').style.display = 'flex';
+  }
+}
+
+async function loadStaffNames(restaurantId) {
+  const grid = document.getElementById('staff-picker-grid');
+  grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:8px 0;">Loading staff...</div>';
+  try {
+    const staffSnap = await getDocs(query(collection(db,'staffNames'), where('restaurantId','==',restaurantId)));
+    const savedNames = [...new Set(staffSnap.docs.map(d => d.data().name).filter(Boolean))];
+    if (savedNames.length === 0) {
+      grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:4px 0;">No staff added yet — type a name below to add one</div>';
     } else {
-      const name = prompt('Your name:');
-      if (!name) return;
-      const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-      await addDoc(collection(db,'prepChecks'),{
-        itemId, catId, restaurantId, dayIdx, weekStart,
-        by: name.trim(), time, checkedAt: serverTimestamp()
-      });
-      el.classList.add('checked');
-      el.title = 'Done by '+name+' at '+time;
+      grid.innerHTML = savedNames.map(n => `
+        <button class="staff-btn" onclick="selectStaffName('${n.replace(/'/g,"&apos;")}')">
+          <div style="font-size:1.2rem;margin-bottom:4px;">👤</div>
+          <div>${n}</div>
+        </button>`).join('');
     }
+  } catch(e) {
+    grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;">Type a name below</div>';
+  }
+}
+
+window.selectStaffName = async function(name) {
+  await completeCheck(name, false);
+}
+
+window.confirmStaffName = async function() {
+  const name = document.getElementById('staff-custom-name').value.trim();
+  if (!name) { showToast('Please enter your name', 'error'); return; }
+  await completeCheck(name, true);
+}
+
+async function completeCheck(name, saveNew) {
+  if (!_pendingCheck) return;
+  const { itemId, catId, restaurantId, dayIdx, weekStart, el } = _pendingCheck;
+  document.getElementById('staff-picker-overlay').style.display = 'none';
+  // Save new name to staffNames collection
+  if (saveNew) {
+    try {
+      const existing = await getDocs(query(collection(db,'staffNames'), where('restaurantId','==',restaurantId), where('name','==',name)));
+      if (existing.empty) {
+        await addDoc(collection(db,'staffNames'), { name, restaurantId, createdAt: serverTimestamp() });
+      }
+    } catch(e) {}
+  }
+  _pendingCheck = null;
+  try {
+    const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    await addDoc(collection(db,'prepChecks'),{
+      itemId, catId, restaurantId, dayIdx, weekStart,
+      by: name.trim(), time, checkedAt: serverTimestamp()
+    });
+    el.classList.add('checked');
+    el.title = 'Done by '+name+' at '+time;
+    showToast('Checked off by '+name+'!');
     loadPrepCategories(window._userData);
-  } catch(e) { showToast('Error updating check', 'error'); }
+  } catch(e) { showToast('Error saving check', 'error'); }
+}
+
+window.closeStaffPicker = function() {
+  document.getElementById('staff-picker-overlay').style.display = 'none';
+  _pendingCheck = null;
 }
 
 window.approvePrepCategory = async function(catId, restaurantId, weekStart, dayIdx) {
-  const name = prompt('Manager/Chef name to approve:');
+  const name = window._userData?.ownerName || window._userData?.restaurantName || 'Manager';
   if (!name) return;
   const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
   try {
@@ -3383,5 +3456,20 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 </script>
+  <div id="staff-picker-overlay" class="staff-picker-overlay" style="display:none;">
+    <div class="staff-picker-modal">
+      <div class="staff-picker-title">Who completed this?</div>
+      <div class="staff-picker-sub" id="staff-picker-item-name">Select your name</div>
+      <div class="staff-picker-grid" id="staff-picker-grid"></div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:6px;">Not listed? Type your name:</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="staff-custom-name" class="form-input-small" placeholder="Your name..." style="flex:1;" onkeydown="if(event.key==='Enter')confirmStaffName()">
+          <button onclick="confirmStaffName()" class="form-btn-small" style="white-space:nowrap;">Done</button>
+        </div>
+      </div>
+      <button class="staff-picker-cancel" onclick="closeStaffPicker()">Cancel</button>
+    </div>
+  </div>
 </body>
 </html>
