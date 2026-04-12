@@ -1563,8 +1563,10 @@ window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, wee
     const nameEl = el.closest('.prep-item-row');
     const itemLabel = nameEl ? nameEl.querySelector('.prep-item-name') : null;
     const itemText = itemLabel ? itemLabel.textContent.trim().replace(/Edit|Del|🚨|✅|⚠.*today/g,'').trim().substring(0,50) : 'this item';
+    injectStaffPicker();
     document.getElementById('staff-picker-item-name').textContent = itemText;
-    document.getElementById('staff-custom-name').value = '';
+    const customInput = document.getElementById('staff-custom-name');
+    if (customInput) customInput.value = '';
     loadStaffNames(restaurantId);
     document.getElementById('staff-picker-overlay').style.display = 'flex';
   }
@@ -1628,9 +1630,45 @@ async function completeCheck(name, saveNew) {
 }
 
 window.closeStaffPicker = function() {
-  document.getElementById('staff-picker-overlay').style.display = 'none';
+  const ov = document.getElementById('staff-picker-overlay');
+  if (ov) ov.style.display = 'none';
   _pendingCheck = null;
 }
+
+// ── Inject staff picker into DOM after page loads ──
+function injectStaffPicker() {
+  if (document.getElementById('staff-picker-overlay')) return;
+  const div = document.createElement('div');
+  div.id = 'staff-picker-overlay';
+  div.className = 'staff-picker-overlay';
+  div.style.display = 'none';
+  div.innerHTML = `
+    <div class="staff-picker-modal" onclick="event.stopPropagation()">
+      <div class="staff-picker-title">Who completed this?</div>
+      <div class="staff-picker-sub" id="staff-picker-item-name">Select your name below</div>
+      <div class="staff-picker-grid" id="staff-picker-grid">
+        <div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:8px 0;">Loading...</div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:6px;">Not listed? Type your name:</div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="staff-custom-name" class="form-input-small" placeholder="Your name..." style="flex:1;">
+          <button onclick="confirmStaffName()" class="form-btn-small" style="white-space:nowrap;">Done</button>
+        </div>
+      </div>
+      <button class="staff-picker-cancel" onclick="closeStaffPicker()">Cancel</button>
+    </div>`;
+  div.addEventListener('click', function(e) {
+    if (e.target === div) closeStaffPicker();
+  });
+  // Add Enter key listener after DOM ready
+  div.querySelector('#staff-custom-name') && div.querySelector('input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmStaffName();
+  });
+  document.body.appendChild(div);
+}
+// Call immediately
+injectStaffPicker();
 
 window.approvePrepCategory = async function(catId, restaurantId, weekStart, dayIdx) {
   const name = window._userData?.ownerName || window._userData?.restaurantName || 'Manager';
@@ -3465,20 +3503,5 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 </script>
-  <div id="staff-picker-overlay" class="staff-picker-overlay" style="display:none;">
-    <div class="staff-picker-modal">
-      <div class="staff-picker-title">Who completed this?</div>
-      <div class="staff-picker-sub" id="staff-picker-item-name">Select your name</div>
-      <div class="staff-picker-grid" id="staff-picker-grid"></div>
-      <div style="margin-bottom:10px;">
-        <div style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:6px;">Not listed? Type your name:</div>
-        <div style="display:flex;gap:8px;">
-          <input type="text" id="staff-custom-name" class="form-input-small" placeholder="Your name..." style="flex:1;" onkeydown="if(event.key==='Enter')confirmStaffName()">
-          <button onclick="confirmStaffName()" class="form-btn-small" style="white-space:nowrap;">Done</button>
-        </div>
-      </div>
-      <button class="staff-picker-cancel" onclick="closeStaffPicker()">Cancel</button>
-    </div>
-  </div>
 </body>
 </html>
