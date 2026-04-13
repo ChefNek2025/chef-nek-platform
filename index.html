@@ -3,6 +3,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chef Nek Pro — Platform</title>
 <!-- PWA Support -->
@@ -1399,17 +1402,22 @@ async function loadPrepCategories(userData) {
                   ${days.map((_,dayIdx) => {
                     const chk = checks[item.id+'_'+dayIdx];
                     const isToday = dayIdx === todayCol;
+                    const iid = item.id;
+                    const cid = cat.id;
+                    const rid = cat.restaurantId;
+                    const ws = weekStart;
                     if (chk) {
-                      const firstName = (chk.by||'Done').split(' ')[0].substring(0,7);
-                      const t = chk.time||'';
-                      return `<div onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" data-checked="true" style="background:#1D9E75;border:1.5px solid #0F6E56;border-radius:8px;cursor:pointer;padding:4px 3px;text-align:center;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;" title="Done by ${chk.by} at ${chk.time} — tap to uncheck">
-                        <div style="font-size:0.65rem;color:#fff;font-weight:700;">✓</div>
-                        <div style="font-size:0.58rem;color:#fff;font-weight:600;line-height:1.2;overflow:hidden;max-width:50px;text-overflow:ellipsis;white-space:nowrap;">${firstName}</div>
-                        <div style="font-size:0.52rem;color:rgba(255,255,255,0.85);line-height:1.2;">${t}</div>
-                      </div>`;
+                      const nm = (chk.by||'Done').split(' ')[0].substring(0,7);
+                      const tm = (chk.time||'').substring(0,5);
+                      return `<button onclick="togglePrepCheck('${iid}','${cid}','${rid}',${dayIdx},'${ws}',this)" data-checked="true" style="width:100%;background:#1D9E75;color:#fff;border:2px solid #0F6E56;border-radius:8px;cursor:pointer;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:48px;font-family:inherit;gap:2px;">
+                        <span style="font-size:0.72rem;font-weight:800;line-height:1;">&#10003;</span>
+                        <span style="font-size:0.62rem;font-weight:700;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;">${nm}</span>
+                        <span style="font-size:0.54rem;opacity:0.9;line-height:1.2;">${tm}</span>
+                      </button>`;
                     } else {
-                      return `<div onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" data-checked="false" style="width:32px;height:32px;border-radius:8px;border:${isToday?'2px solid #1D9E75':'1.5px solid #D0CEC6'};background:${isToday?'rgba(29,158,117,0.05)':'#fff'};cursor:pointer;margin:auto;" title="${isToday?'Tap to check off':''}">
-                      </div>`;
+                      return `<button onclick="togglePrepCheck('${iid}','${cid}','${rid}',${dayIdx},'${ws}',this)" data-checked="false" style="width:100%;background:${isToday?'#FFFBEA':'#FFFDE7'};border:${isToday?'2px solid #F2A623':'1.5px solid #F2A623'};border-radius:8px;cursor:pointer;min-height:48px;font-family:inherit;display:flex;align-items:center;justify-content:center;">
+                        <span style="font-size:0.65rem;color:#854F0B;font-weight:500;">${isToday?'Tap':'—'}</span>
+                      </button>`;
                     }
                   }).join('')}
                 </div>
@@ -1555,22 +1563,33 @@ let _pendingCheck = null;
 
 window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, weekStart, el) {
   try {
-    const isChecked = el.classList.contains('day-check-done') || el.dataset.checked === 'true';
+    // Walk up to find element with data-checked
+    let btn = el;
+    while (btn && btn.dataset && btn.dataset.checked === undefined) btn = btn.parentElement;
+    const isChecked = btn && btn.dataset.checked === 'true';
     if (isChecked) {
+      // Uncheck — revert button to yellow
       const snap = await getDocs(query(collection(db,'prepChecks'), where('itemId','==',itemId)));
       const toDelete = snap.docs.filter(d => d.data().dayIdx === dayIdx && d.data().weekStart === weekStart);
       for (const d of toDelete) {
         const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         await dd(doc(db,'prepChecks',d.id));
       }
-      loadPrepCategories(window._userData);
+      // Update button directly
+      if (btn) {
+        btn.dataset.checked = 'false';
+        btn.style.cssText = 'width:100%;background:#FFFDE7;border:1.5px solid #F2A623;border-radius:8px;cursor:pointer;min-height:48px;font-family:inherit;display:flex;align-items:center;justify-content:center;';
+        btn.innerHTML = '<span style="font-size:0.65rem;color:#854F0B;font-weight:500;">—</span>';
+      }
+      showToast('Unchecked!');
     } else {
-      _pendingCheck = { itemId, catId, restaurantId, dayIdx, weekStart };
+      // Check — show staff picker
+      _pendingCheck = { itemId, catId, restaurantId, dayIdx, weekStart, btn };
       showStaffPicker(restaurantId);
     }
   } catch(e) {
     console.error('togglePrepCheck error:', e);
-    showToast('Error', 'error');
+    showToast('Error — try again', 'error');
   }
 }
 
@@ -1620,11 +1639,13 @@ window.confirmStaffName = async function() {
 
 async function completeCheck(name, saveNew) {
   if (!_pendingCheck) { showToast('Error — please try again', 'error'); return; }
-  const { itemId, catId, restaurantId, dayIdx, weekStart } = _pendingCheck;
+  const { itemId, catId, restaurantId, dayIdx, weekStart, btn } = _pendingCheck;
   _pendingCheck = null;
-  // Hide overlay
+
+  // Hide overlay immediately
   const overlay = document.getElementById('staff-picker-overlay');
   if (overlay) overlay.style.display = 'none';
+
   // Save name for future
   if (saveNew) {
     try {
@@ -1632,20 +1653,41 @@ async function completeCheck(name, saveNew) {
       if (existing.empty) {
         await addDoc(collection(db,'staffNames'), { name, restaurantId, createdAt: serverTimestamp() });
       }
-    } catch(e) { console.log('Name save error (non-critical):', e); }
+    } catch(e) {}
   }
-  // Save the check
+
+  // Save check to Firebase
   try {
     const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
     await addDoc(collection(db,'prepChecks'), {
       itemId, catId, restaurantId, dayIdx, weekStart,
       by: name.trim(), time, checkedAt: serverTimestamp()
     });
+
+    // UPDATE BUTTON DIRECTLY — no reload needed!
+    if (btn) {
+      const nm = name.split(' ')[0].substring(0,7);
+      btn.dataset.checked = 'true';
+      btn.style.cssText = 'width:100%;background:#1D9E75;color:#fff;border:2px solid #0F6E56;border-radius:8px;cursor:pointer;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:48px;font-family:inherit;gap:2px;';
+      btn.innerHTML = '<span style="font-size:0.72rem;font-weight:800;line-height:1;">&#10003;</span>'
+        + '<span style="font-size:0.62rem;font-weight:700;line-height:1.2;">' + nm + '</span>'
+        + '<span style="font-size:0.54rem;opacity:0.9;line-height:1.2;">' + time + '</span>';
+    }
+
     showToast('✅ ' + name + ' checked this off!');
-    loadPrepCategories(window._userData);
+
+    // Update the counter badge (e.g. "3/7 today")
+    const catBody = document.getElementById('cat-body-' + catId);
+    if (catBody) {
+      const allBtns = catBody.querySelectorAll('button[data-checked]');
+      const doneBtns = catBody.querySelectorAll('button[data-checked="true"]');
+      const header = document.querySelector('#prep-cat-' + catId + ' .prep-cat-progress');
+      if (header) header.textContent = doneBtns.length + '/' + allBtns.length + ' today';
+    }
+
   } catch(e) {
     console.error('completeCheck error:', e);
-    showToast('Error saving — check internet connection', 'error');
+    showToast('Error saving — check connection', 'error');
   }
 }
 
