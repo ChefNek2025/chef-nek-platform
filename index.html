@@ -1399,14 +1399,15 @@ async function loadPrepCategories(userData) {
                     const chk = checks[item.id+'_'+dayIdx];
                     const isToday = dayIdx === todayCol;
                     if (chk) {
-                      const firstName = (chk.by||'').split(' ')[0].substring(0,8);
-                      return `<div class="day-check-done" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="Done by ${chk.by} at ${chk.time} — click to uncheck" data-checked="true">
-                        <div class="chk-tick">✓</div>
-                        <div class="chk-name">${firstName}</div>
-                        <div class="chk-time">${chk.time}</div>
+                      const firstName = (chk.by||'Done').split(' ')[0].substring(0,7);
+                      const t = chk.time||'';
+                      return `<div onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" data-checked="true" style="background:#1D9E75;border:1.5px solid #0F6E56;border-radius:8px;cursor:pointer;padding:4px 3px;text-align:center;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;" title="Done by ${chk.by} at ${chk.time} — tap to uncheck">
+                        <div style="font-size:0.65rem;color:#fff;font-weight:700;">✓</div>
+                        <div style="font-size:0.58rem;color:#fff;font-weight:600;line-height:1.2;overflow:hidden;max-width:50px;text-overflow:ellipsis;white-space:nowrap;">${firstName}</div>
+                        <div style="font-size:0.52rem;color:rgba(255,255,255,0.85);line-height:1.2;">${t}</div>
                       </div>`;
                     } else {
-                      return `<div class="day-check-empty ${isToday?'today':''}" onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" title="${isToday?'Tap to check off today':''}">
+                      return `<div onclick="togglePrepCheck('${item.id}','${cat.id}','${cat.restaurantId}',${dayIdx},'${weekStart}',this)" data-checked="false" style="width:32px;height:32px;border-radius:8px;border:${isToday?'2px solid #1D9E75':'1.5px solid #D0CEC6'};background:${isToday?'rgba(29,158,117,0.05)':'#fff'};cursor:pointer;margin:auto;" title="${isToday?'Tap to check off':''}">
                       </div>`;
                     }
                   }).join('')}
@@ -1552,46 +1553,51 @@ window.toggleCat = function(id) {
 let _pendingCheck = null;
 
 window.togglePrepCheck = async function(itemId, catId, restaurantId, dayIdx, weekStart, el) {
-  const isChecked = el.classList.contains('checked') || el.dataset.checked === 'true' || el.classList.contains('day-check-done');
-  if (isChecked) {
-    try {
+  try {
+    const isChecked = el.classList.contains('day-check-done') || el.dataset.checked === 'true';
+    if (isChecked) {
       const snap = await getDocs(query(collection(db,'prepChecks'), where('itemId','==',itemId)));
       const toDelete = snap.docs.filter(d => d.data().dayIdx === dayIdx && d.data().weekStart === weekStart);
       for (const d of toDelete) {
         const {deleteDoc: dd} = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
         await dd(doc(db,'prepChecks',d.id));
       }
-      el.classList.remove('checked');
-      el.title = '';
       loadPrepCategories(window._userData);
-    } catch(e) { showToast('Error updating check', 'error'); }
-  } else {
-    // Store pending check data and show staff picker
-    _pendingCheck = { itemId, catId, restaurantId, dayIdx, weekStart, el };
-    const nameEl = el.closest('.prep-item-row');
-    const itemLabel = nameEl ? nameEl.querySelector('.prep-item-name') : null;
-    const itemText = itemLabel ? itemLabel.textContent.trim().replace(/Edit|Del|🚨|✅|⚠.*today/g,'').trim().substring(0,50) : 'this item';
-    injectStaffPicker();
-    document.getElementById('staff-picker-item-name').textContent = itemText;
-    const customInput = document.getElementById('staff-custom-name');
-    if (customInput) customInput.value = '';
-    loadStaffNames(restaurantId);
-    document.getElementById('staff-picker-overlay').style.display = 'flex';
+    } else {
+      _pendingCheck = { itemId, catId, restaurantId, dayIdx, weekStart };
+      showStaffPicker(restaurantId);
+    }
+  } catch(e) {
+    console.error('togglePrepCheck error:', e);
+    showToast('Error', 'error');
   }
+}
+
+function showStaffPicker(restaurantId) {
+  injectStaffPicker();
+  setTimeout(() => {
+    const overlay = document.getElementById('staff-picker-overlay');
+    if (!overlay) return;
+    const input = document.getElementById('staff-custom-name');
+    if (input) input.value = '';
+    overlay.style.cssText = 'display:flex;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:99999;align-items:center;justify-content:center;padding:20px;';
+    loadStaffNames(restaurantId);
+  }, 50);
 }
 
 async function loadStaffNames(restaurantId) {
   const grid = document.getElementById('staff-picker-grid');
-  grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:8px 0;">Loading staff...</div>';
+  if (!grid) return;
+  grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:8px 0;">Loading...</div>';
   try {
     const staffSnap = await getDocs(query(collection(db,'staffNames'), where('restaurantId','==',restaurantId)));
-    const savedNames = [...new Set(staffSnap.docs.map(d => d.data().name).filter(Boolean))];
-    if (savedNames.length === 0) {
-      grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:4px 0;">No staff added yet — type a name below to add one</div>';
+    const names = [...new Set(staffSnap.docs.map(d => d.data().name).filter(Boolean))];
+    if (names.length === 0) {
+      grid.innerHTML = '<div style="font-size:0.8rem;color:var(--ink-muted);grid-column:span 2;padding:4px 0;">Type a name below to get started</div>';
     } else {
-      grid.innerHTML = savedNames.map(n => `
-        <button class="staff-btn" onclick="selectStaffName('${n.replace(/'/g,"&apos;")}')">
-          <div style="font-size:1.2rem;margin-bottom:4px;">👤</div>
+      grid.innerHTML = names.map(n => `
+        <button class="staff-btn" onclick="selectStaffName('${n.replace(/'/g,"&#39;")}')">
+          <div style="font-size:1.1rem;">👤</div>
           <div>${n}</div>
         </button>`).join('');
     }
@@ -1605,36 +1611,41 @@ window.selectStaffName = async function(name) {
 }
 
 window.confirmStaffName = async function() {
-  const name = document.getElementById('staff-custom-name').value.trim();
+  const input = document.getElementById('staff-custom-name');
+  const name = input ? input.value.trim() : '';
   if (!name) { showToast('Please enter your name', 'error'); return; }
   await completeCheck(name, true);
 }
 
 async function completeCheck(name, saveNew) {
-  if (!_pendingCheck) return;
-  const { itemId, catId, restaurantId, dayIdx, weekStart, el } = _pendingCheck;
-  document.getElementById('staff-picker-overlay').style.display = 'none';
-  // Save new name to staffNames collection
+  if (!_pendingCheck) { showToast('Error — please try again', 'error'); return; }
+  const { itemId, catId, restaurantId, dayIdx, weekStart } = _pendingCheck;
+  _pendingCheck = null;
+  // Hide overlay
+  const overlay = document.getElementById('staff-picker-overlay');
+  if (overlay) overlay.style.display = 'none';
+  // Save name for future
   if (saveNew) {
     try {
       const existing = await getDocs(query(collection(db,'staffNames'), where('restaurantId','==',restaurantId), where('name','==',name)));
       if (existing.empty) {
         await addDoc(collection(db,'staffNames'), { name, restaurantId, createdAt: serverTimestamp() });
       }
-    } catch(e) {}
+    } catch(e) { console.log('Name save error (non-critical):', e); }
   }
-  _pendingCheck = null;
+  // Save the check
   try {
     const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-    await addDoc(collection(db,'prepChecks'),{
+    await addDoc(collection(db,'prepChecks'), {
       itemId, catId, restaurantId, dayIdx, weekStart,
       by: name.trim(), time, checkedAt: serverTimestamp()
     });
-    el.classList.add('checked');
-    el.title = 'Done by '+name+' at '+time;
-    showToast('Checked off by '+name+'!');
+    showToast('✅ ' + name + ' checked this off!');
     loadPrepCategories(window._userData);
-  } catch(e) { showToast('Error saving check', 'error'); }
+  } catch(e) {
+    console.error('completeCheck error:', e);
+    showToast('Error saving — check internet connection', 'error');
+  }
 }
 
 window.closeStaffPicker = function() {
@@ -3513,4 +3524,3 @@ onAuthStateChanged(auth, async (user) => {
 </script>
 </body>
 </html>
-
