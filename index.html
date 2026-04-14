@@ -1408,7 +1408,7 @@ async function loadPrepCategories(userData) {
                     const ws = weekStart;
                     if (chk) {
                       const nm = (chk.by||'Done').split(' ')[0].substring(0,7);
-                      const tm = (chk.time||'').substring(0,5);
+                      const tm = (chk.time||'');
                       return `<button onclick="togglePrepCheck('${iid}','${cid}','${rid}',${dayIdx},'${ws}',this)" data-checked="true" style="width:100%;background:#1D9E75;color:#fff;border:2px solid #0F6E56;border-radius:8px;cursor:pointer;padding:4px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:48px;font-family:inherit;gap:2px;">
                         <span style="font-size:0.72rem;font-weight:800;line-height:1;">&#10003;</span>
                         <span style="font-size:0.62rem;font-weight:700;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;">${nm}</span>
@@ -2310,7 +2310,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto 8px;display:block;" onerror="this.style.display='none'">`:
                 `<div style="width:80px;height:80px;border-radius:50%;background:#f5f5f5;border:3px solid ${color};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
                 <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name}</div>
-                ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes.substring(0,60)}...</div>`:''}
+                ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes}...</div>`:''}
                 ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
               </div>`).join('')}
           </div>
@@ -2347,7 +2347,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#8B4513;">${item.price}</div>`:''}
               </div>
               <div style="font-size:0.7rem;color:rgba(92,51,23,0.6);margin-bottom:3px;font-style:italic;">${item.cat}</div>
-              ${item.notes?`<div style="font-size:0.75rem;color:#7A5C3A;line-height:1.5;">${item.notes.substring(0,90)}...</div>`:''}
+              ${item.notes?`<div style="font-size:0.75rem;color:#7A5C3A;line-height:1.5;">${item.notes}...</div>`:''}
             </div>
           </div>`).join('')}
       </div>
@@ -2378,7 +2378,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
             `<div style="width:90px;height:80px;border-radius:12px;background:#222;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:2rem;">🍽️</span></div>`}
             <div style="flex:1;">
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-style:italic;color:#fff;margin-bottom:3px;">${item.name}</div>
-              ${item.notes?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">${item.notes.substring(0,80)}...</div>`:''}
+              ${item.notes?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">${item.notes}...</div>`:''}
             </div>
             ${item.price?`<div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:700;color:#fff;text-align:center;">${item.price}</div>`:''}
           </div>`).join('')}
@@ -2460,7 +2460,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                   `<div style="width:44px;height:44px;background:#f5f5f5;border-radius:6px;flex-shrink:0;"></div>`}
                   <div style="flex:1;">
                     <div style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;">${item.notes.substring(0,50)}...</div>`:''}
+                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;">${item.notes}...</div>`:''}
                     ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:2px;">${item.price}</div>`:''}
                   </div>
                 </div>`).join('')}
@@ -2552,7 +2552,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 `<div style="width:100%;height:80px;background:#2A2A2A;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
                 <div style="padding:8px 10px;">
                   <div style="font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:2px;">${item.name}</div>
-                  ${item.notes?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.4;">${item.notes.substring(0,45)}...</div>`:''}
+                  ${item.notes?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.4;">${item.notes}...</div>`:''}
                   ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:4px;">${item.price}</div>`:''}
                 </div>
               </div>`).join('')}
@@ -2591,7 +2591,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                     <span style="font-size:0.85rem;font-weight:600;color:#3D1A00;">${item.name}</span>
                     ${item.price?`<span style="font-size:0.8rem;color:#8B4513;font-weight:700;margin-left:8px;white-space:nowrap;">${item.price}</span>`:''}
                   </div>
-                  ${item.notes?`<div style="font-size:0.72rem;color:#8B6640;line-height:1.5;margin-top:2px;font-style:italic;">${item.notes.substring(0,80)}...</div>`:''}
+                  ${item.notes?`<div style="font-size:0.72rem;color:#8B6640;line-height:1.5;margin-top:2px;font-style:italic;">${item.notes}...</div>`:''}
                 </div>`).join('')}
             </div>`).join('')}
         </div>
@@ -2637,7 +2637,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,0.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.2rem;">🍽️</span></div>`}
                 <div style="flex:1;">
                   <div style="font-size:0.875rem;font-weight:600;color:#fff;">${item.name}</div>
-                  ${item.notes?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;margin-top:2px;">${item.notes.substring(0,70)}...</div>`:''}
+                  ${item.notes?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;margin-top:2px;">${item.notes}...</div>`:''}
                 </div>
                 ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</div>`:''}
               </div>`).join('')}
@@ -2683,7 +2683,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                       <span style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</span>
                       ${item.price?`<span style="font-size:0.8rem;font-weight:700;color:#2D5016;">${item.price}</span>`:''}
                     </div>
-                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;margin-top:2px;">${item.notes.substring(0,55)}...</div>`:''}
+                    ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;margin-top:2px;">${item.notes}...</div>`:''}
                   </div>
                 </div>`).join('')}
             </div>`).join('')}
@@ -2695,75 +2695,63 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
     </div>`;
   }
 
-  // ── THEME 11: FOLK ART (La Cocina Picante style) ──
+  // ── THEME 11: FOLK ART ──
   if (theme === 'folk-art') {
-    return `<div id="menu-print-area" style="background:#FDF8F0;border-radius:16px;overflow:hidden;font-family:'Georgia',serif;">
-      <div style="background:linear-gradient(135deg,#E8473F,#C0392B);padding:4px 0;display:flex;justify-content:center;gap:0;">
-        ${Array(20).fill('<div style="width:24px;height:24px;background:rgba(255,255,255,0.15);border-radius:50%;margin:2px;"></div>').join('')}
-      </div>
-      <div style="background:linear-gradient(135deg,#2E86AB,#1A6B8A);padding:20px;text-align:center;position:relative;">
-        <div style="font-size:2rem;font-weight:900;color:#fff;letter-spacing:0.05em;text-transform:uppercase;text-shadow:2px 2px 0 rgba(0,0,0,0.3);">${name}</div>
-        ${settings.tagline?`<div style="font-size:0.85rem;color:rgba(255,255,255,0.85);margin-top:4px;">${settings.tagline}</div>`:''}
+    return `<div id="menu-print-area" style="background:#FDF8F0;border-radius:16px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#2E86AB,#1A6B8A);padding:20px;text-align:center;">
+        <div style="font-size:1.8rem;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:0.05em;">${name}</div>
+        ${settings.tagline?'<div style="font-size:0.85rem;color:rgba(255,255,255,0.85);margin-top:4px;">'+settings.tagline+'</div>':''}
         <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap;">
-          ${settings.hours?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">${settings.hours}</span>`:''}
-          ${settings.phone?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">${settings.phone}</span>`:''}
-          ${settings.instagram?`<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">${settings.instagram}</span>`:''}
+          ${settings.hours?'<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.hours+'</span>':''}
+          ${settings.phone?'<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.phone+'</span>':''}
         </div>
       </div>
-      <div style="background:linear-gradient(135deg,#E8473F,#C0392B);padding:4px 0;display:flex;justify-content:center;gap:0;">
-        ${Array(20).fill('<div style="width:24px;height:24px;background:rgba(255,255,255,0.15);border-radius:50%;margin:2px;"></div>').join('')}
-      </div>
+      <div style="background:#E8473F;height:6px;"></div>
       <div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
         ${sortedGroups.map(([cat,items])=>`
           <div>
             <div style="font-size:0.75rem;font-weight:900;color:#E8473F;text-transform:uppercase;letter-spacing:0.1em;border-bottom:2px solid #E8473F;padding-bottom:6px;margin-bottom:10px;">${cat}</div>
             ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
               <div style="margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px dashed #ddd;">
-                <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">
-                  <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.03em;">${item.name}</div>
-                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:#2E86AB;white-space:nowrap;">${item.price}</div>`:''}
+                <div style="display:flex;justify-content:space-between;gap:8px;">
+                  <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;text-transform:uppercase;">${item.name}</div>
+                  ${item.price?'<div style="font-size:0.78rem;font-weight:700;color:#2E86AB;white-space:nowrap;">'+item.price+'</div>':''}
                 </div>
-                ${item.notes?`<div style="font-size:0.7rem;color:#666;margin-top:2px;line-height:1.4;">${item.notes.substring(0,80)}</div>`:''}
+                ${item.notes?'<div style="font-size:0.72rem;color:#666;margin-top:2px;line-height:1.4;">'+item.notes+'</div>':''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
-      <div style="background:#2E86AB;padding:12px;text-align:center;">
+      <div style="background:#2E86AB;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
       </div>
     </div>`;
   }
 
-  // ── THEME 12: CANTINA PARCHMENT (La Mesa style) ──
+  // ── THEME 12: CANTINA PARCHMENT ──
   if (theme === 'cantina-parchment') {
-    const photoItems = allItems.filter(i=>i.photoUrl).slice(0,5);
-    return `<div id="menu-print-area" style="background:#F5EDD6;border-radius:16px;overflow:hidden;font-family:'Georgia',serif;">
-      <div style="display:grid;grid-template-columns:130px 1fr;">
-        <div style="background:#C67B3C;padding:12px 8px;display:flex;flex-direction:column;gap:8px;">
-          <div style="font-family:'Georgia',serif;font-size:1rem;font-weight:700;font-style:italic;color:#fff;text-align:center;margin-bottom:8px;">${name}</div>
-          ${photoItems.map(item=>`
-            <div style="border-radius:6px;overflow:hidden;">
-              ${item.photoUrl?`<img src="${item.photoUrl}" style="width:100%;height:70px;object-fit:cover;" onerror="this.style.display='none'">`:``}
-              <div style="background:rgba(0,0,0,0.5);padding:3px 5px;"><div style="font-size:0.6rem;color:#fff;font-weight:600;">${item.name.substring(0,15)}</div></div>
-            </div>`).join('')}
+    return `<div id="menu-print-area" style="background:#F5EDD6;border-radius:16px;overflow:hidden;">
+      <div style="background:#C67B3C;padding:20px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:700;font-style:italic;color:#fff;">${name}</div>
+        ${settings.tagline?'<div style="font-size:0.8rem;color:rgba(255,255,255,0.85);margin-top:4px;">'+settings.tagline+'</div>':''}
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap;">
+          ${settings.hours?'<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.hours+'</span>':''}
+          ${settings.phone?'<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.phone+'</span>':''}
+          ${settings.address?'<span style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.address+'</span>':''}
         </div>
-        <div style="padding:16px;">
-          <div style="text-align:center;margin-bottom:12px;">
-            <div style="font-size:1.4rem;font-weight:900;font-style:italic;color:#3D2B0A;">${name}</div>
-            ${settings.tagline?`<div style="font-size:0.75rem;color:#8B6240;">${settings.tagline}</div>`:''}
-          </div>
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-bottom:14px;">
-              <div style="font-size:0.9rem;font-weight:900;color:#C67B3C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;border-bottom:1.5px solid #C67B3C;padding-bottom:4px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;padding-bottom:5px;border-bottom:0.5px dashed rgba(139,98,64,0.3);">
-                  <div>
-                    <div style="font-size:0.78rem;font-weight:600;color:#3D2B0A;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.68rem;color:#8B6240;line-height:1.3;">${item.notes.substring(0,60)}</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:#3D2B0A;white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
+      </div>
+      <div style="padding:20px 24px;">
+        ${sortedGroups.map(([cat,items])=>`
+          <div style="margin-bottom:18px;">
+            <div style="font-size:0.9rem;font-weight:900;color:#C67B3C;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;border-bottom:2px solid #C67B3C;padding-bottom:5px;">${cat}</div>
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px dashed rgba(139,98,64,0.3);">
+                <div>
+                  <div style="font-size:0.82rem;font-weight:600;color:#3D2B0A;">${item.name}</div>
+                  ${item.notes?'<div style="font-size:0.72rem;color:#8B6240;line-height:1.4;margin-top:2px;">'+item.notes+'</div>':''}
+                </div>
+                ${item.price?'<div style="font-size:0.82rem;font-weight:700;color:#C67B3C;white-space:nowrap;">'+item.price+'</div>':''}
+              </div>`).join('')}
+          </div>`).join('')}
       </div>
       <div style="background:#C67B3C;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.6);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
@@ -2771,36 +2759,28 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
     </div>`;
   }
 
-  // ── THEME 13: MINIMAL SERIF (The Kitchen style) ──
+  // ── THEME 13: MINIMAL SERIF ──
   if (theme === 'minimal-serif') {
-    const photoItems = allItems.filter(i=>i.photoUrl).slice(0,4);
-    return `<div id="menu-print-area" style="background:#FAFAF7;border-radius:16px;overflow:hidden;font-family:'Georgia',serif;border:0.5px solid #e8e8e8;">
-      <div style="display:grid;grid-template-columns:90px 1fr;">
-        <div style="display:flex;flex-direction:column;gap:2px;background:#f0ede6;">
-          ${photoItems.map(item=>`
-            <div style="flex:1;min-height:120px;overflow:hidden;${!item.photoUrl?'display:flex;align-items:center;justify-content:center;background:#e8e4db;':''}">
-              ${item.photoUrl?`<img src="${item.photoUrl}" style="width:100%;height:100%;object-fit:cover;min-height:120px;" onerror="this.style.display='none'">`:``}
-            </div>`).join('')}
+    return `<div id="menu-print-area" style="background:#FAFAF7;border-radius:16px;overflow:hidden;border:0.5px solid #e8e8e8;">
+      <div style="padding:32px;text-align:center;border-bottom:2px solid #1A1A14;">
+        <div style="font-size:1.8rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.1em;">${name}</div>
+        ${settings.tagline?'<div style="font-size:0.8rem;color:#888;margin-top:6px;font-style:italic;">'+settings.tagline+'</div>':''}
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:10px;flex-wrap:wrap;">
+          ${settings.address?'<span style="font-size:0.72rem;color:#888;">'+settings.address+'</span>':''}
+          ${settings.phone?'<span style="font-size:0.72rem;color:#888;">'+settings.phone+'</span>':''}
+          ${settings.hours?'<span style="font-size:0.72rem;color:#888;">'+settings.hours+'</span>':''}
         </div>
-        <div style="padding:24px;">
-          <div style="text-align:center;border-bottom:1px solid #333;padding-bottom:16px;margin-bottom:20px;">
-            <div style="font-size:1.8rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.08em;">${name}</div>
-            ${settings.tagline?`<div style="font-size:0.8rem;color:#888;margin-top:4px;">${settings.tagline}</div>`:''}
-            <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap;">
-              ${settings.address?`<span style="font-size:0.72rem;color:#888;">${settings.address}</span>`:''}
-              ${settings.phone?`<span style="font-size:0.72rem;color:#888;">${settings.phone}</span>`:''}
-            </div>
-          </div>
-          ${sortedGroups.map(([cat,items])=>`
-            <div style="margin-bottom:18px;">
-              <div style="font-size:0.85rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.12em;text-align:center;margin-bottom:10px;background:#f0ede6;padding:6px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="margin-bottom:8px;text-align:center;">
-                  <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.05em;">${item.name} ${item.price?`<span style="font-weight:400;">${item.price}</span>`:''}</div>
-                  ${item.notes?`<div style="font-size:0.7rem;color:#888;font-style:italic;line-height:1.4;">${item.notes.substring(0,90)}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
-        </div>
+      </div>
+      <div style="padding:20px 32px;">
+        ${sortedGroups.map(([cat,items])=>`
+          <div style="margin-bottom:20px;">
+            <div style="font-size:0.85rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.15em;text-align:center;background:#f0ede6;padding:8px;margin-bottom:12px;">${cat}</div>
+            ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+              <div style="margin-bottom:10px;text-align:center;padding-bottom:8px;border-bottom:0.5px dashed #ddd;">
+                <div style="font-size:0.82rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.04em;">${item.name} ${item.price?'<span style="font-weight:400;font-style:italic;">'+item.price+'</span>':''}</div>
+                ${item.notes?'<div style="font-size:0.72rem;color:#888;font-style:italic;line-height:1.5;margin-top:3px;">'+item.notes+'</div>':''}
+              </div>`).join('')}
+          </div>`).join('')}
       </div>
       <div style="background:#1A1A14;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
@@ -2808,50 +2788,48 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
     </div>`;
   }
 
-  // ── THEME 14: GRUNGE CANTINA (Raul's style) ──
+  // ── THEME 14: GRUNGE CANTINA ──
   if (theme === 'grunge-cantina') {
-    return `<div id="menu-print-area" style="background:#E8DCC8;border-radius:16px;overflow:hidden;font-family:'Georgia',serif;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0.02) 0,rgba(0,0,0,0.02) 1px,transparent 1px,transparent 8px);">
-      <div style="display:grid;grid-template-columns:1fr 1fr;">
-        <div style="padding:20px;border-right:2px solid #C67B3C;">
-          <div style="background:#C67B3C;padding:12px 16px;margin-bottom:16px;transform:skew(-1deg);">
-            <div style="font-size:1.4rem;font-weight:900;color:#fff;transform:skew(1deg);">${name}</div>
-            ${settings.tagline?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.85);transform:skew(1deg);">${settings.tagline}</div>`:''}
-          </div>
-          ${sortedGroups.filter((_,i)=>i%2===0).map(([cat,items])=>`
-            <div style="margin-bottom:16px;">
-              <div style="font-size:0.85rem;font-weight:900;color:#1A1A14;text-transform:uppercase;letter-spacing:0.1em;border-bottom:2px solid #C67B3C;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px dotted #C67B3C50;">
-                  <div>
-                    <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.68rem;color:#666;line-height:1.3;">${item.notes.substring(0,65)}</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:#C67B3C;white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
+    return `<div id="menu-print-area" style="background:#E8DCC8;border-radius:16px;overflow:hidden;">
+      <div style="background:#C67B3C;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:1.4rem;font-weight:900;color:#fff;">${name}</div>
+          ${settings.tagline?'<div style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.tagline+'</div>':''}
         </div>
-        <div style="padding:20px;">
-          ${allItems.filter(i=>i.photoUrl).slice(0,2).map(item=>`
-            <div style="margin-bottom:12px;border-radius:8px;overflow:hidden;position:relative;">
-              <img src="${item.photoUrl}" style="width:100%;height:100px;object-fit:cover;" onerror="this.style.display='none'">
-            </div>`).join('')}
-          ${sortedGroups.filter((_,i)=>i%2===1).map(([cat,items])=>`
-            <div style="margin-bottom:16px;">
-              <div style="font-size:0.85rem;font-weight:900;color:#1A1A14;text-transform:uppercase;letter-spacing:0.1em;border-bottom:2px solid #C67B3C;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
-              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
-                <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:7px;padding-bottom:6px;border-bottom:0.5px dotted #C67B3C50;">
-                  <div>
-                    <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;">${item.name}</div>
-                    ${item.notes?`<div style="font-size:0.68rem;color:#666;line-height:1.3;">${item.notes.substring(0,65)}</div>`:''}
-                  </div>
-                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:#C67B3C;white-space:nowrap;">${item.price}</div>`:''}
-                </div>`).join('')}
-            </div>`).join('')}
+        <div style="text-align:right;">
+          ${settings.phone?'<div style="font-size:0.8rem;font-weight:700;color:#fff;">'+settings.phone+'</div>':''}
+          ${settings.hours?'<div style="font-size:0.72rem;color:rgba(255,255,255,0.8);">'+settings.hours+'</div>':''}
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;">
-        ${allItems.filter(i=>i.photoUrl).slice(2,4).map(item=>`
-          <img src="${item.photoUrl}" style="width:100%;height:80px;object-fit:cover;" onerror="this.style.display='none'">`).join('')}
+      <div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          ${sortedGroups.filter((_,i)=>i%2===0).map(([cat,items])=>`
+            <div style="margin-bottom:16px;">
+              <div style="font-size:0.85rem;font-weight:900;color:#1A1A14;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #C67B3C;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px dotted rgba(198,123,60,0.4);">
+                  <div style="display:flex;justify-content:space-between;gap:6px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;">${item.name}</div>
+                    ${item.price?'<div style="font-size:0.78rem;font-weight:700;color:#C67B3C;white-space:nowrap;">'+item.price+'</div>':''}
+                  </div>
+                  ${item.notes?'<div style="font-size:0.7rem;color:#666;line-height:1.3;margin-top:2px;">'+item.notes+'</div>':''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div>
+          ${sortedGroups.filter((_,i)=>i%2===1).map(([cat,items])=>`
+            <div style="margin-bottom:16px;">
+              <div style="font-size:0.85rem;font-weight:900;color:#1A1A14;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #C67B3C;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
+              ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px dotted rgba(198,123,60,0.4);">
+                  <div style="display:flex;justify-content:space-between;gap:6px;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#1A1A14;">${item.name}</div>
+                    ${item.price?'<div style="font-size:0.78rem;font-weight:700;color:#C67B3C;white-space:nowrap;">'+item.price+'</div>':''}
+                  </div>
+                  ${item.notes?'<div style="font-size:0.7rem;color:#666;line-height:1.3;margin-top:2px;">'+item.notes+'</div>':''}
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
       </div>
       <div style="background:#C67B3C;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
@@ -2859,38 +2837,33 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
     </div>`;
   }
 
-  // ── THEME 15: SPORTS BAR (Home Team style) ──
+  // ── THEME 15: SPORTS BAR ──
   if (theme === 'sports-bar') {
-    return `<div id="menu-print-area" style="background:#D4B896;border-radius:16px;overflow:hidden;font-family:'Arial',sans-serif;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,0.03) 0,rgba(0,0,0,0.03) 1px,transparent 1px,transparent 20px);">
-      <div style="background:#1A2744;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    return `<div id="menu-print-area" style="background:#D4B896;border-radius:16px;overflow:hidden;">
+      <div style="background:#1A2744;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
         <div>
-          <div style="font-size:1.5rem;font-weight:900;color:#C41E3A;text-transform:uppercase;letter-spacing:0.05em;line-height:1;">${name}</div>
-          ${settings.tagline?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.7);letter-spacing:0.1em;text-transform:uppercase;">${settings.tagline}</div>`:''}
+          <div style="font-size:1.5rem;font-weight:900;color:#C41E3A;text-transform:uppercase;letter-spacing:0.04em;">${name}</div>
+          ${settings.tagline?'<div style="font-size:0.7rem;color:rgba(255,255,255,0.7);letter-spacing:0.08em;text-transform:uppercase;">'+settings.tagline+'</div>':''}
         </div>
         <div style="text-align:right;">
-          ${settings.hours?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.8);">OPEN ${settings.hours}</div>`:''}
-          ${settings.phone?`<div style="font-size:0.8rem;font-weight:700;color:#fff;">${settings.phone}</div>`:''}
+          ${settings.hours?'<div style="font-size:0.72rem;color:rgba(255,255,255,0.8);">OPEN '+settings.hours+'</div>':''}
+          ${settings.phone?'<div style="font-size:0.85rem;font-weight:700;color:#fff;">'+settings.phone+'</div>':''}
         </div>
       </div>
-      <div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+      <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
         ${sortedGroups.map(([cat,items])=>`
           <div>
-            <div style="font-size:0.85rem;font-weight:900;color:#C41E3A;text-transform:uppercase;letter-spacing:0.08em;border-bottom:2px solid #1A2744;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
+            <div style="font-size:0.82rem;font-weight:900;color:#C41E3A;text-transform:uppercase;letter-spacing:0.06em;border-bottom:2px solid #1A2744;padding-bottom:5px;margin-bottom:8px;">${cat}</div>
             ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
               <div style="margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid rgba(0,0,0,0.1);">
                 <div style="display:flex;justify-content:space-between;gap:4px;">
-                  <div style="font-size:0.72rem;font-weight:700;color:#1A1A14;text-transform:uppercase;letter-spacing:0.02em;line-height:1.3;">${item.name}</div>
-                  ${item.price?`<div style="font-size:0.72rem;font-weight:700;color:#1A2744;white-space:nowrap;">${item.price}</div>`:''}
+                  <div style="font-size:0.72rem;font-weight:700;color:#1A1A14;text-transform:uppercase;line-height:1.3;">${item.name}</div>
+                  ${item.price?'<div style="font-size:0.72rem;font-weight:700;color:#1A2744;white-space:nowrap;">'+item.price+'</div>':''}
                 </div>
-                ${item.notes?`<div style="font-size:0.65rem;color:#555;line-height:1.3;margin-top:2px;">${item.notes.substring(0,70)}</div>`:''}
+                ${item.notes?'<div style="font-size:0.65rem;color:#555;line-height:1.3;margin-top:2px;">'+item.notes+'</div>':''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
-      ${allItems.filter(i=>i.photoUrl).length >= 2 ? `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;">
-        ${allItems.filter(i=>i.photoUrl).slice(0,2).map(item=>`
-          <img src="${item.photoUrl}" style="width:100%;height:120px;object-fit:cover;" onerror="this.style.display='none'">`).join('')}
-      </div>` : ''}
       <div style="background:#1A2744;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
       </div>
