@@ -329,7 +329,7 @@
   .inv-cat-chevron { font-size:18px; color:var(--ink-muted); transition:transform 0.2s; font-weight:300; }
   .inv-cat-chevron.open { transform:rotate(90deg); color:var(--green); }
   .inv-cat-body { border-top:0.5px solid var(--border); display:none; }
-  .inv-item-row { display:grid; grid-template-columns:1fr 100px 120px 80px; gap:8px; align-items:center; padding:10px 18px; border-bottom:0.5px solid var(--border); }
+  .inv-item-row { display:grid; grid-template-columns:1fr 80px 130px 90px; gap:8px; align-items:center; padding:10px 18px; border-bottom:0.5px solid var(--border); }
   .inv-item-row:last-child { border-bottom:none; }
   .inv-item-row.low-stock { background:#FFF8EC; border-left:3px solid var(--amber); }
   .inv-item-row.critical-stock { background:#FCEBEB; border-left:3px solid var(--red); }
@@ -1627,14 +1627,28 @@ async function loadStaffNames(restaurantId) {
 }
 
 window.selectStaffName = async function(name) {
-  await completeCheck(name, false);
+  if (window._invMode) {
+    await selectInvStaff(name);
+  } else {
+    await completeCheck(name, false);
+  }
 }
 
 window.confirmStaffName = async function() {
   const input = document.getElementById('staff-custom-name');
   const name = input ? input.value.trim() : '';
   if (!name) { showToast('Please enter your name', 'error'); return; }
-  await completeCheck(name, true);
+  if (window._invMode) {
+    // Save name to staffNames
+    try {
+      const rid = window._userData?.uid||'';
+      const existing = await getDocs(query(collection(db,'staffNames'), where('restaurantId','==',rid), where('name','==',name)));
+      if (existing.empty) await addDoc(collection(db,'staffNames'), { name, restaurantId:rid, createdAt: serverTimestamp() });
+    } catch(e) {}
+    await selectInvStaff(name);
+  } else {
+    await completeCheck(name, true);
+  }
 }
 
 async function completeCheck(name, saveNew) {
@@ -3265,15 +3279,52 @@ async function loadInvCategories(userData) {
                     </div>
                   </div>
                   <div class="inv-item-unit">${item.unit||'—'}</div>
-                  <div class="inv-qty-controls">
-                    <button class="inv-qty-btn" id="inv-minus-${item.id}" onclick="updateInvQty('${item.id}', ${(item.currentQty||0)-1})" ${(item.currentQty||0)===0?'disabled':''} style="${(item.currentQty||0)===0?'opacity:0.3;cursor:not-allowed;':''}">−</button>
-                    <span class="inv-qty-val" id="inv-qty-val-${item.id}" style="color:${isOut?'var(--red)':isLow?'var(--amber)':'var(--ink)'};font-weight:${isOut||isLow?'700':'500'};">${item.currentQty||0}</span>
-                    <button class="inv-qty-btn" id="inv-plus-${item.id}" onclick="updateInvQty('${item.id}', ${(item.currentQty||0)+1})">+</button>
+                  <div class="inv-qty-controls" style="flex-direction:column;gap:6px;min-width:130px;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <button onclick="invAdjust('${item.id}','minus',${item.currentQty||0},${item.alertAt||0},1)" style="width:28px;height:28px;border-radius:6px;border:1.5px solid var(--border);background:var(--cream);font-size:14px;cursor:pointer;flex-shrink:0;${(item.currentQty||0)===0?'opacity:0.3;pointer-events:none;':''}">−</button>
+                      <span id="inv-qty-val-${item.id}" style="font-size:1rem;font-weight:700;min-width:28px;text-align:center;color:${isOut?'var(--red)':isLow?'var(--amber)':'var(--ink)'};">${item.currentQty||0}</span>
+                      <button onclick="invAdjust('${item.id}','plus',${item.currentQty||0},${item.alertAt||0},1)" style="width:28px;height:28px;border-radius:6px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green-dark);font-size:14px;cursor:pointer;flex-shrink:0;">+</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <select id="inv-qty-select-${item.id}" style="flex:1;height:28px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-body);font-size:0.72rem;background:var(--cream);color:var(--ink);padding:0 4px;outline:none;">
+                        <option value="">Add/Remove...</option>
+                        <optgroup label="➕ Add">
+                          <option value="add_1">+1</option>
+                          <option value="add_2">+2</option>
+                          <option value="add_3">+3</option>
+                          <option value="add_5">+5</option>
+                          <option value="add_10">+10</option>
+                          <option value="add_20">+20</option>
+                          <option value="add_50">+50</option>
+                        </optgroup>
+                        <optgroup label="➖ Remove">
+                          <option value="rem_1">−1</option>
+                          <option value="rem_2">−2</option>
+                          <option value="rem_3">−3</option>
+                          <option value="rem_5">−5</option>
+                          <option value="rem_10">−10</option>
+                          <option value="rem_20">−20</option>
+                        </optgroup>
+                        <optgroup label="📦 Set to">
+                          <option value="set_0">Set to 0</option>
+                          <option value="set_5">Set to 5</option>
+                          <option value="set_10">Set to 10</option>
+                          <option value="set_20">Set to 20</option>
+                          <option value="set_50">Set to 50</option>
+                          <option value="set_100">Set to 100</option>
+                        </optgroup>
+                      </select>
+                      <button onclick="invAdjustFromSelect('${item.id}',${item.currentQty||0},${item.alertAt||0})" style="height:28px;padding:0 8px;border-radius:6px;border:none;background:var(--green);color:#fff;font-size:0.72rem;font-weight:600;cursor:pointer;white-space:nowrap;">Go</button>
+                    </div>
+                    <div id="inv-checker-${item.id}" style="font-size:0.62rem;color:var(--ink-muted);text-align:center;line-height:1.3;">
+                      ${item.lastBy ? '<span style="color:var(--green-dark);font-weight:600;">✓ '+item.lastBy+'</span> <span>'+item.lastTime+'</span>' : '<span style="color:var(--dimmer);">Not checked yet</span>'}
+                    </div>
                   </div>
-                  <div>
+                  <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
                     <span class="inv-status" id="inv-status-${item.id}" style="background:${isOut?'#FCEBEB':isLow?'var(--amber-light)':'var(--green-light)'};color:${isOut?'#A32D2D':isLow?'#854F0B':'#0F6E56'};">
                       ${isOut ? '🚨 Out' : isLow ? '⚠ Low' : '✓ OK'}
                     </span>
+                    ${item.alertAt>0?'<div style="font-size:0.65rem;color:var(--ink-muted);">Min: '+item.alertAt+'</div>':''}
                   </div>
                 </div>`;
             }).join('')}
@@ -3333,6 +3384,90 @@ window.toggleInvCat = function(id) {
   const isOpen = body.style.display === 'block';
   body.style.display = isOpen ? 'none' : 'block';
   chev.classList.toggle('open', !isOpen);
+}
+
+// ── INVENTORY STAFF PICKER ──
+let _pendingInv = null;
+
+window.invAdjustFromSelect = function(itemId, currentQty, alertAt) {
+  const sel = document.getElementById('inv-qty-select-'+itemId);
+  if (!sel || !sel.value) { showToast('Pick an option first', 'error'); return; }
+  const val = sel.value;
+  let newQty = currentQty;
+  if (val.startsWith('add_')) newQty = currentQty + parseInt(val.replace('add_',''));
+  else if (val.startsWith('rem_')) newQty = Math.max(0, currentQty - parseInt(val.replace('rem_','')));
+  else if (val.startsWith('set_')) newQty = parseInt(val.replace('set_',''));
+  sel.value = '';
+  _pendingInv = { itemId, newQty, alertAt };
+  showInvStaffPicker(itemId);
+}
+
+window.invAdjust = function(itemId, direction, currentQty, alertAt, amount) {
+  amount = amount || 1;
+  const newQty = direction === 'plus' ? currentQty + amount : Math.max(0, currentQty - amount);
+  _pendingInv = { itemId, newQty, alertAt };
+  showInvStaffPicker(itemId);
+}
+
+function showInvStaffPicker(itemId) {
+  // Reuse the same staff picker modal
+  injectStaffPicker();
+  const overlay = document.getElementById('staff-picker-overlay');
+  if (!overlay) return;
+  const label = document.getElementById('staff-picker-item-name');
+  if (label) label.textContent = 'Who is updating this item?';
+  const input = document.getElementById('staff-custom-name');
+  if (input) input.value = '';
+  overlay.style.cssText = 'display:flex;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:99999;align-items:center;justify-content:center;padding:20px;';
+  // Override selectStaffName temporarily for inventory
+  window._invMode = true;
+  const restaurantId = window._userData?.uid || '';
+  loadStaffNames(restaurantId);
+}
+
+window.selectInvStaff = async function(name) {
+  if (!_pendingInv) return;
+  const { itemId, newQty, alertAt } = _pendingInv;
+  _pendingInv = null;
+  window._invMode = false;
+  const overlay = document.getElementById('staff-picker-overlay');
+  if (overlay) overlay.style.display = 'none';
+  await updateInvQtyWithStaff(itemId, newQty, alertAt, name);
+}
+
+async function updateInvQtyWithStaff(itemId, newQty, alertAt, name) {
+  const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  try {
+    // Save qty + who updated to invItems
+    await setDoc(doc(db,'invItems',itemId), { 
+      currentQty: newQty, lastBy: name.trim(), lastTime: time, updatedAt: serverTimestamp() 
+    }, { merge: true });
+    // Also save to invChecks for history
+    try {
+      await addDoc(collection(db,'invChecks'), {
+        itemId, restaurantId: window._userData?.uid||'',
+        by: name.trim(), time, newQty, checkedAt: serverTimestamp()
+      });
+    } catch(e) {}
+    // Update UI instantly
+    const valEl = document.getElementById('inv-qty-val-'+itemId);
+    const rowEl = document.getElementById('inv-row-'+itemId);
+    const statusEl = document.getElementById('inv-status-'+itemId);
+    const checkerEl = document.getElementById('inv-checker-'+itemId);
+    const minusEl = document.getElementById('inv-minus-'+itemId);
+    const isOut = newQty === 0;
+    const isLow = newQty <= alertAt && !isOut;
+    if (valEl) { valEl.textContent = newQty; valEl.style.color = isOut?'var(--red)':isLow?'var(--amber)':'var(--ink)'; }
+    if (rowEl) { rowEl.classList.remove('low-stock','critical-stock'); if(isOut) rowEl.classList.add('critical-stock'); else if(isLow) rowEl.classList.add('low-stock'); }
+    if (statusEl) { statusEl.textContent = isOut?'🚨 Out':isLow?'⚠ Low':'✓ OK'; statusEl.style.background = isOut?'#FCEBEB':isLow?'var(--amber-light)':'var(--green-light)'; statusEl.style.color = isOut?'#A32D2D':isLow?'#854F0B':'#0F6E56'; }
+    if (checkerEl) checkerEl.innerHTML = '<span style="color:var(--green-dark);font-weight:600;">✓ '+name+'</span><br><span>'+time+'</span>';
+    if (minusEl) { minusEl.disabled = newQty===0; minusEl.style.opacity = newQty===0?'0.3':'1'; }
+    // Update + button onclick with new qty
+    const plusEl = document.getElementById('inv-plus-'+itemId);
+    if (plusEl) plusEl.onclick = ()=>invAdjust(itemId,'plus',newQty,alertAt);
+    if (minusEl) minusEl.onclick = ()=>invAdjust(itemId,'minus',newQty,alertAt);
+    showToast('✅ Updated by '+name+'!');
+  } catch(e) { showToast('Error updating','error'); }
 }
 
 window.updateInvQty = async function(itemId, newQty) {
