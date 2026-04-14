@@ -1878,6 +1878,7 @@ function renderMenuDesign(main, userData) {
           <div onclick="selectTheme('minimal-serif')" id="theme-minimal-serif" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🍽️</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Minimal Serif</div><div style="font-size:0.7rem;color:var(--ink-muted);">Clean elegant</div></div></div>
           <div onclick="selectTheme('grunge-cantina')" id="theme-grunge-cantina" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🤠</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Grunge Cantina</div><div style="font-size:0.7rem;color:var(--ink-muted);">Textured rustic</div></div></div>
           <div onclick="selectTheme('sports-bar')" id="theme-sports-bar" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;"><div style="font-size:1.5rem;">🏈</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Sports Bar</div><div style="font-size:0.7rem;color:var(--ink-muted);">Bold kraft paper</div></div></div>
+          <div onclick="selectTheme('black-lion')" id="theme-black-lion" style="border:1.5px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FAF0E8,#fff);"><div style="font-size:1.5rem;">🦁</div><div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);">Black Lion</div><div style="font-size:0.7rem;color:var(--ink-muted);">Peach + photo grid</div></div></div>
           </div>
           <div style="margin-top:12px;"><label style="font-size:0.78rem;color:var(--ink-muted);margin-bottom:4px;display:block;">Hero photo URL (for Hero Banner)</label><input type="text" id="menu-hero-photo" class="form-input-small" placeholder="Paste a food photo URL" style="width:100%;"></div>
         </div>
@@ -2880,6 +2881,61 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
       </div>
       <div style="background:#1A2744;padding:10px;text-align:center;">
         <div style="font-size:0.68rem;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;">Powered by Chef Nek Pro</div>
+      </div>
+    </div>`;
+  }
+
+  // ── THEME 16: BLACK LION ──
+  if (theme === 'black-lion') {
+    return `<div id="menu-print-area" style="background:#FAF0E8;border-radius:16px;overflow:hidden;font-family:'Arial',sans-serif;">
+      <div style="background:#FAF0E8;padding:24px 24px 8px;text-align:center;position:relative;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+          <div style="font-size:1.8rem;opacity:0.15;">🌿☕🍃</div>
+        </div>
+        <div style="font-size:2rem;font-weight:900;color:#1A1A14;letter-spacing:0.04em;">${name}</div>
+        ${settings.tagline?'<div style="font-size:0.85rem;color:#666;margin-top:4px;">'+settings.tagline+'</div>':''}
+        <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap;">
+          ${settings.phone?'<span style="font-size:0.75rem;color:#888;">'+settings.phone+'</span>':''}
+          ${settings.address?'<span style="font-size:0.75rem;color:#888;">'+settings.address+'</span>':''}
+          ${settings.hours?'<span style="font-size:0.75rem;color:#888;">'+settings.hours+'</span>':''}
+        </div>
+      </div>
+      <div style="padding:0 20px 24px;">
+        ${sortedGroups.map(([cat,items])=>{
+          const photoItems = items.filter(i=>i.photoUrl);
+          const noPhotoItems = items.filter(i=>!i.photoUrl);
+          return `<div style="margin-bottom:24px;">
+            <div style="display:inline-block;background:#1A1A14;color:#fff;font-size:1rem;font-weight:900;letter-spacing:0.06em;padding:6px 20px;margin-bottom:16px;text-transform:uppercase;">${cat}</div>
+            ${photoItems.length > 0 ? `
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:14px;">
+              ${photoItems.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div>
+                  <div style="border-radius:10px;overflow:hidden;margin-bottom:8px;">
+                    <img src="${item.photoUrl}" style="width:100%;height:140px;object-fit:cover;" onerror="this.style.display='none'">
+                  </div>
+                  <div style="font-size:0.85rem;font-weight:800;color:#1A1A14;text-transform:uppercase;letter-spacing:0.03em;">${item.name}</div>
+                  ${item.price?'<div style="font-size:0.85rem;font-weight:700;color:#1A1A14;margin:2px 0;">'+item.price+'</div>':''}
+                  ${item.notes?'<div style="font-size:0.72rem;color:#555;line-height:1.5;margin-top:3px;">'+item.notes+'</div>':''}
+                </div>`).join('')}
+            </div>` : ''}
+            ${noPhotoItems.length > 0 ? `
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${noPhotoItems.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
+                <div style="display:flex;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:0.5px solid rgba(0,0,0,0.1);">
+                  <div style="flex:1;">
+                    <div style="display:flex;align-items:baseline;gap:10px;">
+                      <span style="font-size:0.85rem;font-weight:800;color:#1A1A14;text-transform:uppercase;letter-spacing:0.02em;">${item.name}</span>
+                      ${item.price?'<span style="font-size:0.82rem;font-weight:700;color:#1A1A14;">'+item.price+'</span>':''}
+                    </div>
+                    ${item.notes?'<div style="font-size:0.72rem;color:#555;line-height:1.5;margin-top:3px;">'+item.notes+'</div>':''}
+                  </div>
+                </div>`).join('')}
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="background:#FAF0E8;padding:12px 24px;text-align:center;border-top:0.5px solid rgba(0,0,0,0.1);">
+        <div style="font-size:0.7rem;opacity:0.4;letter-spacing:0.1em;text-transform:uppercase;">🌿 Powered by Chef Nek Pro 🌿</div>
       </div>
     </div>`;
   }
