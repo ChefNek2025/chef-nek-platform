@@ -2370,8 +2370,8 @@ async function loadRestaurantsForSelect(selectId) {
 
 window.selectMenuColor = function(color) {
   menuAccentColor = color;
-  document.querySelectorAll('#color-picker div').forEach(el => {
-    el.style.border = '2px solid transparent';
+  document.querySelectorAll('[data-color]').forEach(el => {
+    el.style.border = '2px solid rgba(0,0,0,0.15)';
     el.style.transform = 'scale(1)';
   });
   const el = document.getElementById('color-'+color.replace('#',''));
@@ -2564,13 +2564,16 @@ window.updateMenuPreview = async function() {
 }
 
 window.selectTheme = function(theme) {
-  document.querySelectorAll('#theme-picker > div').forEach(el => {
+  document.querySelectorAll('[data-theme]').forEach(el => {
     el.style.borderColor = 'var(--border)';
     el.style.background = 'transparent';
+    el.style.fontWeight = '400';
   });
   const el = document.getElementById('theme-'+theme);
-  if (el) { el.style.borderColor = 'var(--green)'; el.style.background = 'var(--green-light)'; }
+  if (el) { el.style.borderColor = 'var(--green)'; el.style.background = 'var(--green-light)'; el.style.fontWeight = '600'; }
   window._selectedTheme = theme;
+  const rid = window._menuViewingRestaurantId || window._userData?.uid;
+  if (rid) setDoc(doc(db,'menuSettings',rid), {theme: theme}, {merge:true});
   updateMenuPreview();
 }
 
@@ -3671,33 +3674,6 @@ function updateMenuPreview() {
 
 let menuAccentColor = '#1D9E75';
 
-window.selectMenuColor = function(color) {
-  menuAccentColor = color;
-  document.querySelectorAll('.menu-color-swatch').forEach(el => {
-    el.style.border = '2px solid rgba(0,0,0,0.15)';
-    el.style.transform = 'scale(1)';
-  });
-  const el = document.getElementById('swatch-' + color.replace('#',''));
-  if (el) { el.style.border = '2px solid var(--ink)'; el.style.transform = 'scale(1.15)'; }
-  updateMenuPreview();
-}
-
-window.selectMenuTheme = function(themeId) {
-  console.log('[THEME] called:', themeId, 'rid:', window._menuViewingRestaurantId);
-  window._selectedTheme = themeId;
-  document.querySelectorAll('.theme-option').forEach(el => {
-    el.style.borderColor = 'var(--border)';
-    el.style.background = 'var(--white)';
-  });
-  const el = document.getElementById('theme-'+themeId);
-  if (el) { el.style.borderColor = 'var(--green)'; el.style.background = 'var(--green-light)'; }
-  const restaurantId = window._menuViewingRestaurantId || window._userData?.uid;
-  if (restaurantId) {
-    setDoc(doc(db,'menuSettings',restaurantId), {theme: themeId}, {merge:true})
-      .then(() => { showToast('Theme saved!'); window.updateMenuPreview(); });
-  }
-}
-
 function buildEditorPanels() {
   const panelEl = document.getElementById('editor-panels');
   if (!panelEl) return;
@@ -3713,15 +3689,15 @@ function buildEditorPanels() {
       + '<div><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:4px;">Phone</label><input id="menu-phone" class="form-input-small" style="width:100%;" value="'+(s.phone||'')+'" placeholder="720-000-0000"></div>'
       + '<div><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:4px;">Hours</label><input id="menu-hours" class="form-input-small" style="width:100%;" value="'+(s.hours||'')+'" placeholder="Mon-Fri 9am-9pm"></div>'
       + '<div style="grid-column:span 2;"><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:4px;">Address</label><input id="menu-address" class="form-input-small" style="width:100%;" value="'+(s.address||'')+'" placeholder="123 Main St, Washington DC"></div>'
-      + '</div><button onclick="saveMenuSettings(\''+rid2+'\')" class="form-btn-small" style="margin-top:12px;">Save & preview</button></div></div>'
+      + '</div><button onclick="saveMenuSettings()" class="form-btn-small" style="margin-top:12px;">Save & preview</button></div></div>'
       + '<div id="panel-theme" style="display:none;"><div class="card"><div class="card-title" style="margin-bottom:12px;">Choose theme</div>'
       + '<div id="theme-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
       + (function() {
-          var themes = ['dark-stone','vintage-parchment','clean-professional','dark-chalkboard','photo-grid','specials-spotlight','hero-banner'];
+          var themes = ['dark-stone','vintage-parchment','clean-professional','dark-chalkboard','photo-grid','specials-spotlight','hero-banner','elegant-restaurant','dark-texture','bistro-illustrated'];
           return themes.map(function(t) {
             var label = t.split('-').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1);}).join(' ');
             var isActive = s.theme === t;
-            return '<button class="theme-option" data-theme="'+t+'" style="height:40px;border-radius:10px;border:'+(isActive?'2px solid var(--green)':'1.5px solid var(--border)')+';background:'+(isActive?'var(--green-light)':'var(--white)')+';font-family:var(--font-body);font-size:0.78rem;cursor:pointer;">'+label+'</button>';
+            return '<button class="theme-option" id="theme-'+t+'" data-theme="'+t+'" style="height:40px;border-radius:10px;border:'+(isActive?'2px solid var(--green)':'1.5px solid var(--border)')+';background:'+(isActive?'var(--green-light)':'var(--white)')+';font-family:var(--font-body);font-size:0.78rem;cursor:pointer;font-weight:'+(isActive?'600':'400')+';transition:all 0.15s;">'+label+'</button>';
           }).join('');
         })()
       + '</div></div></div>'
@@ -3732,13 +3708,13 @@ function buildEditorPanels() {
           return colors.map(function(c) {
             var id = c.replace('#','');
             var isActive = menuAccentColor === c;
-            return '<div class="menu-color-swatch" id="swatch-'+id+'" data-color="'+c+'" onclick="selectMenuColor(this.dataset.color)" style="width:36px;height:36px;border-radius:50%;background:'+c+';cursor:pointer;border:'+(isActive?'2px solid var(--ink)':'2px solid rgba(0,0,0,0.15)')+';transition:transform 0.15s;"></div>';
+            return '<div class="menu-color-swatch" id="color-'+id+'" data-color="'+c+'" style="width:40px;height:40px;border-radius:50%;background:'+c+';cursor:pointer;border:'+(isActive?'3px solid var(--ink)':'2px solid rgba(0,0,0,0.15)')+';transition:all 0.15s;transform:'+(isActive?'scale(1.2)':'scale(1)')+';" title="Click to select"></div>';
           }).join('');
         })().join('')
       + '</div></div></div>'
-      + '<div id="panel-fonts" style="display:none;"><div class="card"><p style="color:var(--ink-muted);font-size:0.875rem;">Font settings coming soon.</p></div></div>'
+      + '<div id="panel-fonts" style="display:none;"><div class="card"><div class="card-title" style="margin-bottom:12px;">Fonts</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:6px;font-weight:600;">Title font</label><select id="menu-title-font" class="form-input-small" style="width:100%;height:40px;"><option value="Georgia,serif">Georgia (Elegant)</option><option value="var(--font-display)">Playfair (Display)</option><option value="var(--font-body)">DM Sans (Modern)</option><option value="Courier New,monospace">Courier (Classic)</option></select></div><div><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:6px;font-weight:600;">Body font</label><select id="menu-body-font" class="form-input-small" style="width:100%;height:40px;"><option value="var(--font-body)">DM Sans (Modern)</option><option value="Georgia,serif">Georgia (Elegant)</option><option value="var(--font-display)">Playfair (Display)</option></select></div></div><button onclick="saveMenuSettings(\''+(rid2)+'\'')" class="form-btn-small" style="margin-top:12px;">Save fonts</button></div></div>
       + '<div id="panel-layout" style="display:none;"><div class="card"><p style="color:var(--ink-muted);font-size:0.875rem;">Layout settings coming soon.</p></div></div>'
-      + '<div id="panel-logo" style="display:none;"><div class="card"><p style="color:var(--ink-muted);font-size:0.875rem;">Logo settings coming soon.</p></div></div>';
+      + '<div id="panel-logo" style="display:none;"><div class="card"><div class="card-title" style="margin-bottom:12px;">Logo & branding</div><div style="margin-bottom:12px;"><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:6px;font-weight:600;">Logo URL or upload</label><input type="text" id="menu-logo-url" class="form-input-small" style="width:100%;margin-bottom:8px;" placeholder="https://... or paste logo URL"><label for="menu-logo-upload" style="height:40px;padding:0 14px;background:var(--green);color:#fff;border-radius:8px;font-size:0.85rem;font-weight:500;cursor:pointer;display:flex;align-items:center;white-space:nowrap;">📤 Upload logo<input type="file" id="menu-logo-upload" accept="image/*" style="display:none;" onchange="uploadMenuLogo(this)"></label></div><div id="logo-preview" style="display:none;margin-bottom:12px;"><img id="logo-preview-img" style="max-width:80px;max-height:80px;border-radius:8px;border:0.5px solid var(--border);"></div><div><label style="font-size:0.75rem;color:var(--ink-muted);display:block;margin-bottom:6px;font-weight:600;">Logo position</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="menu-logo-pos" value="top-center" style="width:14px;height:14px;"><span>Top center</span></label><label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="menu-logo-pos" value="top-left" style="width:14px;height:14px;"><span>Top left</span></label><label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;cursor:pointer;"><input type="radio" name="menu-logo-pos" value="side" style="width:14px;height:14px;"><span>Side panel</span></label></div></div><button onclick="saveMenuSettings(\''+(rid2)+'\'')" class="form-btn-small" style="margin-top:12px;">Save logo</button></div></div>'
   }).catch(() => {});
   // Use event delegation on the editor-panels container
   // Remove old listener first to avoid duplicates
@@ -3749,13 +3725,20 @@ function buildEditorPanels() {
       const themeBtn = e.target.closest('[data-theme]');
       if (themeBtn) {
         console.log('[THEME-DELEGATE] clicked:', themeBtn.dataset.theme);
-        window.selectMenuTheme(themeBtn.dataset.theme);
+        window.selectTheme(themeBtn.dataset.theme);
         return;
       }
       const colorBtn = e.target.closest('[data-color]');
       if (colorBtn) {
         console.log('[COLOR-DELEGATE] clicked:', colorBtn.dataset.color);
         window.selectMenuColor(colorBtn.dataset.color);
+        return;
+      }
+      const fontBtn = e.target.closest('select[id^="menu-"]');
+      if (fontBtn && (fontBtn.id === 'menu-title-font' || fontBtn.id === 'menu-body-font')) {
+        if (fontBtn.id === 'menu-title-font') menuTitleFont = fontBtn.value;
+        else menuBodyFont = fontBtn.value;
+        return;
       }
     };
     console.log('[PANELS] Click handler attached to editor-panels');
@@ -3773,18 +3756,21 @@ window.saveMenuSettings = async function() {
     phone: (document.getElementById('menu-phone') || document.getElementById('ms-phone'))?.value.trim() || '',
     hours: (document.getElementById('menu-hours') || document.getElementById('ms-hours'))?.value.trim() || '',
     address: (document.getElementById('menu-address') || document.getElementById('ms-address'))?.value.trim() || '',
-    theme: window._selectedTheme || document.querySelector('.theme-option[style*="green"]')?.dataset?.theme || undefined,
-    accentColor: menuAccentColor || undefined,
-    font: window._selectedFont || undefined,
-    layout: window._selectedLayout || undefined,
+    theme: window._selectedTheme || document.querySelector('[data-theme][style*="green"]')?.dataset?.theme || 'dark-stone',
+    accentColor: menuAccentColor || '#1D9E75',
+    titleFont: document.getElementById('menu-title-font')?.value || menuTitleFont || 'Georgia,serif',
+    bodyFont: document.getElementById('menu-body-font')?.value || menuBodyFont || 'var(--font-body)',
+    logoUrl: document.getElementById('menu-logo-url')?.value.trim() || menuLogoUrl || '',
+    logoPos: document.querySelector('input[name="menu-logo-pos"]:checked')?.value || 'top-center',
   };
-  // Remove undefined keys
-  Object.keys(settings).forEach(k => settings[k] === undefined && delete settings[k]);
   try {
     await setDoc(doc(db,'menuSettings',restaurantId), settings, {merge:true});
-    showToast('Menu settings saved!');
+    showToast('✅ Menu settings saved!');
     updateMenuPreview();
-  } catch(e) { showToast('Error saving','error'); }
+  } catch(e) { 
+    console.error('Save error:', e);
+    showToast('Error saving','error'); 
+  }
 }
 
 // ============================================
