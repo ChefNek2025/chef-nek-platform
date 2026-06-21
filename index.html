@@ -2875,7 +2875,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               <div style="background:#fff;border-radius:14px;overflow:hidden;padding:14px;text-align:center;">
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid ${color};margin:0 auto 8px;display:block;" onerror="this.style.display='none'">`:
                 `<div style="width:80px;height:80px;border-radius:50%;background:#f5f5f5;border:3px solid ${color};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
-                <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name}</div>
+                <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#888;"> · 🔥 ${item.calories}</span>`:''}</div>
                 ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes}</div>`:''}
                 <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
                   ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
@@ -2916,7 +2916,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               `<div style="width:80px;height:80px;border-radius:50%;background:#D4A853;flex-shrink:0;border:3px solid #8B4513;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
             <div style="flex:1;background:rgba(255,255,255,0.6);border-radius:10px;padding:12px 16px;border:0.5px solid rgba(139,69,19,0.2);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                <div style="font-size:0.95rem;font-weight:700;color:#5C3317;">${item.name}</div>
+                <div style="font-size:0.95rem;font-weight:700;color:#5C3317;">${item.name} ${item.calories?`<span style="font-size:0.65rem;font-weight:400;color:#8B6640;"> · 🔥 ${item.calories}</span>`:''}</div>
                 ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#8B4513;">${item.price}</div>`:''}
 ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">🔥 ${item.calories}</div>`:''}
               </div>
@@ -2951,7 +2951,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
             ${item.photoUrl?`<img src="${item.photoUrl}" style="width:90px;height:80px;object-fit:cover;border-radius:12px;flex-shrink:0;" onerror="this.style.display='none'">`:
             `<div style="width:90px;height:80px;border-radius:12px;background:#222;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:2rem;">🍽️</span></div>`}
             <div style="flex:1;">
-              <div style="font-family:Georgia,serif;font-size:0.95rem;font-style:italic;color:#fff;margin-bottom:3px;">${item.name}</div>
+              <div style="font-family:Georgia,serif;font-size:0.95rem;font-style:italic;color:#fff;margin-bottom:3px;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:rgba(255,255,255,0.45);"> · 🔥 ${item.calories}</span>`:''}</div>
               ${item.notes?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">${item.notes}</div>`:''}
             </div>
             ${item.price?`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;text-align:center;">${item.price}</div>${item.calories?`<div style="font-size:0.6rem;color:rgba(255,255,255,0.45);">🔥 ${item.calories}</div>`:''}</div>`:''}
@@ -3033,7 +3033,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                   ${item.photoUrl?`<img src="${item.photoUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;" onerror="this.style.display='none'">`:
                   `<div style="width:44px;height:44px;background:#f5f5f5;border-radius:6px;flex-shrink:0;"></div>`}
                   <div style="flex:1;">
-                    <div style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</div>
+                    <div style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#888;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;">${item.notes}</div>`:''}
                     ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:2px;">${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#999;margin-top:1px;">🔥 ${item.calories}</div>`:''}
                   </div>
@@ -3125,7 +3125,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:100%;height:80px;object-fit:cover;" onerror="this.style.background='#2A2A2A'">`:
                 `<div style="width:100%;height:80px;background:#2A2A2A;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
                 <div style="padding:8px 10px;">
-                  <div style="font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:2px;">${item.name}</div>
+                  <div style="font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:2px;">${item.name} ${item.calories?`<span style="font-size:0.6rem;font-weight:400;color:rgba(255,255,255,0.45);"> · 🔥 ${item.calories}</span>`:''}</div>
                   ${item.notes?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.4;">${item.notes}</div>`:''}
                   ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:4px;">${item.price}</div>`:''}${item.calories?`<div style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:2px;">🔥 ${item.calories}</div>`:''}
                 </div>
@@ -3162,7 +3162,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
               ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
                 <div style="margin-bottom:10px;">
                   <div style="display:flex;justify-content:space-between;align-items:baseline;">
-                    <span style="font-size:0.85rem;font-weight:600;color:#3D1A00;">${item.name}</span>
+                    <span style="font-size:0.85rem;font-weight:600;color:#3D1A00;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#8B6640;"> · 🔥 ${item.calories}</span>`:''}</span>
                     ${item.price?`<span style="font-size:0.8rem;color:#8B4513;font-weight:700;margin-left:8px;white-space:nowrap;">${item.price}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.72rem;color:#8B6640;line-height:1.5;margin-top:2px;font-style:italic;">${item.notes}</div>`:''}
@@ -3210,7 +3210,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;" onerror="this.style.display='none'">`:
                 `<div style="width:52px;height:52px;border-radius:8px;background:rgba(255,255,255,0.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.2rem;">🍽️</span></div>`}
                 <div style="flex:1;">
-                  <div style="font-size:0.875rem;font-weight:600;color:#fff;">${item.name}</div>
+                  <div style="font-size:0.875rem;font-weight:600;color:#fff;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:rgba(255,255,255,0.4);"> · 🔥 ${item.calories}</span>`:''}</div>
                   ${item.notes?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;margin-top:2px;">${item.notes}</div>`:''}
                 </div>
                 ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</div>`:''}${item.calories?`<span style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-left:6px;">🔥 ${item.calories}</span>`:''}
@@ -3297,7 +3297,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl ? `<img src="${item.photoUrl}" style="width:76px;height:76px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1.5px solid rgba(201,162,39,0.3);" onerror="this.style.display='none'">` : ''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:5px;">
-                    <div style="font-size:1rem;font-weight:700;color:#FFFFFF;font-family:Georgia,serif;">${item.name}</div>
+                    <div style="font-size:1rem;font-weight:700;color:#FFFFFF;font-family:Georgia,serif;">${item.name} ${item.calories?`<span style="font-size:0.65rem;font-weight:400;color:rgba(255,255,255,0.4);"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price ? `<div style="font-size:1rem;font-weight:700;color:#C9A227;white-space:nowrap;">${item.price}</div>` : ''}${item.calories?`<div style="font-size:0.65rem;color:rgba(201,162,39,0.5);margin-top:3px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes ? `<div style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.65;">${item.notes}</div>` : ''}
@@ -3328,7 +3328,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
             ${items.map(item=>`
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:16px 0;border-bottom:1px solid #F0F0F0;">
                 <div style="flex:1;">
-                  <div style="font-size:1rem;font-weight:600;color:#0A0A0A;margin-bottom:4px;">${item.name}</div>
+                  <div style="font-size:1rem;font-weight:600;color:#0A0A0A;margin-bottom:4px;">${item.name} ${item.calories?`<span style="font-size:0.65rem;font-weight:400;color:#999;"> · 🔥 ${item.calories}</span>`:''}</div>
                   ${item.notes?`<div style="font-size:0.82rem;color:#999;line-height:1.6;">${item.notes}</div>`:''}
                 </div>
                 <div style="display:flex;align-items:flex-start;gap:14px;">
@@ -3359,7 +3359,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid ${neon}40;flex-shrink:0;">`:''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div style="font-size:0.95rem;font-weight:700;color:#fff;">${item.name}</div>
+                    <div style="font-size:0.95rem;font-weight:700;color:#fff;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:rgba(255,255,255,0.4);"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:${neon};white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.5;">${item.notes}</div>`:''}
@@ -3392,7 +3392,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:10px;flex-shrink:0;">`:''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div style="font-size:0.95rem;font-weight:700;color:#0D4A3A;">${item.name}</div>
+                    <div style="font-size:0.95rem;font-weight:700;color:#0D4A3A;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#666;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#1A7A5E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#666;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.8rem;color:#666;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
@@ -3420,7 +3420,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:68px;height:68px;object-fit:cover;border-radius:8px;flex-shrink:0;border:2px solid #8B5E3C;">`:''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div style="font-size:0.95rem;font-weight:700;color:#F5E6C8;">${item.name}</div>
+                    <div style="font-size:0.95rem;font-weight:700;color:#F5E6C8;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#A0856A;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#C9A227;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#A0856A;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0856A;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
@@ -3481,7 +3481,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 <div style="background:#fff;border-radius:10px;overflow:hidden;border:1.5px solid #E0DDD8;">
                   ${item.photoUrl?`<img src="${item.photoUrl}" style="width:100%;height:110px;object-fit:cover;">`:'<div style="height:6px;background:#E8380D;"></div>'}
                   <div style="padding:10px;">
-                    <div style="font-size:0.88rem;font-weight:700;color:#1A1A14;">${item.name}</div>
+                    <div style="font-size:0.88rem;font-weight:700;color:#1A1A14;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#888;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.notes?`<div style="font-size:0.72rem;color:#888;margin-top:3px;line-height:1.4;">${item.notes}</div>`:''}
                     ${item.price?`<div style="font-size:0.9rem;font-weight:800;color:#E8380D;margin-top:6px;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                   </div>
@@ -3512,7 +3512,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:64px;height:64px;object-fit:cover;border-radius:10px;flex-shrink:0;">`:''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div style="font-size:0.92rem;font-weight:700;color:#4A2C2A;">${item.name}</div>
+                    <div style="font-size:0.92rem;font-weight:700;color:#4A2C2A;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#A0756E;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price?`<div style="font-size:0.92rem;font-weight:700;color:#C97E6E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#A0756E;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0756E;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
@@ -3543,7 +3543,7 @@ ${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">�
                 ${item.photoUrl?`<img src="${item.photoUrl}" style="width:70px;height:70px;object-fit:cover;border-radius:6px;flex-shrink:0;">`:''}
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                    <div style="font-size:0.95rem;font-weight:600;color:#1A1A14;">${item.name}</div>
+                    <div style="font-size:0.95rem;font-weight:600;color:#1A1A14;">${item.name} ${item.calories?`<span style="font-size:0.62rem;font-weight:400;color:#888;"> · 🔥 ${item.calories}</span>`:''}</div>
                     ${item.price?`<div style="font-size:0.95rem;font-weight:400;color:#C9302C;white-space:nowrap;">¥ ${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#888;margin-top:4px;line-height:1.7;">${item.notes}</div>`:''}
