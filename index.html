@@ -2877,7 +2877,11 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 `<div style="width:80px;height:80px;border-radius:50%;background:#f5f5f5;border:3px solid ${color};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
                 <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name}</div>
                 ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes}</div>`:''}
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
+                  ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
+                  ${item.calories?`<div style="font-size:0.65rem;color:#888;background:#FFF0E5;padding:2px 8px;border-radius:20px;">🔥 ${item.calories}</div>`:''}
+                </div>
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                   ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
                   ${item.calories?`<div style="font-size:0.68rem;color:#888;background:#FFF0E5;padding:2px 8px;border-radius:20px;">🔥 ${item.calories}</div>`:''}
                 </div>
@@ -2914,6 +2918,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
                 <div style="font-size:0.95rem;font-weight:700;color:#5C3317;">${item.name}</div>
                 ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#8B4513;">${item.price}</div>`:''}
+${item.calories?`<div style="font-size:0.65rem;color:#8B6640;margin-top:2px;">🔥 ${item.calories}</div>`:''}
               </div>
               <div style="font-size:0.7rem;color:rgba(92,51,23,0.6);margin-bottom:3px;font-style:italic;">${item.cat}</div>
               ${item.notes?`<div style="font-size:0.75rem;color:#7A5C3A;line-height:1.5;">${item.notes}</div>`:''}
@@ -2949,7 +2954,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-style:italic;color:#fff;margin-bottom:3px;">${item.name}</div>
               ${item.notes?`<div style="font-size:0.75rem;color:rgba(255,255,255,0.4);line-height:1.5;">${item.notes}</div>`:''}
             </div>
-            ${item.price?`<div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:0.8rem;font-weight:700;color:#fff;text-align:center;">${item.price}</div>`:''}
+            ${item.price?`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#fff;text-align:center;">${item.price}</div>${item.calories?`<div style="font-size:0.6rem;color:rgba(255,255,255,0.45);">🔥 ${item.calories}</div>`:''}</div>`:''}
           </div>`).join('')}
       </div>
       <div style="padding:16px 28px;border-top:0.5px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
@@ -2993,7 +2998,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
             ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
               <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid rgba(255,255,255,0.06);">
                 <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
-                ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+                ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}${item.calories?`<span style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-left:4px;">🔥 ${item.calories}</span>`:''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
@@ -3030,7 +3035,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                   <div style="flex:1;">
                     <div style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</div>
                     ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;">${item.notes}</div>`:''}
-                    ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:2px;">${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:2px;">${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#999;margin-top:1px;">🔥 ${item.calories}</div>`:''}
                   </div>
                 </div>`).join('')}
             </div>`).join('')}
@@ -3063,7 +3068,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
                 <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px dashed rgba(255,255,255,0.08);">
                   <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
-                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}${item.calories?`<span style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-left:4px;">🔥 ${item.calories}</span>`:''}
                 </div>`).join('')}
             </div>`).join('')}
         </div>
@@ -3074,7 +3079,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
               ${items.sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(item=>`
                 <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px dashed rgba(255,255,255,0.08);">
                   <span style="font-size:0.8rem;color:rgba(255,255,255,0.8);">${item.name}</span>
-                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}
+                  ${item.price?`<span style="font-size:0.8rem;color:#F2A623;font-weight:600;">${item.price}</span>`:''}${item.calories?`<span style="font-size:0.65rem;color:rgba(255,255,255,0.4);margin-left:4px;">🔥 ${item.calories}</span>`:''}
                 </div>`).join('')}
             </div>`).join('')}
         </div>
@@ -3122,7 +3127,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="padding:8px 10px;">
                   <div style="font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:2px;">${item.name}</div>
                   ${item.notes?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);line-height:1.4;">${item.notes}</div>`:''}
-                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:4px;">${item.price}</div>`:''}
+                  ${item.price?`<div style="font-size:0.78rem;font-weight:700;color:${color};margin-top:4px;">${item.price}</div>`:''}${item.calories?`<div style="font-size:0.62rem;color:rgba(255,255,255,0.4);margin-top:2px;">🔥 ${item.calories}</div>`:''}
                 </div>
               </div>`).join('')}
           </div>
@@ -3250,7 +3255,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                   <div style="flex:1;">
                     <div style="display:flex;justify-content:space-between;">
                       <span style="font-size:0.8rem;font-weight:600;color:#1A1A14;">${item.name}</span>
-                      ${item.price?`<span style="font-size:0.8rem;font-weight:700;color:#2D5016;">${item.price}</span>`:''}
+                      ${item.price?`<span style="font-size:0.8rem;font-weight:700;color:#2D5016;">${item.price}</span>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                     </div>
                     ${item.notes?`<div style="font-size:0.68rem;color:#999;line-height:1.4;margin-top:2px;">${item.notes}</div>`:''}
                   </div>
@@ -3293,7 +3298,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:5px;">
                     <div style="font-size:1rem;font-weight:700;color:#FFFFFF;font-family:Georgia,serif;">${item.name}</div>
-                    ${item.price ? `<div style="font-size:1rem;font-weight:700;color:#C9A227;white-space:nowrap;">${item.price}</div>` : ''}
+                    ${item.price ? `<div style="font-size:1rem;font-weight:700;color:#C9A227;white-space:nowrap;">${item.price}</div>` : ''}${item.calories?`<div style="font-size:0.65rem;color:rgba(201,162,39,0.5);margin-top:3px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes ? `<div style="font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.65;">${item.notes}</div>` : ''}
                 </div>
@@ -3328,7 +3333,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 </div>
                 <div style="display:flex;align-items:flex-start;gap:14px;">
                   ${item.photoUrl?`<img src="${item.photoUrl}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;">`:''}
-                  ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#0A0A0A;white-space:nowrap;padding-top:2px;">$${item.price}</div>`:''}
+                  ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#0A0A0A;white-space:nowrap;padding-top:2px;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#999;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                 </div>
               </div>`).join('')}
           </div>`).join('')}
@@ -3355,7 +3360,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#fff;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:${neon};white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:${neon};white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:rgba(255,255,255,0.35);margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3388,7 +3393,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#0D4A3A;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#1A7A5E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#1A7A5E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#666;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.8rem;color:#666;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3416,7 +3421,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#F5E6C8;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#C9A227;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#C9A227;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#A0856A;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0856A;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3447,7 +3452,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:1rem;font-weight:700;color:#F5E6C8;">${item.name}</div>
-                    ${item.price?`<div style="font-size:1rem;font-weight:400;color:#C9A227;white-space:nowrap;font-family:Inter,sans-serif;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:1rem;font-weight:400;color:#C9A227;white-space:nowrap;font-family:Inter,sans-serif;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:rgba(201,162,39,0.5);margin-top:3px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.8rem;color:rgba(245,230,200,0.45);margin-top:4px;line-height:1.65;font-style:italic;">${item.notes}</div>`:''}
                 </div>
@@ -3478,7 +3483,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                   <div style="padding:10px;">
                     <div style="font-size:0.88rem;font-weight:700;color:#1A1A14;">${item.name}</div>
                     ${item.notes?`<div style="font-size:0.72rem;color:#888;margin-top:3px;line-height:1.4;">${item.notes}</div>`:''}
-                    ${item.price?`<div style="font-size:0.9rem;font-weight:800;color:#E8380D;margin-top:6px;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.9rem;font-weight:800;color:#E8380D;margin-top:6px;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                   </div>
                 </div>`).join('')}
             </div>
@@ -3508,7 +3513,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.92rem;font-weight:700;color:#4A2C2A;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.92rem;font-weight:700;color:#C97E6E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
+                    ${item.price?`<div style="font-size:0.92rem;font-weight:700;color:#C97E6E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#A0756E;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0756E;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3539,7 +3544,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:600;color:#1A1A14;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:400;color:#C9302C;white-space:nowrap;">¥ ${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:400;color:#C9302C;white-space:nowrap;">¥ ${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#888;margin-top:4px;line-height:1.7;">${item.notes}</div>`:''}
                 </div>
