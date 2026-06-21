@@ -3208,7 +3208,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                   <div style="font-size:0.875rem;font-weight:600;color:#fff;">${item.name}</div>
                   ${item.notes?`<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);line-height:1.4;margin-top:2px;">${item.notes}</div>`:''}
                 </div>
-                ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</div>`:''}
+                ${item.price?`<div style="font-size:0.9rem;font-weight:700;color:#F2A623;white-space:nowrap;">${item.price}</div>`:''}${item.calories?`<span style="font-size:0.68rem;color:rgba(255,255,255,0.45);margin-left:6px;">🔥 ${item.calories}</span>`:''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
@@ -3355,7 +3355,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#fff;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:${neon};white-space:nowrap;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:${neon};white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3388,7 +3388,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#0D4A3A;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#1A7A5E;white-space:nowrap;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#1A7A5E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.8rem;color:#666;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3416,7 +3416,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:700;color:#F5E6C8;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#C9A227;white-space:nowrap;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:700;color:#C9A227;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0856A;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3508,7 +3508,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.92rem;font-weight:700;color:#4A2C2A;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.92rem;font-weight:700;color:#C97E6E;white-space:nowrap;">$${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.92rem;font-weight:700;color:#C97E6E;white-space:nowrap;">$${item.price}</div>`:''}${item.calories?`<span style="font-size:0.65rem;opacity:0.6;margin-left:4px;">🔥 ${item.calories}</span>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#A0756E;margin-top:3px;line-height:1.5;">${item.notes}</div>`:''}
                 </div>
@@ -3539,7 +3539,7 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 <div style="flex:1;">
                   <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div style="font-size:0.95rem;font-weight:600;color:#1A1A14;">${item.name}</div>
-                    ${item.price?`<div style="font-size:0.95rem;font-weight:400;color:#C9302C;white-space:nowrap;">¥ ${item.price}</div>`:''}
+                    ${item.price?`<div style="font-size:0.95rem;font-weight:400;color:#C9302C;white-space:nowrap;">¥ ${item.price}</div>`:''}${item.calories?`<div style="font-size:0.65rem;color:#888;margin-top:2px;">🔥 ${item.calories}</div>`:''}
                   </div>
                   ${item.notes?`<div style="font-size:0.78rem;color:#888;margin-top:4px;line-height:1.7;">${item.notes}</div>`:''}
                 </div>
@@ -3831,6 +3831,7 @@ async function executePrint(recipes, allCats, rid) {
       if (showPrice && item.price) html += '<div class="item-price">$' + item.price + '</div>';
       html += '</div>';
       if (showDesc && item.notes) html += '<div class="item-desc">' + item.notes + '</div>';
+      if (item.calories) html += '<div style="font-size:8pt;color:#888;margin-top:2px;">🔥 ' + item.calories + '</div>';
       html += '</div></div>';
     });
     html += '</div>';
