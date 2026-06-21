@@ -47,11 +47,7 @@
   link.href = url;
   document.head.appendChild(link);
 })();
-
-
-// ============================================
-// START APP
-// ============================================
+</script>
 
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -9757,6 +9753,10 @@ window.nbUpdateTargetPreview = function() {
   if (!preview) return;
   preview.textContent = sel?.value ? '✉️ Only ' + sel.value + ' will see this notice' : '👥 All staff will see this notice';
 }
+window.printPage = function(page) {
+  window.print();
+}
+
 // ============================================
 // START APP
 // ============================================
