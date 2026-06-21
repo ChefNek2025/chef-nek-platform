@@ -566,6 +566,31 @@ window.renderLogin = function() {
         <div class="login-feature"><div class="login-feature-dot"></div><div class="login-feature-text">Inventory tracker with low-stock alerts</div></div>
         <div class="login-feature"><div class="login-feature-dot"></div><div class="login-feature-text">Menu costing calculator</div></div>
         <div class="login-feature"><div class="login-feature-dot"></div><div class="login-feature-text">Chef Nek training video library</div></div>
+
+        <!-- TEAM HUB HIGHLIGHT -->
+        <div style="margin-top:24px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:16px;padding:18px 20px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(29,158,117,0.3);border:1px solid rgba(29,158,117,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"><path d="M16 3H2a1 1 0 00-1 1v8a1 1 0 001 1h3l3 3 3-3h5a1 1 0 001-1V4a1 1 0 00-1-1z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:700;color:#fff;">💬 Team Hub — NEW</div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);">Chat + task management for your kitchen</div>
+            </div>
+            <span style="margin-left:auto;background:var(--green);color:#fff;font-size:0.6rem;font-weight:700;padding:3px 8px;border-radius:100px;white-space:nowrap;">LIVE</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+              <span style="color:var(--green);">✓</span> WhatsApp-style group chat for your team
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+              <span style="color:var(--green);">✓</span> Assign tasks with priority &amp; deadlines
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;color:rgba(255,255,255,0.6);">
+              <span style="color:var(--green);">✓</span> Staff checks off tasks when done
+            </div>
+          </div>
+        </div>
       </div>
       <div class="login-right">
         <h1 class="login-form-title">Welcome back</h1>
@@ -1267,6 +1292,7 @@ function renderRecipes(main, userData) {
              <option value="Combo Meals">Combo Meals</option>
           </select>
           <input type="text" id="recipe-servings" class="form-input-small" placeholder="Servings (e.g. 4)">
+          <input type="text" id="recipe-calories" class="form-input-small" placeholder="Calories (e.g. 450 kcal)">
           <div style="display:flex;gap:6px;align-items:center;">
               <input type="text" id="recipe-price" class="form-input-small" placeholder="Price (e.g. $13.99)">
               <input type="text" id="recipe-photo" class="form-input-small" placeholder="Photo URL or upload below" style="flex:1;">
@@ -1377,7 +1403,10 @@ function recipeCard(r) {
           <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:700;color:var(--ink);">${r.name}</div>
           ${r.category ? `<span class="status-badge status-active">${r.category}</span>` : ''}
         </div>
-        ${r.price ? `<div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;color:var(--green);white-space:nowrap;">${r.price}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          ${r.price ? `<div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;color:var(--green);white-space:nowrap;">${r.price}</div>` : ''}
+          ${r.calories ? `<div style="display:flex;align-items:center;gap:4px;background:#FFF0E5;border:1px solid #F4C09A;border-radius:100px;padding:3px 12px;"><span style="font-size:0.75rem;font-weight:700;color:#C05C00;">🔥 ${r.calories}</span></div>` : ''}
+        </div>
       </div>
       <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
         ${r.photoUrl ? `<img src="${r.photoUrl}" style="width:120px;height:100px;object-fit:cover;border-radius:10px;flex-shrink:0;" onerror="this.style.display='none'">` : `<div style="width:120px;height:100px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="2" width="18" height="20" rx="3"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/></svg></div>`}
@@ -1413,6 +1442,7 @@ function recipeCard(r) {
              <option value="Combo Meals">Combo Meals</option>
           </select>
           <input type="text" id="edit-servings-${id}" value="${safeServings}" class="form-input-small" placeholder="Servings">
+          <input type="text" id="edit-calories-${id}" value="${r.calories||''}" class="form-input-small" placeholder="Calories (e.g. 450 kcal)">
           <input type="text" id="edit-price-${id}" value="${r.price||''}" class="form-input-small" placeholder="Price (e.g. $13.99)">
           <div style="display:flex;gap:6px;align-items:center;">
               <input type="text" id="edit-photo-${id}" value="${safePhoto}" class="form-input-small" placeholder="Photo URL" style="flex:1;">
@@ -1555,12 +1585,13 @@ window.saveRecipe = async function(id) {
   const name = document.getElementById('edit-name-' + id).value.trim();
   const category = document.getElementById('edit-category-' + id).value;
   const servings = document.getElementById('edit-servings-' + id).value.trim();
+  const calories = document.getElementById('edit-calories-' + id)?.value.trim() || '';
   const price = document.getElementById('edit-price-' + id).value.trim();
   const photoUrl = document.getElementById('edit-photo-' + id).value.trim();
   const notes = document.getElementById('edit-notes-' + id).value.trim();
   if (!name) { showToast('Recipe name is required', 'error'); return; }
   try {
-    await setDoc(doc(db, 'recipes', id), { name, category, servings, price, photoUrl, notes }, { merge: true });
+    await setDoc(doc(db, 'recipes', id), { name, category, servings, calories, price, photoUrl, notes }, { merge: true });
     showToast('Recipe updated!');
     loadRecipes(window._userData);
   } catch(e) { showToast('Error updating recipe', 'error'); }
@@ -1579,13 +1610,14 @@ window.addRecipe = async function() {
   const name = document.getElementById('recipe-name').value.trim();
   const category = document.getElementById('recipe-category').value;
   const servings = document.getElementById('recipe-servings').value.trim();
+  const calories = document.getElementById('recipe-calories')?.value.trim() || '';
   const price = document.getElementById('recipe-price').value.trim();
   const photoUrl = document.getElementById('recipe-photo').value.trim();
   const notes = document.getElementById('recipe-notes').value.trim();
   const restaurantId = document.getElementById('recipe-restaurant').value;
   if (!name || !restaurantId) { showToast('Recipe name and restaurant are required', 'error'); return; }
   try {
-    await addDoc(collection(db, 'recipes'), { name, category, servings, price, photoUrl, notes, restaurantId, createdAt: serverTimestamp() });
+    await addDoc(collection(db, 'recipes'), { name, category, servings, calories, price, photoUrl, notes, restaurantId, createdAt: serverTimestamp() });
     showToast('Recipe added successfully!');
     loadRecipes(window._userData);
     document.getElementById('recipe-name').value = '';
@@ -2845,7 +2877,10 @@ function buildMenuHTML(theme, color, userData, settings, sortedGroups) {
                 `<div style="width:80px;height:80px;border-radius:50%;background:#f5f5f5;border:3px solid ${color};margin:0 auto 8px;display:flex;align-items:center;justify-content:center;"><span style="font-size:1.5rem;">🍽️</span></div>`}
                 <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:3px;">${item.name}</div>
                 ${item.notes?`<div style="font-size:0.68rem;color:#888;line-height:1.4;margin-bottom:6px;">${item.notes}</div>`:''}
-                ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  ${item.price?`<div style="font-size:0.8rem;font-weight:700;color:${color};background:${color}15;padding:3px 10px;border-radius:20px;display:inline-block;">${item.price}</div>`:''}
+                  ${item.calories?`<div style="font-size:0.68rem;color:#888;background:#FFF0E5;padding:2px 8px;border-radius:20px;">🔥 ${item.calories}</div>`:''}
+                </div>
               </div>`).join('')}
           </div>
         </div>`).join('')}
@@ -5641,6 +5676,8 @@ window.showAddMenuItem = function() {
     + '</select></div>'
     + '<div><label style="font-size:0.75rem;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px;">Price</label>'
     + '<input type="text" id="ami-price" class="form-input-small" style="width:100%;" placeholder="e.g. 13.99"></div>'
+    + '<div><label style="font-size:0.75rem;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:5px;">Calories</label>'
+    + '<input type="text" id="ami-calories" class="form-input-small" style="width:100%;" placeholder="e.g. 450 kcal"></div>'
     + '</div>'
     // Custom category
     + '<div id="ami-custom-cat-row" style="display:none;">'
@@ -5740,6 +5777,7 @@ async function saveMenuItem() {
     ? document.getElementById('ami-custom-cat')?.value.trim()
     : catSel?.value;
   const price = document.getElementById('ami-price')?.value.trim();
+  const calories = document.getElementById('ami-calories')?.value.trim() || '';
   const notes = document.getElementById('ami-notes')?.value.trim();
   const photoUrl = document.getElementById('ami-photo')?.value.trim();
   const restaurantId = isAdmin
@@ -5752,7 +5790,7 @@ async function saveMenuItem() {
 
   try {
     await addDoc(collection(db,'recipes'), {
-      name, category, price, notes, photoUrl,
+      name, category, price, calories, notes, photoUrl,
       restaurantId, createdAt: serverTimestamp()
     });
     showToast('✅ ' + name + ' added to menu!');
