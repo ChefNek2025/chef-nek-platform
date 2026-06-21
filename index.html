@@ -9760,6 +9760,27 @@ window.printPage = function(page) {
 // ============================================
 // START APP
 // ============================================
+// Catch ALL uncaught errors and show on screen
+window.onerror = function(msg, src, line, col, err) {
+  document.getElementById('root').innerHTML = 
+    '<div style="padding:30px;font-family:monospace;color:red;background:#fff;min-height:100vh;">'
+    + '<h2>JavaScript Error</h2>'
+    + '<p><b>' + msg + '</b></p>'
+    + '<p>Line: ' + line + '</p>'
+    + '<p>' + (err ? err.stack : '') + '</p>'
+    + '</div>';
+  return false;
+};
+
+window.addEventListener('unhandledrejection', function(e) {
+  document.getElementById('root').innerHTML = 
+    '<div style="padding:30px;font-family:monospace;color:red;background:#fff;min-height:100vh;">'
+    + '<h2>Promise Error</h2>'
+    + '<p><b>' + e.reason + '</b></p>'
+    + '<p>' + (e.reason && e.reason.stack ? e.reason.stack : '') + '</p>'
+    + '</div>';
+});
+
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     try {
@@ -9773,7 +9794,11 @@ onAuthStateChanged(auth, async (user) => {
       renderApp(userData);
     } catch(e) {
       console.error('Auth error:', e);
-      renderLogin();
+      document.getElementById('root').innerHTML = 
+        '<div style="padding:30px;font-family:monospace;color:red;background:#fff;">'
+        + '<h2>Auth Error</h2><p>' + e.message + '</p><p>' + e.stack + '</p>'
+        + '<button onclick="renderLogin()" style="padding:10px 20px;background:green;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:16px;">Go to Login</button>'
+        + '</div>';
     }
   } else {
     window._userData = null;
@@ -9781,4 +9806,13 @@ onAuthStateChanged(auth, async (user) => {
     renderLogin();
   }
 });
+
+// Fallback: if loading screen still showing after 8 seconds, force login
+setTimeout(function() {
+  const root = document.getElementById('root');
+  if (root && root.querySelector('.loading-screen')) {
+    console.warn('Timeout: forcing login page');
+    renderLogin();
+  }
+}, 8000);
 
