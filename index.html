@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Chef Nek Pro v4.18 - In-UI API key input, no key in code -->
+<!-- Chef Nek Pro v4.19 - Fixed key input rendering -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -517,7 +517,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-console.log("%cChef Nek Pro v4.18","color:#1D9E75;font-weight:bold;font-size:14px");
+console.log("%cChef Nek Pro v4.19","color:#1D9E75;font-weight:bold;font-size:14px");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCbX-lJSCX2XU4UKOA-6RvvOdBiU_CFTl0",
@@ -10317,58 +10317,73 @@ window.openAIFoodScanner = function() {
   body.style.cssText = 'padding:24px;';
 
   // ── API Key row ─────────────────────────────────────────
-  // Stored only in memory (window._anthropicKey) — never in code or GitHub
   const keyRow = document.createElement('div');
   keyRow.style.cssText = 'margin-bottom:14px;';
 
-  const savedKey = window._anthropicKey || '';
-  keyRow.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="position:relative;flex:1;">
-        <input id="ai-key-input" type="password"
-          placeholder="Paste your Anthropic API key (sk-ant-api03-...)"
-          value="${savedKey}"
-          style="width:100%;height:42px;border-radius:10px;border:1.5px solid ${savedKey ? 'var(--green)' : 'var(--border)'};
-                 padding:0 38px 0 12px;font-family:var(--font-body);font-size:0.8rem;
-                 background:${savedKey ? '#F0FAF5' : 'var(--cream)'};color:var(--ink);
-                 box-sizing:border-box;outline:none;transition:border-color 0.2s;">
-        <span id="ai-key-eye" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
-              cursor:pointer;font-size:1rem;user-select:none;" title="Show/hide key">👁️</span>
-      </div>
-      <a href="https://console.anthropic.com" target="_blank"
-         style="font-size:0.72rem;color:var(--green);white-space:nowrap;text-decoration:none;font-weight:600;">
-        Get free key ↗
-      </a>
-    </div>
-    <div style="font-size:0.7rem;color:var(--ink-muted);margin-top:5px;padding-left:2px;">
-      🔒 Key stays in memory only — never saved to code or GitHub
-    </div>
-  `;
+  const keyLabel = document.createElement('div');
+  keyLabel.style.cssText = 'font-size:0.75rem;font-weight:600;color:var(--ink-muted);margin-bottom:6px;';
+  keyLabel.textContent = '🔑 Anthropic API Key';
+  keyRow.appendChild(keyLabel);
+
+  const keyInputWrap = document.createElement('div');
+  keyInputWrap.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+  const keyInputInner = document.createElement('div');
+  keyInputInner.style.cssText = 'position:relative;flex:1;';
+
+  const keyInput = document.createElement('input');
+  keyInput.id = 'ai-key-input';
+  keyInput.type = 'password';
+  keyInput.placeholder = 'sk-ant-api03-...';
+  keyInput.value = window._anthropicKey || '';
+  keyInput.autocomplete = 'off';
+  keyInput.style.cssText = 'width:100%;height:44px;border-radius:10px;'
+    + 'border:1.5px solid ' + (window._anthropicKey ? 'var(--green)' : 'var(--border)') + ';'
+    + 'padding:0 40px 0 12px;font-family:var(--font-body);font-size:0.82rem;'
+    + 'background:' + (window._anthropicKey ? '#F0FAF5' : '#fff') + ';'
+    + 'color:var(--ink);box-sizing:border-box;outline:none;';
+
+  const eyeBtn = document.createElement('button');
+  eyeBtn.type = 'button';
+  eyeBtn.textContent = '👁️';
+  eyeBtn.title = 'Show / hide key';
+  eyeBtn.style.cssText = 'position:absolute;right:10px;top:50%;transform:translateY(-50%);'
+    + 'background:none;border:none;cursor:pointer;font-size:1rem;padding:0;line-height:1;';
+
+  keyInputInner.appendChild(keyInput);
+  keyInputInner.appendChild(eyeBtn);
+
+  const getKeyLink = document.createElement('a');
+  getKeyLink.href = 'https://console.anthropic.com';
+  getKeyLink.target = '_blank';
+  getKeyLink.textContent = 'Get key ↗';
+  getKeyLink.style.cssText = 'font-size:0.72rem;color:var(--green);white-space:nowrap;'
+    + 'text-decoration:none;font-weight:700;flex-shrink:0;';
+
+  keyInputWrap.appendChild(keyInputInner);
+  keyInputWrap.appendChild(getKeyLink);
+  keyRow.appendChild(keyInputWrap);
+
+  const keyHint = document.createElement('div');
+  keyHint.style.cssText = 'font-size:0.7rem;color:var(--ink-muted);margin-top:5px;';
+  keyHint.textContent = '🔒 Key stays in memory only — never saved to code or GitHub';
+  keyRow.appendChild(keyHint);
+
   body.appendChild(keyRow);
 
-  // Wire up show/hide toggle and save to memory on input
-  setTimeout(() => {
-    const keyInput = document.getElementById('ai-key-input');
-    const eyeBtn   = document.getElementById('ai-key-eye');
-    if (keyInput) {
-      keyInput.addEventListener('input', function() {
-        const v = this.value.trim();
-        window._anthropicKey = v;
-        this.style.borderColor  = v.startsWith('sk-ant') ? 'var(--green)' : 'var(--border)';
-        this.style.background   = v.startsWith('sk-ant') ? '#F0FAF5'     : 'var(--cream)';
-      });
-      keyInput.addEventListener('focus', function() {
-        if (!this.value) this.style.borderColor = 'var(--green)';
-      });
-    }
-    if (eyeBtn && keyInput) {
-      eyeBtn.addEventListener('click', function() {
-        const isHidden = keyInput.type === 'password';
-        keyInput.type  = isHidden ? 'text' : 'password';
-        this.textContent = isHidden ? '🙈' : '👁️';
-      });
-    }
-  }, 0);
+  // Events
+  keyInput.addEventListener('input', function() {
+    const v = this.value.trim();
+    window._anthropicKey = v;
+    const valid = v.startsWith('sk-ant');
+    this.style.borderColor = valid ? 'var(--green)' : 'var(--border)';
+    this.style.background  = valid ? '#F0FAF5'     : '#fff';
+  });
+  eyeBtn.addEventListener('click', function() {
+    const hidden = keyInput.type === 'password';
+    keyInput.type    = hidden ? 'text'  : 'password';
+    this.textContent = hidden ? '🙈'   : '👁️';
+  });
   // ─────────────────────────────────────────────────────────
 
   // Upload area
@@ -10592,9 +10607,9 @@ async function runAIScan() {
   }
 
   try {
-    // Read key from UI input first, fall back to in-memory store
-    const keyInput = document.getElementById('ai-key-input');
-    const apiKey = (keyInput?.value?.trim()) || window._anthropicKey || '';
+    // Read key from UI input or memory
+    const keyField = document.getElementById('ai-key-input');
+    const apiKey = (keyField?.value?.trim()) || window._anthropicKey || '';
 
     if (!apiKey) {
       throw new Error('Please paste your Anthropic API key above first.\nGet a free key at console.anthropic.com');
