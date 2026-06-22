@@ -9896,9 +9896,31 @@ const CALORIE_DB = {
   'niter kibbeh':       700, 'ghee':                900, 'sesame oil':         884,
 
   // SAUCES & CONDIMENTS
-  'ketchup':             97, 'mayonnaise':          680, 'hot sauce':           11,
-  'soy sauce':           53, 'bbq sauce':           172, 'ranch dressing':     140,
-  'hummus':             166, 'tahini':              595, 'pesto':              263,
+  'ketchup':             97,  'mayonnaise':          680, 'hot sauce':           11,
+  'soy sauce':           53,  'bbq sauce':           172, 'ranch dressing':     140,
+  'hummus':             166,  'tahini':              595, 'pesto':              263,
+  'worcestershire sauce': 78, 'fish sauce':          35,  'oyster sauce':        51,
+  'hoisin sauce':       220,  'teriyaki sauce':     100, 'sriracha':            93,
+  'buffalo sauce':       90,  'alfredo sauce':      185, 'marinara sauce':      53,
+  'tomato sauce':        29,  'tomato paste':        82, 'salsa':               36,
+  'guacamole':          150,  'tzatziki':            54, 'aioli':              470,
+  'hollandaise':        480,  'gravy':               37, 'cream sauce':        230,
+  'white sauce':        150,  'cheese sauce':       145, 'curry sauce':         87,
+  'tikka masala sauce': 120,  'jerk sauce':         100, 'chimichurri':        280,
+  'mole sauce':         130,  'enchilada sauce':     20, 'taco sauce':          23,
+  'sweet chili sauce':  125,  'plum sauce':         140, 'duck sauce':         130,
+  'ponzu sauce':         30,  'miso paste':         200, 'gochujang':          125,
+  'harissa':             60,  'berbere sauce':       80, 'berbere paste':      100,
+  'honey mustard':      260,  'dijon mustard':       66, 'yellow mustard':      60,
+  'hot honey':          290,  'maple syrup':        260, 'honey':              304,
+  'lemon juice':         22,  'lime juice':          25, 'vinegar':             18,
+  'apple cider vinegar': 22,  'balsamic vinegar':   88, 'red wine vinegar':    19,
+  'coconut milk':       197,  'coconut cream':      330, 'evaporated milk':   135,
+  'chicken broth':        7,  'beef broth':           7, 'vegetable broth':     4,
+  'red wine':            85,  'white wine':          82, 'beer':               43,
+  'creole sauce':        65,  'cajun sauce':         90, 'pepper sauce':        45,
+  'onion gravy':         40,  'mushroom sauce':      55, 'wine sauce':          70,
+  'pepper jack sauce':  150,  'nacho cheese':       130, 'queso':              120,
 
   // FRUITS
   'banana':              89, 'mango':               60,  'pineapple':          50,
@@ -9909,10 +9931,16 @@ const CALORIE_DB = {
   'almonds':            579, 'peanuts':             567, 'walnuts':            654,
   'sesame seeds':       573, 'sunflower seeds':     584,
 
-  // SPICES (per tsp = ~2-5g, minimal calories - show as 0)
+  // SPICES (per tsp - minimal calories)
   'salt': 0, 'pepper': 0, 'cumin': 0, 'turmeric': 0, 'paprika': 0,
   'cinnamon': 0, 'cardamom': 0, 'berbere': 0, 'mitmita': 0, 'ginger': 0,
-  'oregano': 0, 'thyme': 0, 'rosemary': 0, 'bay leaf': 0,
+  'oregano': 0, 'thyme': 0, 'rosemary': 0, 'bay leaf': 0, 'allspice': 0,
+  'nutmeg': 0, 'cloves': 0, 'chili powder': 0, 'garlic powder': 0,
+  'onion powder': 0, 'smoked paprika': 0, 'cayenne pepper': 0,
+  'italian seasoning': 0, 'jerk seasoning': 0, 'old bay': 0,
+  'lemon pepper': 0, 'seasoning salt': 0, 'adobo seasoning': 0,
+  'curry powder': 0, 'garam masala': 0, 'five spice': 0, 'sumac': 0,
+  'zaatar': 0, 'fenugreek': 0, 'coriander': 0, 'mustard seeds': 0,
 };
 
 window._calcTargetField = null;
@@ -9946,6 +9974,19 @@ window.openCalcModal = function(targetFieldId) {
     + '<input type="text" id="calc-search" placeholder="e.g. chicken breast, rice, butter..." class="form-input-small" style="flex:1;" oninput="calcSearch(this.value)">'
     + '</div>'
     + '<div id="calc-suggestions" style="display:none;background:#fff;border:1.5px solid var(--green);border-radius:10px;margin-top:4px;overflow:hidden;max-height:180px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.1);"></div>'
+    + '</div>'
+
+    // Custom ingredient
+    + '<div style="background:#F5F0FF;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1.5px solid #D4BBFF;">'
+    + '<div style="font-size:0.75rem;font-weight:700;color:#5B3DB5;margin-bottom:8px;">➕ Cannot find your ingredient? Add it manually:</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:8px;align-items:end;">'
+    + '<div><label style="font-size:0.68rem;color:#5B3DB5;display:block;margin-bottom:3px;">Ingredient name</label>'
+    + '<input type="text" id="custom-ing-name" class="form-input-small" placeholder="e.g. My special sauce" style="width:100%;"></div>'
+    + '<div><label style="font-size:0.68rem;color:#5B3DB5;display:block;margin-bottom:3px;">Calories per 100g</label>'
+    + '<input type="number" id="custom-ing-cal" class="form-input-small" placeholder="e.g. 120" style="width:100%;"></div>'
+    + '<button onclick="calcAddCustom()" style="height:42px;padding:0 14px;border-radius:8px;background:#5B3DB5;color:#fff;border:none;font-family:var(--font-body);font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Add</button>'
+    + '</div>'
+    + '<div style="font-size:0.68rem;color:#7B5DB5;margin-top:6px;">💡 Look up calories on Google: search "<b>100g [ingredient name] calories</b>"</div>'
     + '</div>'
 
     // Quick add common proteins
@@ -10171,6 +10212,27 @@ function calcRenderTotal() {
     useBtn.style.opacity = '1';
     useBtn.textContent = '✅ Use ' + totalRounded + ' kcal';
   }
+}
+
+window.calcAddCustom = function() {
+  const nameEl = document.getElementById('custom-ing-name');
+  const calEl  = document.getElementById('custom-ing-cal');
+  const name   = nameEl?.value.trim();
+  const cal    = parseFloat(calEl?.value);
+
+  if (!name) { showToast('Enter ingredient name', 'error'); return; }
+  if (isNaN(cal) || cal < 0) { showToast('Enter calories per 100g', 'error'); return; }
+
+  // Add to database for this session
+  CALORIE_DB[name.toLowerCase()] = cal;
+
+  // Add to calculator
+  calcAddIngredient(name.toLowerCase(), cal);
+
+  // Clear inputs
+  if (nameEl) nameEl.value = '';
+  if (calEl)  calEl.value = '';
+  showToast('✅ ' + name + ' added!');
 }
 
 window.calcApply = function() {
