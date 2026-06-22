@@ -10028,13 +10028,51 @@ window.calcAddIngredient = function(name, calPer100g) {
 
   // Add to list
   const id = Date.now();
-  window._calcIngredients.push({ id, name, calPer100g, grams: 100 });
+  window._calcIngredients.push({ id, name, calPer100g, grams: 100, displayAmount: 100, unit: 'g' });
   calcRenderList();
 }
 
 window.calcRemoveIngredient = function(id) {
   window._calcIngredients = window._calcIngredients.filter(i => i.id !== id);
   calcRenderList();
+}
+
+window.calcUpdateAmount = function(id, amount) {
+  const item = window._calcIngredients.find(i => i.id === id);
+  if (!item) return;
+  item.displayAmount = parseFloat(amount) || 0;
+  item.grams = calcToGrams(item.displayAmount, item.unit, item.name);
+  calcRenderTotal();
+}
+
+window.calcChangeUnit = function(id, unit) {
+  const item = window._calcIngredients.find(i => i.id === id);
+  if (!item) return;
+  item.unit = unit;
+  item.grams = calcToGrams(item.displayAmount, unit, item.name);
+  calcRenderTotal();
+}
+
+// Convert any unit to grams
+function calcToGrams(amount, unit, name) {
+  const conversions = {
+    'g':    1,
+    'oz':   28.3495,
+    'lb':   453.592,
+    'cup':  240,      // approximate for most ingredients
+    'tbsp': 15,
+    'tsp':  5,
+    'pc':   100,      // rough piece weight
+  };
+  // Special cup sizes for common ingredients
+  const cupOverrides = {
+    'white rice': 185, 'brown rice': 195, 'flour': 120, 'sugar': 200,
+    'butter': 227, 'milk': 244, 'heavy cream': 238, 'olive oil': 216,
+    'spinach': 30, 'lettuce': 47, 'kale': 67, 'broccoli': 91,
+  };
+  let factor = conversions[unit] || 1;
+  if (unit === 'cup' && cupOverrides[name]) factor = cupOverrides[name];
+  return amount * factor;
 }
 
 window.calcUpdateGrams = function(id, grams) {
@@ -10057,15 +10095,24 @@ function calcRenderList() {
     + window._calcIngredients.map(ing => `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--cream);border-radius:10px;margin-bottom:6px;">
         <div style="flex:1;font-size:0.875rem;font-weight:500;color:var(--ink);text-transform:capitalize;">${ing.name}</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <input type="number" value="${ing.grams}" min="1" max="2000"
-            onchange="calcUpdateGrams(${ing.id}, this.value)"
-            oninput="calcUpdateGrams(${ing.id}, this.value)"
-            style="width:70px;height:34px;border:1.5px solid var(--border);border-radius:8px;text-align:center;font-family:var(--font-body);font-size:0.875rem;outline:none;">
-          <span style="font-size:0.75rem;color:var(--ink-muted);">g</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <input type="number" value="${ing.displayAmount || ing.grams}" min="0.1" max="5000" step="0.1"
+            onchange="calcUpdateAmount(${ing.id}, this.value)"
+            oninput="calcUpdateAmount(${ing.id}, this.value)"
+            style="width:65px;height:34px;border:1.5px solid var(--border);border-radius:8px;text-align:center;font-family:var(--font-body);font-size:0.875rem;outline:none;">
+          <select onchange="calcChangeUnit(${ing.id}, this.value)" style="height:34px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:0.75rem;background:var(--cream);color:var(--ink);padding:0 4px;outline:none;cursor:pointer;">
+            <option value="g" ${ing.unit==='g'?'selected':''}>g</option>
+            <option value="oz" ${ing.unit==='oz'?'selected':''}>oz</option>
+            <option value="lb" ${ing.unit==='lb'?'selected':''}>lb</option>
+            <option value="cup" ${ing.unit==='cup'?'selected':''}>cup</option>
+            <option value="tbsp" ${ing.unit==='tbsp'?'selected':''}>tbsp</option>
+            <option value="tsp" ${ing.unit==='tsp'?'selected':''}>tsp</option>
+            <option value="pc" ${ing.unit==='pc'?'selected':''}>piece</option>
+          </select>
         </div>
-        <div style="font-size:0.82rem;font-weight:700;color:#C05C00;min-width:60px;text-align:right;">
-          ${ing.calPer100g === 0 ? '~0' : Math.round(ing.calPer100g * ing.grams / 100)} kcal
+        <div style="text-align:right;min-width:55px;">
+          <div style="font-size:0.82rem;font-weight:700;color:#C05C00;">${ing.calPer100g === 0 ? '~0' : Math.round(ing.calPer100g * ing.grams / 100)} kcal</div>
+          <div style="font-size:0.6rem;color:#999;">${Math.round(ing.grams)}g</div>
         </div>
         <button onclick="calcRemoveIngredient(${ing.id})" style="width:28px;height:28px;border-radius:6px;border:0.5px solid #F09595;background:#FCEBEB;color:#A32D2D;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">×</button>
       </div>`).join('');
