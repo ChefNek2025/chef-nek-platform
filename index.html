@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Chef Nek Pro v4.23 - Schedule Off Day support -->
+<!-- Chef Nek Pro v4.24 - Schedule green/red shift selector -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -517,7 +517,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-console.log("%cChef Nek Pro v4.23","color:#1D9E75;font-weight:bold;font-size:14px");
+console.log("%cChef Nek Pro v4.24","color:#1D9E75;font-weight:bold;font-size:14px");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCbX-lJSCX2XU4UKOA-6RvvOdBiU_CFTl0",
@@ -10308,31 +10308,41 @@ function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
     box.appendChild(mkField('Employee', empSel));
     box.appendChild(mkField('Day', daySel));
 
-    // ── Off Day toggle ──────────────────────────────────
-    const offToggleWrap = document.createElement('div');
-    offToggleWrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;'
-      + 'background:#FFF5F5;border:1.5px solid #FFCDD2;border-radius:12px;padding:12px 16px;margin-bottom:14px;cursor:pointer;';
+    // ── Shift type selector: Working (green) / Off Day (red) ──
+    const typeRow = document.createElement('div');
+    typeRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
 
-    const offLabel = document.createElement('div');
-    offLabel.innerHTML = '<div style="font-size:0.875rem;font-weight:700;color:#C62828;">🚫 Mark as Off Day</div>'
-      + '<div style="font-size:0.72rem;color:#E57373;margin-top:1px;">Employee is not working this day</div>';
-
-    const offSwitch = document.createElement('div');
     let isOff = existingShift?.isOff || false;
-    const renderSwitch = () => {
-      offSwitch.style.cssText = `width:44px;height:24px;border-radius:100px;background:${isOff ? '#E53935' : '#E0E0E0'};position:relative;transition:background 0.2s;flex-shrink:0;`;
-      offSwitch.innerHTML = `<div style="position:absolute;top:3px;left:${isOff ? '23px' : '3px'};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:left 0.2s;"></div>`;
+
+    const workBtn = document.createElement('button');
+    workBtn.type = 'button';
+    workBtn.innerHTML = '✅ Working Shift';
+    const offBtn = document.createElement('button');
+    offBtn.type = 'button';
+    offBtn.innerHTML = '🚫 Off Day';
+
+    const baseStyle = 'height:48px;border-radius:12px;font-family:var(--font-body);font-size:0.875rem;font-weight:700;cursor:pointer;border:2px solid;transition:all 0.18s;';
+    const activeWork = baseStyle + 'background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;border-color:#1D9E75;box-shadow:0 4px 14px rgba(29,158,117,0.35);';
+    const inactiveWork = baseStyle + 'background:#F0FAF5;color:#1D9E75;border-color:#C8E6C9;';
+    const activeOff  = baseStyle + 'background:linear-gradient(135deg,#E53935,#C62828);color:#fff;border-color:#E53935;box-shadow:0 4px 14px rgba(229,57,53,0.3);';
+    const inactiveOff  = baseStyle + 'background:#FFF5F5;color:#E53935;border-color:#FFCDD2;';
+
+    const applyStyles = () => {
+      workBtn.style.cssText = isOff ? inactiveWork : activeWork;
+      offBtn.style.cssText  = isOff ? activeOff   : inactiveOff;
+      shiftFields.style.display = isOff ? 'none' : 'block';
     };
-    renderSwitch();
 
-    offToggleWrap.appendChild(offLabel);
-    offToggleWrap.appendChild(offSwitch);
-    box.appendChild(offToggleWrap);
+    workBtn.addEventListener('click', () => { isOff = false; applyStyles(); });
+    offBtn.addEventListener('click',  () => { isOff = true;  applyStyles(); });
 
-    // Fields that hide when Off Day is on
+    typeRow.appendChild(workBtn);
+    typeRow.appendChild(offBtn);
+    box.appendChild(typeRow);
+    // ──────────────────────────────────────────────────────
+
+    // Fields that show only for working shifts
     const shiftFields = document.createElement('div');
-    shiftFields.style.display = isOff ? 'none' : 'block';
-
     shiftFields.appendChild(mkField('Position', posSel));
     const timeRow = document.createElement('div');
     timeRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;';
@@ -10341,15 +10351,8 @@ function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
     shiftFields.appendChild(timeRow);
     box.appendChild(shiftFields);
 
-    // Toggle handler
-    offToggleWrap.addEventListener('click', () => {
-      isOff = !isOff;
-      renderSwitch();
-      offToggleWrap.style.background = isOff ? '#FFF5F5' : '#F5FFF9';
-      offToggleWrap.style.borderColor = isOff ? '#FFCDD2' : '#C8E6C9';
-      shiftFields.style.display = isOff ? 'none' : 'block';
-    });
-    // ────────────────────────────────────────────────────
+    // Initialize button styles based on current isOff state
+    applyStyles();
 
     box.appendChild(mkField('Notes (optional)', notesEl));
 
