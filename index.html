@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Chef Nek Pro v4.21 - Advanced Schedule page -->
+<!-- Chef Nek Pro v4.22 - Schedule 12h AM/PM format -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -517,7 +517,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-console.log("%cChef Nek Pro v4.21","color:#1D9E75;font-weight:bold;font-size:14px");
+console.log("%cChef Nek Pro v4.22","color:#1D9E75;font-weight:bold;font-size:14px");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCbX-lJSCX2XU4UKOA-6RvvOdBiU_CFTl0",
@@ -9864,6 +9864,13 @@ function schedPosStyle(posLabel) {
   const p = SCHEDULE_POSITIONS.find(x => x.label === posLabel) || SCHEDULE_POSITIONS[5];
   return { color: p.color, bg: p.bg };
 }
+function schedFmt12h(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  const h12 = h % 12 || 12;
+  return `${h12}:${m.toString().padStart(2,'0')}${ampm}`;
+}
 
 function renderSchedule(main, userData) {
   const rid = currentRestaurantId() || userData.uid;
@@ -10078,7 +10085,7 @@ async function schedRenderGrid(rid) {
           const hrs = schedHoursFromShift(sh.startTime, sh.endTime);
           const shiftEl = document.createElement('div');
           shiftEl.style.cssText = `background:${bg};border-left:3px solid ${color};border-radius:6px;padding:4px 7px;margin-bottom:4px;cursor:pointer;`;
-          shiftEl.innerHTML = `<div style="font-size:0.68rem;font-weight:700;color:${color};">${sh.startTime}–${sh.endTime}</div>`
+          shiftEl.innerHTML = `<div style="font-size:0.68rem;font-weight:700;color:${color};">${schedFmt12h(sh.startTime)}–${schedFmt12h(sh.endTime)}</div>`
             + `<div style="font-size:0.65rem;color:var(--ink-muted);">${sh.position} · ${hrs}h</div>`;
           shiftEl.addEventListener('click', e => {
             e.stopPropagation();
@@ -10182,11 +10189,73 @@ function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
     return s;
   }
   function mkTime(val) {
-    const i = document.createElement('input');
-    i.type = 'time';
-    i.value = val || '';
-    i.style.cssText = 'width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 12px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;box-sizing:border-box;';
-    return i;
+    // Build a 12h AM/PM select — more mobile-friendly than type="time"
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:4px;';
+
+    const hours = [];
+    for (let h = 1; h <= 12; h++) hours.push(h);
+    const mins = ['00','15','30','45'];
+    const ampms = ['AM','PM'];
+
+    // Parse existing value (HH:MM 24h)
+    let initH = 9, initM = '00', initAMPM = 'AM';
+    if (val) {
+      const [hh, mm] = val.split(':').map(Number);
+      initAMPM = hh >= 12 ? 'PM' : 'AM';
+      initH = hh % 12 || 12;
+      initM = mm.toString().padStart(2,'0');
+      // Round to nearest 15
+      const rounded = ['00','15','30','45'].includes(initM) ? initM : '00';
+      initM = rounded;
+    }
+
+    const selStyle = 'height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 8px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;';
+
+    const hSel = document.createElement('select');
+    hSel.style.cssText = selStyle + 'flex:1;';
+    hours.forEach(h => {
+      const o = document.createElement('option');
+      o.value = h; o.textContent = h;
+      if (h === initH) o.selected = true;
+      hSel.appendChild(o);
+    });
+
+    const mSel = document.createElement('select');
+    mSel.style.cssText = selStyle + 'width:70px;';
+    mins.forEach(m => {
+      const o = document.createElement('option');
+      o.value = m; o.textContent = m;
+      if (m === initM) o.selected = true;
+      mSel.appendChild(o);
+    });
+
+    const aSel = document.createElement('select');
+    aSel.style.cssText = selStyle + 'width:70px;';
+    ampms.forEach(a => {
+      const o = document.createElement('option');
+      o.value = a; o.textContent = a;
+      if (a === initAMPM) o.selected = true;
+      aSel.appendChild(o);
+    });
+
+    wrap.appendChild(hSel);
+    wrap.appendChild(mSel);
+    wrap.appendChild(aSel);
+
+    // Expose .value as HH:MM (24h) for Firestore storage
+    Object.defineProperty(wrap, 'value', {
+      get() {
+        const h = parseInt(hSel.value);
+        const m = mSel.value;
+        const ap = aSel.value;
+        let h24 = h % 12;
+        if (ap === 'PM') h24 += 12;
+        return `${h24.toString().padStart(2,'0')}:${m}`;
+      }
+    });
+
+    return wrap;
   }
 
   // Employee selector
