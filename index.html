@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Chef Nek Pro v4.22 - Schedule 12h AM/PM format -->
+<!-- Chef Nek Pro v4.23 - Schedule Off Day support -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -517,7 +517,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc, getDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-console.log("%cChef Nek Pro v4.22","color:#1D9E75;font-weight:bold;font-size:14px");
+console.log("%cChef Nek Pro v4.23","color:#1D9E75;font-weight:bold;font-size:14px");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCbX-lJSCX2XU4UKOA-6RvvOdBiU_CFTl0",
@@ -10081,17 +10081,29 @@ async function schedRenderGrid(rid) {
         const dayShifts = shifts.filter(s => s.employeeId === emp.id && s.dayIndex === di);
 
         dayShifts.forEach(sh => {
-          const { color, bg } = schedPosStyle(sh.position);
-          const hrs = schedHoursFromShift(sh.startTime, sh.endTime);
-          const shiftEl = document.createElement('div');
-          shiftEl.style.cssText = `background:${bg};border-left:3px solid ${color};border-radius:6px;padding:4px 7px;margin-bottom:4px;cursor:pointer;`;
-          shiftEl.innerHTML = `<div style="font-size:0.68rem;font-weight:700;color:${color};">${schedFmt12h(sh.startTime)}–${schedFmt12h(sh.endTime)}</div>`
-            + `<div style="font-size:0.65rem;color:var(--ink-muted);">${sh.position} · ${hrs}h</div>`;
-          shiftEl.addEventListener('click', e => {
-            e.stopPropagation();
-            schedOpenShiftModal(rid, sh, emp.id, di);
-          });
-          cell.appendChild(shiftEl);
+          if (sh.isOff) {
+            // Off Day badge
+            const offEl = document.createElement('div');
+            offEl.style.cssText = 'background:#FFF5F5;border-left:3px solid #E53935;border-radius:6px;padding:5px 7px;margin-bottom:4px;cursor:pointer;';
+            offEl.innerHTML = '<div style="font-size:0.72rem;font-weight:800;color:#C62828;letter-spacing:0.04em;">🚫 OFF</div>'
+              + (sh.notes ? `<div style="font-size:0.65rem;color:#E57373;">${sh.notes}</div>` : '');
+            if (isAdmin) {
+              offEl.addEventListener('click', e => { e.stopPropagation(); schedOpenShiftModal(rid, sh, emp.id, di); });
+            }
+            cell.appendChild(offEl);
+          } else {
+            const { color, bg } = schedPosStyle(sh.position);
+            const hrs = schedHoursFromShift(sh.startTime, sh.endTime);
+            const shiftEl = document.createElement('div');
+            shiftEl.style.cssText = `background:${bg};border-left:3px solid ${color};border-radius:6px;padding:4px 7px;margin-bottom:4px;cursor:pointer;`;
+            shiftEl.innerHTML = `<div style="font-size:0.68rem;font-weight:700;color:${color};">${schedFmt12h(sh.startTime)}–${schedFmt12h(sh.endTime)}</div>`
+              + `<div style="font-size:0.65rem;color:var(--ink-muted);">${sh.position} · ${hrs}h</div>`;
+            shiftEl.addEventListener('click', e => {
+              e.stopPropagation();
+              schedOpenShiftModal(rid, sh, emp.id, di);
+            });
+            cell.appendChild(shiftEl);
+          }
         });
 
         // Add shift button on hover/tap
@@ -10124,8 +10136,8 @@ function schedUpdateStats(shifts, staff) {
   const statsBar = document.getElementById('sched-stats');
   if (!statsBar) return;
 
-  const totalShifts = shifts.length;
-  const totalHrs = shifts.reduce((sum, s) => sum + schedHoursFromShift(s.startTime, s.endTime), 0);
+  const totalShifts = shifts.filter(s => !s.isOff).length;
+  const totalHrs = shifts.filter(s => !s.isOff).reduce((sum, s) => sum + schedHoursFromShift(s.startTime, s.endTime), 0);
   const staffScheduled = new Set(shifts.map(s => s.employeeId)).size;
   const posBreakdown = {};
   shifts.forEach(s => { posBreakdown[s.position] = (posBreakdown[s.position]||0) + 1; });
@@ -10295,13 +10307,50 @@ function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
   } else {
     box.appendChild(mkField('Employee', empSel));
     box.appendChild(mkField('Day', daySel));
-    box.appendChild(mkField('Position', posSel));
 
+    // ── Off Day toggle ──────────────────────────────────
+    const offToggleWrap = document.createElement('div');
+    offToggleWrap.style.cssText = 'display:flex;align-items:center;justify-content:space-between;'
+      + 'background:#FFF5F5;border:1.5px solid #FFCDD2;border-radius:12px;padding:12px 16px;margin-bottom:14px;cursor:pointer;';
+
+    const offLabel = document.createElement('div');
+    offLabel.innerHTML = '<div style="font-size:0.875rem;font-weight:700;color:#C62828;">🚫 Mark as Off Day</div>'
+      + '<div style="font-size:0.72rem;color:#E57373;margin-top:1px;">Employee is not working this day</div>';
+
+    const offSwitch = document.createElement('div');
+    let isOff = existingShift?.isOff || false;
+    const renderSwitch = () => {
+      offSwitch.style.cssText = `width:44px;height:24px;border-radius:100px;background:${isOff ? '#E53935' : '#E0E0E0'};position:relative;transition:background 0.2s;flex-shrink:0;`;
+      offSwitch.innerHTML = `<div style="position:absolute;top:3px;left:${isOff ? '23px' : '3px'};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.25);transition:left 0.2s;"></div>`;
+    };
+    renderSwitch();
+
+    offToggleWrap.appendChild(offLabel);
+    offToggleWrap.appendChild(offSwitch);
+    box.appendChild(offToggleWrap);
+
+    // Fields that hide when Off Day is on
+    const shiftFields = document.createElement('div');
+    shiftFields.style.display = isOff ? 'none' : 'block';
+
+    shiftFields.appendChild(mkField('Position', posSel));
     const timeRow = document.createElement('div');
     timeRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;';
     timeRow.appendChild(mkField('Start Time', startTime));
     timeRow.appendChild(mkField('End Time', endTime));
-    box.appendChild(timeRow);
+    shiftFields.appendChild(timeRow);
+    box.appendChild(shiftFields);
+
+    // Toggle handler
+    offToggleWrap.addEventListener('click', () => {
+      isOff = !isOff;
+      renderSwitch();
+      offToggleWrap.style.background = isOff ? '#FFF5F5' : '#F5FFF9';
+      offToggleWrap.style.borderColor = isOff ? '#FFCDD2' : '#C8E6C9';
+      shiftFields.style.display = isOff ? 'none' : 'block';
+    });
+    // ────────────────────────────────────────────────────
+
     box.appendChild(mkField('Notes (optional)', notesEl));
 
     // Buttons
@@ -10321,9 +10370,10 @@ function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
         employeeId: empSel.value,
         employeeName: emp.name,
         dayIndex: parseInt(daySel.value),
-        position: posSel.value,
-        startTime: startTime.value,
-        endTime: endTime.value,
+        isOff: isOff,
+        position: isOff ? '' : posSel.value,
+        startTime: isOff ? '' : startTime.value,
+        endTime: isOff ? '' : endTime.value,
         notes: notesEl.value.trim(),
         updatedAt: new Date().toISOString()
       };
