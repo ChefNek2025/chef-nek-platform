@@ -809,6 +809,10 @@ function renderApp(userData) {
             <path d="M2 7L9 2l7 5v9a1 1 0 01-1 1H3a1 1 0 01-1-1z"/><path d="M6 18v-7h6v7"/>
           </svg>
         </button>
+        ${isAdmin ? `<button id="notif-bell" onclick="showNotifications()" style="width:40px;height:40px;border-radius:10px;border:none;background:var(--cream);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;" title="Notifications">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"><path d="M9 2a5 5 0 00-5 5v3l-1.5 2.5h13L14 10V7a5 5 0 00-5-5z"/><path d="M7 15.5a2 2 0 004 0"/></svg>
+          <div id="notif-dot" style="display:none;position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#E53935;border:1.5px solid #fff;"></div>
+        </button>` : ''}
       </div>
     </div>
     <div class="app-layout">
@@ -892,6 +896,11 @@ function renderApp(userData) {
     </div>
   `;
   renderPage(userData);
+  // Start notification listener for admin
+  if (isAdmin) {
+    const rid = currentRestaurantId() || userData.uid;
+    setTimeout(() => startNotifListener(rid), 2000);
+  }
   // Ensure sidebar is closed on page load
   setTimeout(() => {
     const sb = document.getElementById('main-sidebar');
@@ -9577,11 +9586,34 @@ async function thRefreshTasks(rid, myName) {
 window.thToggleTask = async function(taskId, done, rid, myName) {
   const senderName = isAdmin ? 'Chef Nek' : myName;
   try {
+    // Get task details first for the notification
+    const taskDoc = await getDoc(doc(db,'teamTasks',taskId));
+    const task = taskDoc.data();
+
     await setDoc(doc(db,'teamTasks',taskId), {
       done,
       doneBy: done ? senderName : null,
       doneAt: done ? serverTimestamp() : null
     }, {merge:true});
+
+    // Send notification to admin when employee marks done
+    if (done && !isAdmin && task) {
+      const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      const today = new Date().toISOString().split('T')[0];
+      await addDoc(collection(db,'notifications'), {
+        type: 'task_done',
+        restaurantId: rid,
+        employeeName: senderName,
+        taskId,
+        taskTitle: task.title || 'Task',
+        message: senderName + ' completed: "' + (task.title||'Task') + '"',
+        date: today,
+        time,
+        read: false,
+        createdAt: serverTimestamp()
+      });
+    }
+
     thRefreshTasks(rid, myName);
   } catch(e) { showToast('Error','error'); }
 }
@@ -9697,6 +9729,14 @@ function renderStaff(main, userData) {
   }
 
   header.appendChild(headerRow);
+
+  // Employee-only subtitle
+  if (!isAdmin) {
+    const subNote = document.createElement('div');
+    subNote.style.cssText = 'font-size:0.78rem;color:var(--ink-muted);margin-top:6px;';
+    subNote.textContent = '👇 Tap your name to check in for your shift';
+    header.appendChild(subNote);
+  }
   main.appendChild(header);
 
   const body = document.createElement('div');
@@ -9865,12 +9905,118 @@ async function staffLoad(rid) {
   }
 }
 
-window.staffCheckIn = function(i) {
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+// Start listening for notifications when admin loads
+function startNotifListener(rid) {
+  if (!isAdmin || window._notifUnsubscribe) return;
+  try {
+    const { onSnapshot, query: fsQuery, collection: fsCol, where: fsWhere, orderBy: fsOrderBy } = window._fsExports || {};
+    // Use the already-imported Firestore functions
+    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js').then(({ onSnapshot, query, collection, where, orderBy, limit }) => {
+      const q = query(collection(db,'notifications'), where('restaurantId','==',rid), where('read','==',false), orderBy('createdAt','desc'), limit(20));
+      window._notifUnsubscribe = onSnapshot(q, snap => {
+        const count = snap.docs.length;
+        const dot = document.getElementById('notif-dot');
+        if (dot) dot.style.display = count > 0 ? 'block' : 'none';
+      });
+    }).catch(()=>{});
+  } catch(e) {}
+}
+
+window.showNotifications = async function() {
+  const rid = currentRestaurantId() || window._userData?.uid;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,0.2);animation:aiSlideUp 0.3s cubic-bezier(0.16,1,0.3,1);';
+
+  box.innerHTML = '<div style="width:36px;height:4px;border-radius:100px;background:var(--border);margin:12px auto 0;"></div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;">'
+    + '<div style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--ink);">🔔 Notifications</div>'
+    + '<button id="notif-mark-all" style="font-size:0.72rem;color:var(--green);background:none;border:none;cursor:pointer;font-weight:600;">Mark all read</button>'
+    + '</div>'
+    + '<div id="notif-list" style="padding:0 16px 32px;"></div>';
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+
+  const listEl = document.getElementById('notif-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--ink-muted);">Loading…</div>';
+
+  try {
+    const { getDocs, query, collection, where, orderBy, limit, updateDoc, doc, writeBatch } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snap = await getDocs(query(collection(db,'notifications'), where('restaurantId','==',rid), orderBy('createdAt','desc'), limit(30)));
+    const notifs = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    listEl.innerHTML = '';
+    if (!notifs.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--ink-muted);"><div style="font-size:2rem;margin-bottom:8px;">🔔</div><div style="font-weight:600;">No notifications yet</div><div style="font-size:0.8rem;margin-top:4px;">You\'ll see when staff check in or complete tasks</div></div>';
+      return;
+    }
+
+    notifs.forEach(n => {
+      const card = document.createElement('div');
+      const isUnread = !n.read;
+      card.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;margin-bottom:8px;background:' + (isUnread?'#F0FAF5':'#FAFAF8') + ';border:1px solid ' + (isUnread?'rgba(29,158,117,0.2)':'var(--border)') + ';';
+
+      const icon = n.type === 'task_done' ? '✅' : '🟢';
+      const initials = (n.employeeName||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+      card.innerHTML = '<div style="width:36px;height:36px;border-radius:50%;background:' + (isUnread?'var(--green)':'#ccc') + ';display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:800;color:#fff;flex-shrink:0;">' + initials + '</div>'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:0.85rem;font-weight:' + (isUnread?'700':'500') + ';color:var(--ink);">' + (n.message||'') + '</div>'
+        + '<div style="font-size:0.7rem;color:var(--ink-muted);margin-top:3px;">' + (n.date||'') + ' · ' + (n.time||'') + '</div>'
+        + '</div>'
+        + (isUnread ? '<div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:6px;"></div>' : '');
+      listEl.appendChild(card);
+    });
+
+    // Mark all as read
+    document.getElementById('notif-mark-all')?.addEventListener('click', async () => {
+      const batch = writeBatch(db);
+      snap.docs.filter(d=>!d.data().read).forEach(d => batch.update(doc(db,'notifications',d.id), {read:true}));
+      await batch.commit();
+      const dot = document.getElementById('notif-dot');
+      if (dot) dot.style.display = 'none';
+      overlay.remove();
+      showToast('All notifications marked as read');
+    });
+
+  } catch(e) {
+    if (listEl) listEl.innerHTML = '<div style="padding:16px;color:var(--red);">Error loading notifications.</div>';
+    console.error(e);
+  }
+};
+
+window.staffCheckIn = async function(i) {
   const staff = window._staffList[i];
   if (!staff) return;
+  const rid = currentRestaurantId() || window._userData?.uid;
   localStorage.setItem('cnp-staff-name', staff.name);
-  showToast('Checked in as ' + staff.name + '!');
-  staffLoad(currentRestaurantId() || window._userData?.uid);
+
+  // Record check-in to Firestore so admin can see
+  try {
+    const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    const today = new Date().toISOString().split('T')[0];
+    await addDoc(collection(db,'notifications'), {
+      type: 'checkin',
+      restaurantId: rid,
+      employeeName: staff.name,
+      role: staff.role || '',
+      message: staff.name + ' checked in at ' + time,
+      date: today,
+      time,
+      read: false,
+      createdAt: serverTimestamp()
+    });
+  } catch(e) { console.log('Checkin notify error:', e); }
+
+  showToast('✅ Checked in as ' + staff.name + '!');
+  staffLoad(rid);
 }
 
 window.staffShowForm = function(editIndex) {
