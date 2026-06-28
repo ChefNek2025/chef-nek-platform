@@ -851,6 +851,10 @@ function renderApp(userData) {
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3.3 2.2-5 5-5s5 1.7 5 5"/><circle cx="13" cy="6" r="2"/><path d="M13 10c1.7 0 3 1 3 3"/></svg>
             Staff
           </button>
+          <button class="nav-item ${currentPage==='schedule'?'active':''}" onclick="navigate('schedule')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="2" width="14" height="13" rx="2"/><line x1="1" y1="6" x2="15" y2="6"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="11" y1="1" x2="11" y2="4"/><line x1="4" y1="10" x2="6" y2="10"/><line x1="7" y1="10" x2="12" y2="10"/><line x1="4" y1="13" x2="8" y2="13"/></svg>
+            Schedule
+          </button>
           <button class="nav-item ${currentPage==='teamhub'?'active':''}" onclick="navigate('teamhub')">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 3H2a1 1 0 00-1 1v6a1 1 0 001 1h3l3 2 3-2h3a1 1 0 001-1V4a1 1 0 00-1-1z"/><line x1="4" y1="7" x2="12" y2="7"/><line x1="4" y1="9.5" x2="9" y2="9.5"/></svg>
             Team Hub
@@ -996,6 +1000,7 @@ function renderPage(userData) {
     case 'clients':   renderClients(main, userData); break;
     case 'teamhub':     renderTeamHub(main, userData); break;
     case 'staff':       renderStaff(main, userData); break;
+    case 'schedule':    renderSchedule(main, userData); break;
         default:          renderDashboard(main, userData);
   }
 }
@@ -1114,6 +1119,13 @@ function renderDashboard(main, userData) {
             </div>
             <div class="quick-card-title">Staff</div>
             <div class="quick-card-sub">Manage your team</div>
+          </button>
+          <button class="quick-card" onclick="navigate('schedule')">
+            <div class="quick-card-icon" style="background:#EDFAF4;">
+              <svg viewBox="0 0 18 18" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="2" width="16" height="15" rx="2"/><line x1="1" y1="7" x2="17" y2="7"/><line x1="5" y1="1" x2="5" y2="4"/><line x1="13" y1="1" x2="13" y2="4"/><line x1="4" y1="11" x2="7" y2="11"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="4" y1="14" x2="9" y2="14"/></svg>
+            </div>
+            <div class="quick-card-title">📅 Schedule</div>
+            <div class="quick-card-sub">Weekly shift planner</div>
           </button>
                     <button class="quick-card" onclick="navigate('teamhub')" style="background:linear-gradient(135deg,#0A2A1A,#0F4A2A);border:1.5px solid rgba(29,158,117,0.5);position:relative;overflow:hidden;">
             <div style="position:absolute;top:0;right:0;background:var(--green);color:#fff;font-size:0.6rem;font-weight:700;padding:3px 8px;border-radius:0 0 0 8px;letter-spacing:0.05em;">NEW</div>
@@ -10035,6 +10047,353 @@ window.showStaffNamePicker = async function(callback) {
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
   } catch(e) { console.error(e); }
+}
+
+// ============================================
+// ADVANCED SCHEDULE PAGE
+// ============================================
+const SCHEDULE_POSITIONS = [
+  { label: 'Kitchen',  color: '#E85D26', bg: '#FFF0EB' },
+  { label: 'FOH',      color: '#1D9E75', bg: '#EDFAF4' },
+  { label: 'Bar',      color: '#7C3AED', bg: '#F5F0FF' },
+  { label: 'Manager',  color: '#F2A623', bg: '#FFF8ED' },
+  { label: 'Delivery', color: '#2563EB', bg: '#EEF4FF' },
+  { label: 'Other',    color: '#64748B', bg: '#F1F5F9' },
+];
+const SCHED_DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function schedGetMonday(d) {
+  const dt = new Date(d); const day = dt.getDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  dt.setDate(dt.getDate() + diff); dt.setHours(0,0,0,0); return dt;
+}
+function schedFmtDate(d) { return d.toISOString().split('T')[0]; }
+function schedHoursFromShift(start, end) {
+  if (!start || !end) return 0;
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  let mins = (eh*60+em) - (sh*60+sm);
+  if (mins < 0) mins += 24*60;
+  return +(mins/60).toFixed(1);
+}
+function schedFmt12h(t) {
+  if (!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'pm' : 'am';
+  return `${h%12||12}:${m.toString().padStart(2,'0')}${ampm}`;
+}
+
+function renderSchedule(main, userData) {
+  const rid = currentRestaurantId() || userData.uid;
+  main.innerHTML = '';
+  if (!window._schedWeekStart) window._schedWeekStart = schedGetMonday(new Date());
+
+  const header = document.createElement('div');
+  header.className = 'page-header';
+  header.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div><h1 class="page-title">📅 Schedule</h1><p class="page-sub">Weekly employee shift planner</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button id="sched-print-btn" style="height:38px;padding:0 16px;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;">🖨️ Print</button>
+      ${isAdmin ? `<button id="sched-add-btn" style="height:38px;padding:0 18px;background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;border:none;border-radius:10px;font-family:var(--font-body);font-size:0.82rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(29,158,117,0.3);">+ Add Shift</button>` : ''}
+    </div></div>`;
+  main.appendChild(header);
+
+  const body = document.createElement('div');
+  body.className = 'page-body';
+
+  // Week nav
+  const weekBar = document.createElement('div');
+  weekBar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:16px;box-shadow:0 1px 4px rgba(26,26,20,0.06);';
+  const prevBtn = document.createElement('button');
+  prevBtn.textContent = '← Prev';
+  prevBtn.style.cssText = 'height:36px;padding:0 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--ink);';
+  const weekLabel = document.createElement('div');
+  weekLabel.id = 'sched-week-label';
+  weekLabel.style.cssText = 'font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);text-align:center;';
+  const rightGroup = document.createElement('div');
+  rightGroup.style.cssText = 'display:flex;gap:6px;';
+  const todayBtn = document.createElement('button');
+  todayBtn.textContent = 'Today';
+  todayBtn.style.cssText = 'height:36px;padding:0 14px;border-radius:8px;border:none;background:var(--ink);color:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;';
+  const nextBtn = document.createElement('button');
+  nextBtn.textContent = 'Next →';
+  nextBtn.style.cssText = 'height:36px;padding:0 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--ink);';
+  rightGroup.appendChild(todayBtn); rightGroup.appendChild(nextBtn);
+  weekBar.appendChild(prevBtn); weekBar.appendChild(weekLabel); weekBar.appendChild(rightGroup);
+  body.appendChild(weekBar);
+
+  // Stats
+  const statsBar = document.createElement('div');
+  statsBar.id = 'sched-stats';
+  statsBar.style.cssText = 'display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;';
+  body.appendChild(statsBar);
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;';
+  SCHEDULE_POSITIONS.forEach(p => {
+    const chip = document.createElement('div');
+    chip.style.cssText = `display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;background:${p.bg};border:1px solid ${p.color}30;font-size:0.72rem;font-weight:600;color:${p.color};`;
+    chip.innerHTML = `<div style="width:6px;height:6px;border-radius:50%;background:${p.color};"></div>${p.label}`;
+    legend.appendChild(chip);
+  });
+  body.appendChild(legend);
+
+  // Grid
+  const gridWrap = document.createElement('div');
+  gridWrap.id = 'sched-grid-wrap';
+  gridWrap.style.cssText = 'overflow-x:auto;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 12px rgba(26,26,20,0.07);';
+  body.appendChild(gridWrap);
+  main.appendChild(body);
+
+  prevBtn.addEventListener('click', () => { window._schedWeekStart = new Date(window._schedWeekStart.getTime() - 7*24*60*60*1000); schedRenderGrid(rid); });
+  nextBtn.addEventListener('click', () => { window._schedWeekStart = new Date(window._schedWeekStart.getTime() + 7*24*60*60*1000); schedRenderGrid(rid); });
+  todayBtn.addEventListener('click', () => { window._schedWeekStart = schedGetMonday(new Date()); schedRenderGrid(rid); });
+
+  const addBtn = document.getElementById('sched-add-btn');
+  if (addBtn) addBtn.addEventListener('click', () => schedOpenShiftModal(rid, null, null, null));
+  const printBtn = document.getElementById('sched-print-btn');
+  if (printBtn) printBtn.addEventListener('click', () => window.print());
+
+  schedRenderGrid(rid);
+}
+
+async function schedRenderGrid(rid) {
+  const ws = window._schedWeekStart;
+  const weekEnd = new Date(ws.getTime() + 6*24*60*60*1000);
+  const label = document.getElementById('sched-week-label');
+  if (label) {
+    const opts = {month:'short',day:'numeric'};
+    label.textContent = ws.toLocaleDateString('en-US',opts) + ' – ' + weekEnd.toLocaleDateString('en-US',opts) + ', ' + weekEnd.getFullYear();
+  }
+  const wrap = document.getElementById('sched-grid-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-muted);"><div class="loading-spinner" style="margin:0 auto 10px;"></div>Loading…</div>';
+
+  try {
+    const wsStr = schedFmtDate(ws);
+    const [staffSnap, shiftSnap] = await Promise.all([
+      getDocs(query(collection(db,'staffMembers'), where('restaurantId','==',rid))),
+      getDocs(query(collection(db,'scheduleShifts'), where('restaurantId','==',rid), where('weekStart','==',wsStr)))
+    ]);
+    const staff = staffSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.active!==false).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const shifts = shiftSnap.docs.map(d=>({id:d.id,...d.data()}));
+    window._schedStaff = staff; window._schedShifts = shifts; window._schedWeekStartStr = wsStr;
+
+    // Stats
+    const statsBar = document.getElementById('sched-stats');
+    if (statsBar) {
+      const totalHrs = shifts.filter(s=>!s.isOff).reduce((sum,s)=>sum+schedHoursFromShift(s.startTime,s.endTime),0);
+      statsBar.innerHTML = '';
+      [{label:'Total Shifts',value:shifts.filter(s=>!s.isOff).length,icon:'📋'},{label:'Total Hours',value:totalHrs.toFixed(1)+'h',icon:'⏱️'},{label:'Staff Scheduled',value:new Set(shifts.map(s=>s.employeeId)).size+' / '+staff.length,icon:'👥'}].forEach(s=>{
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex:1;min-width:130px;';
+        card.innerHTML = `<span style="font-size:1.3rem;">${s.icon}</span><div><div style="font-size:1rem;font-weight:800;color:var(--ink);">${s.value}</div><div style="font-size:0.7rem;color:var(--ink-muted);">${s.label}</div></div>`;
+        statsBar.appendChild(card);
+      });
+    }
+
+    wrap.innerHTML = '';
+    if (!staff.length) { wrap.innerHTML = '<div style="padding:48px;text-align:center;color:var(--ink-muted);"><div style="font-size:2.5rem;margin-bottom:10px;">👥</div><div style="font-weight:600;">No staff yet</div><div style="font-size:0.82rem;margin-top:4px;">Add employees in the Staff page first</div></div>'; return; }
+
+    const table = document.createElement('div');
+    table.style.cssText = 'min-width:700px;';
+
+    // Header row
+    const headRow = document.createElement('div');
+    headRow.style.cssText = 'display:grid;grid-template-columns:140px repeat(7,1fr);border-bottom:2px solid var(--border);';
+    const nameHead = document.createElement('div');
+    nameHead.style.cssText = 'padding:12px 14px;font-size:0.72rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;background:#FAFAF8;border-right:1px solid var(--border);border-radius:16px 0 0 0;';
+    nameHead.textContent = 'Employee';
+    headRow.appendChild(nameHead);
+    const today = schedFmtDate(new Date());
+    SCHED_DAYS.forEach((day,i) => {
+      const dt = new Date(ws.getTime()+i*24*60*60*1000);
+      const dtStr = schedFmtDate(dt);
+      const isToday = dtStr===today;
+      const cell = document.createElement('div');
+      cell.style.cssText = `padding:10px 6px;text-align:center;background:${isToday?'#F0FAF5':'#FAFAF8'};border-right:1px solid var(--border);${i===6?'border-radius:0 16px 0 0;border-right:none;':''}`;
+      cell.innerHTML = `<div style="font-size:0.72rem;font-weight:700;color:${isToday?'var(--green)':'var(--ink-muted)'};text-transform:uppercase;">${day}</div><div style="font-size:0.9rem;font-weight:800;color:${isToday?'var(--green)':'var(--ink)'};">${dt.getDate()}</div>`;
+      headRow.appendChild(cell);
+    });
+    table.appendChild(headRow);
+
+    staff.forEach((emp,ei) => {
+      const isLast = ei===staff.length-1;
+      const row = document.createElement('div');
+      row.style.cssText = `display:grid;grid-template-columns:140px repeat(7,1fr);border-bottom:${isLast?'none':'1px solid var(--border)'};`;
+      const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const hue = [...(emp.name||'')].reduce((h,c)=>h+c.charCodeAt(0),0)%360;
+      const nameCell = document.createElement('div');
+      nameCell.style.cssText = 'padding:10px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;background:#FAFAF8;';
+      nameCell.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:50%;background:hsl(${hue},50%,85%);display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:hsl(${hue},50%,35%);flex-shrink:0;">${initials}</div><div style="font-size:0.8rem;font-weight:600;color:var(--ink);line-height:1.2;">${emp.name||'—'}<br><span style="font-size:0.68rem;font-weight:400;color:var(--ink-muted);">${emp.role||''}</span></div></div>`;
+      row.appendChild(nameCell);
+
+      SCHED_DAYS.forEach((day,di) => {
+        const dt = new Date(ws.getTime()+di*24*60*60*1000);
+        const dtStr = schedFmtDate(dt);
+        const isToday = dtStr===today;
+        const cell = document.createElement('div');
+        cell.style.cssText = `padding:6px;border-right:${di===6?'none':'1px solid var(--border)'};min-height:70px;background:${isToday?'#FDFFF9':'#fff'};cursor:pointer;transition:background 0.15s;position:relative;`;
+        const dayShifts = shifts.filter(s=>s.employeeId===emp.id&&s.dayIndex===di);
+        dayShifts.forEach(sh => {
+          if (sh.isOff) {
+            const offEl = document.createElement('div');
+            offEl.style.cssText = 'background:#FFF5F5;border-left:3px solid #E53935;border-radius:6px;padding:4px 7px;margin-bottom:4px;cursor:pointer;';
+            offEl.innerHTML = '<div style="font-size:0.72rem;font-weight:800;color:#C62828;">🚫 OFF</div>'+(sh.notes?`<div style="font-size:0.65rem;color:#E57373;">${sh.notes}</div>`:'');
+            if (isAdmin) offEl.addEventListener('click', e=>{e.stopPropagation();schedOpenShiftModal(rid,sh,emp.id,di);});
+            cell.appendChild(offEl);
+          } else {
+            const hrs = schedHoursFromShift(sh.startTime,sh.endTime);
+            const shiftEl = document.createElement('div');
+            shiftEl.style.cssText = 'background:#EDFAF4;border-left:3px solid #1D9E75;border-radius:6px;padding:4px 7px;margin-bottom:4px;cursor:pointer;';
+            shiftEl.innerHTML = `<div style="font-size:0.68rem;font-weight:800;color:#0A5C3F;">${schedFmt12h(sh.startTime)}–${schedFmt12h(sh.endTime)}</div><div style="font-size:0.65rem;color:#1D7A55;font-weight:500;">${sh.position} · ${hrs}h</div>`;
+            shiftEl.addEventListener('click', e=>{e.stopPropagation();schedOpenShiftModal(rid,sh,emp.id,di);});
+            cell.appendChild(shiftEl);
+          }
+        });
+        if (isAdmin) {
+          const addCell = document.createElement('div');
+          addCell.style.cssText = 'position:absolute;bottom:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(29,158,117,0.12);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:0.85rem;opacity:0;transition:opacity 0.15s;cursor:pointer;font-weight:700;';
+          addCell.textContent = '+';
+          cell.appendChild(addCell);
+          cell.addEventListener('mouseenter',()=>{addCell.style.opacity='1';cell.style.background=isToday?'#F5FFFC':'#F8FDF9';});
+          cell.addEventListener('mouseleave',()=>{addCell.style.opacity='0';cell.style.background=isToday?'#FDFFF9':'#fff';});
+          cell.addEventListener('click',()=>schedOpenShiftModal(rid,null,emp.id,di));
+        }
+        row.appendChild(cell);
+      });
+      table.appendChild(row);
+    });
+    wrap.appendChild(table);
+  } catch(e) {
+    console.error(e);
+    wrap.innerHTML = '<div style="padding:32px;text-align:center;color:var(--red);">Failed to load schedule.</div>';
+  }
+}
+
+function schedOpenShiftModal(rid, existingShift, preEmployeeId, preDayIndex) {
+  const staff = window._schedStaff || [];
+  const wsStr = window._schedWeekStartStr || schedFmtDate(schedGetMonday(new Date()));
+  const isEdit = !!existingShift;
+
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:520px;padding:24px;box-shadow:0 -8px 40px rgba(0,0,0,0.2);max-height:92vh;overflow-y:auto;animation:aiSlideUp 0.35s cubic-bezier(0.16,1,0.3,1);';
+
+  const mHead = document.createElement('div');
+  mHead.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;';
+  mHead.innerHTML = `<div style="font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--ink);">${isEdit?'✏️ Edit Shift':'➕ Add Shift'}</div>`;
+  const mClose = document.createElement('button');
+  mClose.textContent = '✕';
+  mClose.style.cssText = 'background:var(--cream);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;';
+  mHead.appendChild(mClose);
+  box.appendChild(mHead);
+
+  function mkField(label, el) {
+    const wrap = document.createElement('div'); wrap.style.cssText = 'margin-bottom:14px;';
+    const lbl = document.createElement('label'); lbl.style.cssText = 'display:block;font-size:0.75rem;font-weight:600;color:var(--ink-muted);margin-bottom:5px;'; lbl.textContent = label;
+    wrap.appendChild(lbl); wrap.appendChild(el); return wrap;
+  }
+  function mkSelect(opts, val) {
+    const s = document.createElement('select');
+    s.style.cssText = 'width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 12px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;';
+    opts.forEach(o => { const op = document.createElement('option'); op.value=o.value; op.textContent=o.label; if(o.value==val) op.selected=true; s.appendChild(op); });
+    return s;
+  }
+  function mkTime(val) {
+    const wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;gap:4px;';
+    const hours=[]; for(let h=1;h<=12;h++) hours.push(h);
+    const mins=['00','15','30','45']; const ampms=['AM','PM'];
+    let initH=9,initM='00',initAMPM='AM';
+    if(val){const[hh,mm]=val.split(':').map(Number);initAMPM=hh>=12?'PM':'AM';initH=hh%12||12;initM=['00','15','30','45'].includes(mm.toString().padStart(2,'0'))?mm.toString().padStart(2,'0'):'00';}
+    const selStyle='height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 8px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;';
+    const hSel=document.createElement('select');hSel.style.cssText=selStyle+'flex:1;';
+    hours.forEach(h=>{const o=document.createElement('option');o.value=h;o.textContent=h;if(h===initH)o.selected=true;hSel.appendChild(o);});
+    const mSel=document.createElement('select');mSel.style.cssText=selStyle+'width:70px;';
+    mins.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;if(m===initM)o.selected=true;mSel.appendChild(o);});
+    const aSel=document.createElement('select');aSel.style.cssText=selStyle+'width:70px;';
+    ampms.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;if(a===initAMPM)o.selected=true;aSel.appendChild(o);});
+    wrap.appendChild(hSel);wrap.appendChild(mSel);wrap.appendChild(aSel);
+    Object.defineProperty(wrap,'value',{get(){const h=parseInt(hSel.value);const m=mSel.value;const ap=aSel.value;let h24=h%12;if(ap==='PM')h24+=12;return`${h24.toString().padStart(2,'0')}:${m}`;}});
+    return wrap;
+  }
+
+  const empSel = mkSelect(staff.map(s=>({value:s.id,label:s.name})), existingShift?.employeeId||preEmployeeId||(staff[0]?.id));
+  const daySel = mkSelect(SCHED_DAYS.map((d,i)=>{const dt=new Date(new Date(wsStr+'T00:00:00').getTime()+i*24*60*60*1000);return{value:i,label:d+' '+dt.getDate()};}), existingShift?.dayIndex??preDayIndex??0);
+  const posSel = mkSelect(SCHEDULE_POSITIONS.map(p=>({value:p.label,label:p.label})), existingShift?.position||'Kitchen');
+  const startTime = mkTime(existingShift?.startTime||'09:00');
+  const endTime   = mkTime(existingShift?.endTime  ||'17:00');
+  const notesEl = document.createElement('input');
+  notesEl.type='text'; notesEl.placeholder='Optional note'; notesEl.value=existingShift?.notes||'';
+  notesEl.style.cssText='width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 12px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;box-sizing:border-box;';
+
+  // Shift type selector
+  const typeRow = document.createElement('div');
+  typeRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;';
+  let isOff = existingShift?.isOff||false;
+  const workBtn = document.createElement('button'); workBtn.type='button'; workBtn.innerHTML='✅ Working Shift';
+  const offBtn  = document.createElement('button'); offBtn.type='button';  offBtn.innerHTML='🚫 Off Day';
+  const base='height:48px;border-radius:12px;font-family:var(--font-body);font-size:0.875rem;font-weight:700;cursor:pointer;border:2px solid;transition:all 0.18s;';
+  const activeWork=base+'background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;border-color:#1D9E75;box-shadow:0 4px 14px rgba(29,158,117,0.35);';
+  const inactiveWork=base+'background:#fff;color:#555;border-color:#ddd;';
+  const activeOff=base+'background:linear-gradient(135deg,#E53935,#C62828);color:#fff;border-color:#E53935;box-shadow:0 4px 14px rgba(229,57,53,0.3);';
+  const inactiveOff=base+'background:#fff;color:#555;border-color:#ddd;';
+  const shiftFields = document.createElement('div');
+
+  const applyStyles = () => {
+    workBtn.style.cssText = isOff?inactiveWork:activeWork;
+    offBtn.style.cssText  = isOff?activeOff:inactiveOff;
+    shiftFields.style.display = isOff?'none':'block';
+  };
+  workBtn.addEventListener('click',()=>{isOff=false;applyStyles();});
+  offBtn.addEventListener('click', ()=>{isOff=true; applyStyles();});
+  typeRow.appendChild(workBtn); typeRow.appendChild(offBtn);
+  box.appendChild(typeRow);
+
+  shiftFields.appendChild(mkField('Employee', empSel));
+  shiftFields.appendChild(mkField('Day', daySel));
+  shiftFields.appendChild(mkField('Position', posSel));
+  const timeRow = document.createElement('div');
+  timeRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;';
+  timeRow.appendChild(mkField('Start Time', startTime));
+  timeRow.appendChild(mkField('End Time', endTime));
+  shiftFields.appendChild(timeRow);
+  box.appendChild(shiftFields);
+  applyStyles();
+  box.appendChild(mkField('Notes (optional)', notesEl));
+
+  const btnRow = document.createElement('div'); btnRow.style.cssText = 'display:flex;gap:8px;margin-top:4px;';
+  const saveBtn = document.createElement('button');
+  saveBtn.textContent = isEdit?'💾 Save Changes':'✅ Add Shift';
+  saveBtn.style.cssText = 'flex:1;height:48px;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;font-family:var(--font-body);font-size:0.95rem;font-weight:700;cursor:pointer;';
+  saveBtn.addEventListener('click', async () => {
+    const emp = staff.find(s=>s.id===empSel.value);
+    if (!emp && !isOff) return;
+    const payload = { restaurantId:rid, weekStart:wsStr, employeeId:empSel.value, employeeName:emp?.name||'', dayIndex:parseInt(daySel.value), isOff, position:isOff?'':posSel.value, startTime:isOff?'':startTime.value, endTime:isOff?'':endTime.value, notes:notesEl.value.trim(), updatedAt:new Date().toISOString() };
+    try {
+      saveBtn.disabled=true; saveBtn.textContent='Saving…';
+      if (isEdit) await setDoc(doc(db,'scheduleShifts',existingShift.id), payload);
+      else await addDoc(collection(db,'scheduleShifts'), payload);
+      overlay.remove();
+      showToast(isEdit?'✅ Shift updated':'✅ Shift added');
+      schedRenderGrid(rid);
+    } catch(e) { console.error(e); showToast('Failed to save','error'); saveBtn.disabled=false; saveBtn.textContent=isEdit?'💾 Save Changes':'✅ Add Shift'; }
+  });
+  btnRow.appendChild(saveBtn);
+  if (isEdit) {
+    const delBtn = document.createElement('button');
+    delBtn.textContent='🗑️ Delete';
+    delBtn.style.cssText='height:48px;padding:0 18px;border-radius:12px;border:none;background:#FFF0F0;color:var(--red);font-family:var(--font-body);font-size:0.875rem;font-weight:700;cursor:pointer;';
+    delBtn.addEventListener('click', async()=>{ if(!confirm('Delete this shift?'))return; await deleteDoc(doc(db,'scheduleShifts',existingShift.id)); overlay.remove(); showToast('Shift deleted'); schedRenderGrid(rid); });
+    btnRow.appendChild(delBtn);
+  }
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  mClose.addEventListener('click',()=>overlay.remove());
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
 }
 
 // ============================================
