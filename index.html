@@ -886,6 +886,11 @@ function renderApp(userData) {
           ${adminNav}
         </nav>
         <div class="sidebar-bottom">
+          ${isAdmin ? `<button onclick="showNotifications()" style="width:100%;height:44px;border-radius:10px;border:none;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 14px;margin-bottom:8px;position:relative;" id="sidebar-notif-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 1a4 4 0 00-4 4v3l-1.5 2.5h11L12 8V5a4 4 0 00-4-4z"/><path d="M6 13.5a2 2 0 004 0"/></svg>
+            Notifications
+            <div id="sidebar-notif-dot" style="display:none;width:8px;height:8px;border-radius:50%;background:#E53935;margin-left:auto;flex-shrink:0;"></div>
+          </button>` : ''}
           <button class="signout-btn" onclick="handleSignOut()">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3"/><polyline points="10,5 13,8 10,11"/><line x1="13" y1="8" x2="5" y2="8"/></svg>
             Sign out
@@ -1251,6 +1256,12 @@ function renderDashboard(main, userData) {
         </div>
       </div>
     </div>
+    ${isAdmin ? `
+    <div id="dashboard-notifs" style="display:none;background:#fff;border-radius:16px;border:1px solid var(--border);padding:18px 20px;margin-top:24px;box-shadow:0 2px 8px rgba(26,26,20,0.06);">
+      <div class="dash-notif-header" style="font-family:var(--font-display);font-size:0.95rem;font-weight:700;color:var(--ink);margin-bottom:14px;">🔔 Activity Feed</div>
+      <div class="dash-notif-list"></div>
+      <button onclick="showNotifications()" style="width:100%;height:36px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--green);font-family:var(--font-body);font-size:0.78rem;font-weight:600;cursor:pointer;margin-top:12px;">View all & mark as read →</button>
+    </div>` : ''}
   `;
   loadDashboardStats(userData);
   // Load sales trend chart
@@ -1268,6 +1279,48 @@ function renderDashboard(main, userData) {
     loadPOSWidget(u, 'clover-widget-content');
     setInterval(() => loadPOSWidget(u, 'clover-widget-content'), 300000);
   }).catch(()=>{});
+
+  // Load notification inbox on dashboard (admin only)
+  if (isAdmin) loadDashboardNotifs(ridPOS);
+}
+
+async function loadDashboardNotifs(rid) {
+  const el = document.getElementById('dashboard-notifs');
+  if (!el) return;
+  try {
+    const { getDocs, query, collection, where, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const snap = await getDocs(query(collection(db,'notifications'), where('restaurantId','==',rid), orderBy('createdAt','desc'), limit(10)));
+    const notifs = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const unread = notifs.filter(n=>!n.read);
+
+    el.style.display = 'block';
+
+    const header = el.querySelector('.dash-notif-header');
+    if (header) header.innerHTML = '🔔 Activity Feed <span style="font-size:0.72rem;color:var(--green);font-weight:700;margin-left:8px;">' + (unread.length > 0 ? unread.length + ' new' : 'All caught up ✓') + '</span>';
+
+    const list = el.querySelector('.dash-notif-list');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!notifs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-muted);font-size:0.82rem;">No activity yet — notifications appear here when staff check in or complete tasks</div>';
+      return;
+    }
+
+    notifs.forEach(n => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);';
+      const initials = (n.employeeName||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const typeIcon = n.type === 'task_done' ? '✅' : '🟢';
+      row.innerHTML = '<div style="width:32px;height:32px;border-radius:50%;background:' + (!n.read?'var(--green)':'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:#fff;flex-shrink:0;">' + initials + '</div>'
+        + '<div style="flex:1;min-width:0;">'
+        + '<div style="font-size:0.82rem;font-weight:' + (!n.read?'700':'500') + ';color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + typeIcon + ' ' + (n.message||'') + '</div>'
+        + '<div style="font-size:0.7rem;color:var(--ink-muted);">' + (n.time||'') + '</div>'
+        + '</div>'
+        + (!n.read ? '<div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>' : '');
+      list.appendChild(row);
+    });
+  } catch(e) { console.log('Notif load err:', e); }
 }
 
 async function loadDashboardStats(userData) {
@@ -9941,7 +9994,15 @@ function startNotifListener(rid) {
       window._notifUnsubscribe = onSnapshot(q, snap => {
         const count = snap.docs.length;
         const dot = document.getElementById('notif-dot');
+        const sidebarDot = document.getElementById('sidebar-notif-dot');
+        const sidebarBtn = document.getElementById('sidebar-notif-btn');
         if (dot) dot.style.display = count > 0 ? 'block' : 'none';
+        if (sidebarDot) sidebarDot.style.display = count > 0 ? 'flex' : 'none';
+        if (sidebarBtn) {
+          sidebarBtn.style.background = count > 0 ? 'rgba(229,57,53,0.15)' : 'rgba(255,255,255,0.06)';
+          sidebarBtn.style.color = count > 0 ? '#FF8A80' : 'rgba(255,255,255,0.7)';
+          sidebarBtn.title = count > 0 ? count + ' unread notification' + (count>1?'s':'') : 'Notifications';
+        }
       });
     }).catch(()=>{});
   } catch(e) {}
