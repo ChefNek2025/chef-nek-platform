@@ -545,7 +545,10 @@ let currentPage = 'dashboard';
 let isAdmin = false;
 
 function currentRestaurantId() {
-  if (!isAdmin) return window._userData?.uid || '';
+  if (!isAdmin) {
+    // Employees: use the restaurant ID stored when they checked in
+    return localStorage.getItem('cnp-restaurant-id') || window._userData?.uid || '';
+  }
   return window._viewingRestaurantId || window._userData?.uid || '';
 }
 
@@ -9245,6 +9248,11 @@ function renderTeamHub(main, userData) {
         btn.textContent = name;
         btn.onclick = () => {
           localStorage.setItem('cnp-staff-name', name);
+          // Store the restaurant ID from the staff record so queries work correctly
+          const staffData = d.data();
+          if (staffData.restaurantId) {
+            localStorage.setItem('cnp-restaurant-id', staffData.restaurantId);
+          }
           renderTeamHub(main, userData);
         };
         container.appendChild(btn);
@@ -9265,9 +9273,23 @@ function renderTeamHub(main, userData) {
 
   const taskTab = document.createElement('button');
   taskTab.id = 'th-tab-tasks';
-  taskTab.style.cssText = 'flex:1;height:44px;border-radius:12px;border:2px solid ' + (window._thTab==='tasks'?'#F2A623':'var(--border)') + ';background:' + (window._thTab==='tasks'?'#F2A623':'var(--white)') + ';color:' + (window._thTab==='tasks'?'#fff':'var(--ink-muted)') + ';font-family:var(--font-body);font-size:0.9rem;font-weight:700;cursor:pointer;';
-  taskTab.textContent = '📋 Tasks';
+  taskTab.style.cssText = 'flex:1;height:44px;border-radius:12px;border:2px solid ' + (window._thTab==='tasks'?'#F2A623':'var(--border)') + ';background:' + (window._thTab==='tasks'?'#F2A623':'var(--white)') + ';color:' + (window._thTab==='tasks'?'#fff':'var(--ink-muted)') + ';font-family:var(--font-body);font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;';
+  taskTab.innerHTML = '<span>📋 Tasks</span>';
   taskTab.onclick = () => { window._thTab = 'tasks'; thShowTab(rid, myName); };
+
+  // Task count badge — show pending tasks for employee
+  getDocs(query(collection(db,'teamTasks'), where('restaurantId','==',rid), where('done','==',false))).then(snap => {
+    const count = snap.docs.filter(d => {
+      const t = d.data();
+      return !t.assignedTo || t.assignedTo === myName || isAdmin;
+    }).length;
+    if (count > 0) {
+      const badge = document.createElement('div');
+      badge.style.cssText = 'min-width:20px;height:20px;border-radius:100px;background:#E53935;color:#fff;font-size:0.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;';
+      badge.textContent = count;
+      taskTab.appendChild(badge);
+    }
+  }).catch(()=>{});
 
   tabs.appendChild(chatTab);
   tabs.appendChild(taskTab);
@@ -9997,6 +10019,11 @@ window.staffCheckIn = async function(i) {
   if (!staff) return;
   const rid = currentRestaurantId() || window._userData?.uid;
   localStorage.setItem('cnp-staff-name', staff.name);
+
+  // Store the restaurant ID so employees can query the right data
+  if (staff.restaurantId) {
+    localStorage.setItem('cnp-restaurant-id', staff.restaurantId);
+  }
 
   // Record check-in to Firestore so admin can see
   try {
