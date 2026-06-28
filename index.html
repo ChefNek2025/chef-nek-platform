@@ -5140,7 +5140,7 @@ async function clLoadTab(type, userData) {
       empty.innerHTML = '<div class="empty-state-title">No ' + type + ' items yet</div>'
         + '<div class="empty-state-sub">' + (isAdmin ? 'Click Add item above' : 'Chef Nek will add items') + '</div>';
       panel.appendChild(empty);
-      return;
+      // Don't return — still show the sign-off section below
     }
 
     // Item cards
@@ -5156,9 +5156,12 @@ async function clLoadTab(type, userData) {
 
       const info = document.createElement('div');
       info.style.flex = '1';
-      info.innerHTML = '<div style="font-size:0.9rem;font-weight:' + (chk?'600':'500') + ';color:var(--ink);">' + item.name + '</div>'
+      info.innerHTML = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+        + '<span style="font-size:0.9rem;font-weight:' + (chk?'600':'500') + ';color:var(--ink);">' + item.name + '</span>'
+        + (!chk ? '<span style="font-size:0.58rem;font-weight:800;color:#C62828;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:100px;padding:1px 6px;letter-spacing:0.05em;white-space:nowrap;">REQUIRED</span>' : '')
+        + '</div>'
         + (item.note ? '<div style="font-size:0.75rem;color:var(--ink-muted);margin-top:2px;">' + item.note + '</div>' : '')
-        + (chk ? '<div style="font-size:0.72rem;color:' + color + ';margin-top:4px;">Done by ' + (chk.by||'?') + ' · ' + (chk.time||'') + '</div>' : '');
+        + (chk ? '<div style="font-size:0.72rem;color:' + color + ';margin-top:4px;">✅ Done by ' + (chk.by||'?') + ' · ' + (chk.time||'') + '</div>' : '');
 
       card.appendChild(cb);
       card.appendChild(info);
