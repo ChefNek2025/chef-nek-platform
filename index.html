@@ -5156,9 +5156,19 @@ async function clLoadTab(type, userData) {
 
       const info = document.createElement('div');
       info.style.flex = '1';
-      info.innerHTML = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+
+      // Priority badge config
+      const prioCfg = {
+        required:  { label:'🔴 Required',  bg:'#FFF0F0', color:'#C62828', border:'#FFCDD2' },
+        important: { label:'🟠 Important', bg:'#FFF4EC', color:'#C17F3A', border:'#FFD5A8' },
+        standard:  { label:'🔵 Standard',  bg:'#EEF4FF', color:'#2563EB', border:'#BFDBFE' },
+        optional:  { label:'⚪ Optional',  bg:'#F5F5F5', color:'#6B7280', border:'#E5E7EB' },
+      };
+      const prio = prioCfg[item.priority || 'standard'];
+
+      info.innerHTML = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;">'
         + '<span style="font-size:0.9rem;font-weight:' + (chk?'600':'500') + ';color:var(--ink);">' + item.name + '</span>'
-        + (!chk ? '<span style="font-size:0.58rem;font-weight:800;color:#C62828;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:100px;padding:1px 6px;letter-spacing:0.05em;white-space:nowrap;">REQUIRED</span>' : '')
+        + (!chk ? '<span style="font-size:0.58rem;font-weight:800;color:' + prio.color + ';background:' + prio.bg + ';border:1px solid ' + prio.border + ';border-radius:100px;padding:2px 7px;letter-spacing:0.04em;white-space:nowrap;">' + prio.label + '</span>' : '')
         + '</div>'
         + (item.note ? '<div style="font-size:0.75rem;color:var(--ink-muted);margin-top:2px;">' + item.note + '</div>' : '')
         + (chk ? '<div style="font-size:0.72rem;color:' + color + ';margin-top:4px;">✅ Done by ' + (chk.by||'?') + ' · ' + (chk.time||'') + '</div>' : '');
@@ -5281,49 +5291,85 @@ function clShowAddModal(type, rid, color) {
 
   const modal = document.createElement('div');
   modal.id = 'cl-add-modal';
-  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:flex-end;justify-content:center;';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:20px;width:100%;max-width:420px;padding:28px;';
+  box.style.cssText = 'background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:28px 28px 40px;animation:aiSlideUp 0.3s cubic-bezier(0.16,1,0.3,1);';
 
-  const title = document.createElement('div');
-  title.style.cssText = 'font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:16px;';
-  title.textContent = 'Add ' + (type === 'opening' ? 'Opening' : 'Closing') + ' Item';
-  box.appendChild(title);
+  // Handle
+  box.innerHTML = '<div style="width:36px;height:4px;border-radius:100px;background:var(--border);margin:0 auto 20px;"></div>';
+
+  const titleEl = document.createElement('div');
+  titleEl.style.cssText = 'font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:20px;';
+  titleEl.textContent = 'Add ' + (type === 'opening' ? 'Opening' : 'Closing') + ' Item';
+  box.appendChild(titleEl);
+
+  // Task name
+  const nameLabel = document.createElement('div');
+  nameLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+  nameLabel.textContent = 'Task Name';
+  box.appendChild(nameLabel);
 
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
   nameInput.id = 'cl-modal-name';
   nameInput.className = 'form-input-small';
-  nameInput.style.cssText = 'width:100%;margin-bottom:10px;';
-  nameInput.placeholder = 'Task name (e.g. Check walk-in temp)';
+  nameInput.style.cssText = 'width:100%;margin-bottom:14px;box-sizing:border-box;';
+  nameInput.placeholder = 'e.g. Check walk-in temp';
   box.appendChild(nameInput);
+
+  // Priority dropdown
+  const prioLabel = document.createElement('div');
+  prioLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+  prioLabel.textContent = 'Priority Level';
+  box.appendChild(prioLabel);
+
+  const prioSel = document.createElement('select');
+  prioSel.id = 'cl-modal-priority';
+  prioSel.style.cssText = 'width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 12px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;margin-bottom:14px;';
+  [
+    { value:'required',  label:'🔴 Required — Must be completed' },
+    { value:'important', label:'🟠 Important — Should be completed' },
+    { value:'standard',  label:'🔵 Standard — Normal task' },
+    { value:'optional',  label:'⚪ Optional — Nice to have' },
+  ].forEach(o => {
+    const op = document.createElement('option');
+    op.value = o.value; op.textContent = o.label;
+    prioSel.appendChild(op);
+  });
+  box.appendChild(prioSel);
+
+  // Note
+  const noteLabel = document.createElement('div');
+  noteLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+  noteLabel.textContent = 'Note (optional)';
+  box.appendChild(noteLabel);
 
   const noteInput = document.createElement('input');
   noteInput.type = 'text';
   noteInput.id = 'cl-modal-note';
   noteInput.className = 'form-input-small';
-  noteInput.style.cssText = 'width:100%;margin-bottom:16px;';
-  noteInput.placeholder = 'Note (optional)';
+  noteInput.style.cssText = 'width:100%;margin-bottom:20px;box-sizing:border-box;';
+  noteInput.placeholder = 'Extra instructions...';
   box.appendChild(noteInput);
 
   const btns = document.createElement('div');
   btns.style.cssText = 'display:flex;gap:8px;';
 
   const saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Add item';
-  saveBtn.style.cssText = 'flex:1;height:44px;background:' + color + ';color:#fff;border:none;border-radius:10px;font-family:var(--font-body);font-size:0.9rem;font-weight:700;cursor:pointer;';
+  saveBtn.textContent = 'Add Item';
+  saveBtn.style.cssText = 'flex:1;height:48px;background:' + color + ';color:#fff;border:none;border-radius:12px;font-family:var(--font-body);font-size:0.95rem;font-weight:700;cursor:pointer;';
   saveBtn.onclick = async () => {
     const name = nameInput.value.trim();
     const note = noteInput.value.trim();
+    const priority = prioSel.value;
     if (!name) { showToast('Task name required','error'); return; }
-    saveBtn.textContent = 'Saving...';
-    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...'; saveBtn.disabled = true;
     try {
       const snap = await getDocs(query(collection(db,'clItems'), where('restaurantId','==',rid)));
       const existingForType = snap.docs.filter(d => d.data().type === type);
       await addDoc(collection(db,'clItems'), {
-        name, note, type, restaurantId: rid,
+        name, note, type, priority, restaurantId: rid,
         order: existingForType.length,
         createdAt: serverTimestamp()
       });
@@ -5333,14 +5379,13 @@ function clShowAddModal(type, rid, color) {
     } catch(e) {
       console.error('Add item error:', e);
       showToast('Error: ' + e.message, 'error');
-      saveBtn.textContent = 'Add item';
-      saveBtn.disabled = false;
+      saveBtn.textContent = 'Add Item'; saveBtn.disabled = false;
     }
   };
 
   const cancelBtn = document.createElement('button');
   cancelBtn.textContent = 'Cancel';
-  cancelBtn.style.cssText = 'height:44px;padding:0 16px;border-radius:10px;border:0.5px solid var(--border);background:transparent;color:var(--ink-muted);cursor:pointer;font-family:var(--font-body);';
+  cancelBtn.style.cssText = 'height:48px;padding:0 18px;border-radius:12px;border:1.5px solid var(--border);background:transparent;color:var(--ink-muted);cursor:pointer;font-family:var(--font-body);';
   cancelBtn.onclick = () => modal.remove();
 
   btns.appendChild(saveBtn);
@@ -5348,6 +5393,9 @@ function clShowAddModal(type, rid, color) {
   box.appendChild(btns);
   modal.appendChild(box);
   document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  setTimeout(() => nameInput.focus(), 100);
+}
   modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
   setTimeout(() => nameInput.focus(), 50);
 }
@@ -5379,10 +5427,31 @@ function clShowEditModal(item, type, rid, color) {
   const noteInput = document.createElement('input');
   noteInput.type = 'text';
   noteInput.className = 'form-input-small';
-  noteInput.style.cssText = 'width:100%;margin-bottom:16px;';
+  noteInput.style.cssText = 'width:100%;margin-bottom:14px;';
   noteInput.value = item.note || '';
   noteInput.placeholder = 'Note (optional)';
   box.appendChild(noteInput);
+
+  // Priority dropdown
+  const prioLabel2 = document.createElement('div');
+  prioLabel2.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;';
+  prioLabel2.textContent = 'Priority Level';
+  box.appendChild(prioLabel2);
+
+  const prioSel2 = document.createElement('select');
+  prioSel2.style.cssText = 'width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);padding:0 12px;font-family:var(--font-body);font-size:0.875rem;background:#fff;color:var(--ink);outline:none;margin-bottom:16px;';
+  [
+    { value:'required',  label:'🔴 Required — Must be completed' },
+    { value:'important', label:'🟠 Important — Should be completed' },
+    { value:'standard',  label:'🔵 Standard — Normal task' },
+    { value:'optional',  label:'⚪ Optional — Nice to have' },
+  ].forEach(o => {
+    const op = document.createElement('option');
+    op.value = o.value; op.textContent = o.label;
+    if (o.value === (item.priority || 'standard')) op.selected = true;
+    prioSel2.appendChild(op);
+  });
+  box.appendChild(prioSel2);
 
   const btns = document.createElement('div');
   btns.style.cssText = 'display:flex;gap:8px;';
@@ -5393,10 +5462,11 @@ function clShowEditModal(item, type, rid, color) {
   saveBtn.onclick = async () => {
     const name = nameInput.value.trim();
     const note = noteInput.value.trim();
+    const priority = prioSel2.value;
     if (!name) { showToast('Task name required','error'); return; }
     saveBtn.textContent = 'Saving...'; saveBtn.disabled = true;
     try {
-      await setDoc(doc(db,'clItems',item.id), {name, note}, {merge:true});
+      await setDoc(doc(db,'clItems',item.id), {name, note, priority}, {merge:true});
       showToast('Updated!');
       modal.remove();
       clLoadTab(type, window._userData);
