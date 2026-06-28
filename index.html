@@ -10086,7 +10086,12 @@ function schedFmt12h(t) {
 function renderSchedule(main, userData) {
   const rid = currentRestaurantId() || userData.uid;
   main.innerHTML = '';
-  if (!window._schedWeekStart) window._schedWeekStart = schedGetMonday(new Date());
+
+  // Restore last-viewed week from sessionStorage, or default to current week
+  if (!window._schedWeekStart) {
+    const saved = sessionStorage.getItem('sched-week-start');
+    window._schedWeekStart = saved ? new Date(saved) : schedGetMonday(new Date());
+  }
 
   const header = document.createElement('div');
   header.className = 'page-header';
@@ -10109,7 +10114,21 @@ function renderSchedule(main, userData) {
   prevBtn.style.cssText = 'height:36px;padding:0 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:600;cursor:pointer;color:var(--ink);';
   const weekLabel = document.createElement('div');
   weekLabel.id = 'sched-week-label';
-  weekLabel.style.cssText = 'font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);text-align:center;';
+  weekLabel.style.cssText = 'font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;';
+
+  // Week jump picker — click the label to jump to any week
+  const jumpPicker = document.createElement('input');
+  jumpPicker.type = 'date';
+  jumpPicker.title = 'Jump to week';
+  jumpPicker.style.cssText = 'border:none;font-size:0.68rem;color:var(--green);background:transparent;cursor:pointer;text-align:center;font-family:var(--font-body);font-weight:600;outline:none;width:130px;';
+  jumpPicker.value = schedFmtDate(window._schedWeekStart);
+  jumpPicker.addEventListener('change', function() {
+    if (!this.value) return;
+    window._schedWeekStart = schedGetMonday(new Date(this.value + 'T12:00:00'));
+    sessionStorage.setItem('sched-week-start', window._schedWeekStart.toISOString());
+    schedRenderGrid(rid);
+  });
+  weekLabel.appendChild(jumpPicker);
   const rightGroup = document.createElement('div');
   rightGroup.style.cssText = 'display:flex;gap:6px;';
   const todayBtn = document.createElement('button');
@@ -10146,9 +10165,21 @@ function renderSchedule(main, userData) {
   body.appendChild(gridWrap);
   main.appendChild(body);
 
-  prevBtn.addEventListener('click', () => { window._schedWeekStart = new Date(window._schedWeekStart.getTime() - 7*24*60*60*1000); schedRenderGrid(rid); });
-  nextBtn.addEventListener('click', () => { window._schedWeekStart = new Date(window._schedWeekStart.getTime() + 7*24*60*60*1000); schedRenderGrid(rid); });
-  todayBtn.addEventListener('click', () => { window._schedWeekStart = schedGetMonday(new Date()); schedRenderGrid(rid); });
+  prevBtn.addEventListener('click', () => {
+    window._schedWeekStart = new Date(window._schedWeekStart.getTime() - 7*24*60*60*1000);
+    sessionStorage.setItem('sched-week-start', window._schedWeekStart.toISOString());
+    schedRenderGrid(rid);
+  });
+  nextBtn.addEventListener('click', () => {
+    window._schedWeekStart = new Date(window._schedWeekStart.getTime() + 7*24*60*60*1000);
+    sessionStorage.setItem('sched-week-start', window._schedWeekStart.toISOString());
+    schedRenderGrid(rid);
+  });
+  todayBtn.addEventListener('click', () => {
+    window._schedWeekStart = schedGetMonday(new Date());
+    sessionStorage.setItem('sched-week-start', window._schedWeekStart.toISOString());
+    schedRenderGrid(rid);
+  });
 
   const addBtn = document.getElementById('sched-add-btn');
   if (addBtn) addBtn.addEventListener('click', () => schedOpenShiftModal(rid, null, null, null));
@@ -10162,10 +10193,17 @@ async function schedRenderGrid(rid) {
   const ws = window._schedWeekStart;
   const weekEnd = new Date(ws.getTime() + 6*24*60*60*1000);
   const label = document.getElementById('sched-week-label');
+  const picker = label?.querySelector('input[type=date]');
   if (label) {
     const opts = {month:'short',day:'numeric'};
-    label.textContent = ws.toLocaleDateString('en-US',opts) + ' – ' + weekEnd.toLocaleDateString('en-US',opts) + ', ' + weekEnd.getFullYear();
+    const labelText = ws.toLocaleDateString('en-US',opts) + ' – ' + weekEnd.toLocaleDateString('en-US',opts) + ', ' + weekEnd.getFullYear();
+    // Update the label span if it exists, otherwise set first child text
+    let span = label.querySelector('span');
+    if (!span) { span = document.createElement('span'); label.insertBefore(span, label.firstChild); }
+    span.textContent = labelText;
+    span.style.cssText = 'font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--ink);';
   }
+  if (picker) picker.value = schedFmtDate(ws);
   const wrap = document.getElementById('sched-grid-wrap');
   if (!wrap) return;
   wrap.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-muted);"><div class="loading-spinner" style="margin:0 auto 10px;"></div>Loading…</div>';
