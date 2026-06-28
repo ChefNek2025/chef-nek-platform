@@ -5396,9 +5396,6 @@ function clShowAddModal(type, rid, color) {
   modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
   setTimeout(() => nameInput.focus(), 100);
 }
-  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
-  setTimeout(() => nameInput.focus(), 50);
-}
 
 function clShowEditModal(item, type, rid, color) {
   const existing = document.getElementById('cl-edit-modal');
