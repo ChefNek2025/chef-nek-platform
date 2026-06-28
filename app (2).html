@@ -5232,21 +5232,39 @@ async function clLoadTab(type, userData) {
       panel.appendChild(card);
     });
 
-    // Sign off button — only shows when ALL items done
-    if (done === items.length && items.length > 0) {
-      const signWrap = document.createElement('div');
-      signWrap.style.cssText = 'background:linear-gradient(135deg,' + (type==='opening'?'#EDFAF4':'#FFF8ED') + ',' + (type==='opening'?'#D4F5E8':'#FFE8C4') + ');border:2px solid ' + color + ';border-radius:16px;padding:20px;margin-top:12px;text-align:center;';
-      signWrap.innerHTML = '<div style="font-size:1.8rem;margin-bottom:6px;">' + (type==='opening'?'🌅':'🌙') + '</div>'
-        + '<div style="font-size:0.9rem;font-weight:700;color:var(--ink);margin-bottom:4px;">All ' + items.length + ' tasks complete!</div>'
-        + '<div style="font-size:0.75rem;color:var(--ink-muted);margin-bottom:14px;">Sign off to confirm you completed the ' + type + ' checklist.</div>';
+    // Sign-off section — always visible, REQUIRED badge, disabled until all done
+    const signWrap = document.createElement('div');
+    const allDone = done === items.length && items.length > 0;
+    signWrap.style.cssText = 'border:2px solid ' + (allDone ? color : 'var(--border)') + ';border-radius:16px;padding:20px;margin-top:12px;text-align:center;background:' + (allDone ? (type==='opening'?'#EDFAF4':'#FFF8ED') : 'var(--cream)') + ';transition:all 0.3s;';
 
-      const signBtn = document.createElement('button');
-      signBtn.style.cssText = 'width:100%;height:52px;border-radius:14px;border:none;background:' + color + ';color:#fff;font-family:var(--font-body);font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px ' + (type==='opening'?'rgba(29,158,117,0.35)':'rgba(193,127,58,0.35)') + ';';
-      signBtn.textContent = '✍️ Sign Off ' + (type==='opening'?'Opening':'Closing') + ' Checklist';
-      signBtn.onclick = () => clSignOff(type, rid, today);
-      signWrap.appendChild(signBtn);
-      panel.appendChild(signWrap);
-    }
+    // Required badge
+    const reqBadge = document.createElement('div');
+    reqBadge.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:#FFF0F0;border:1px solid #FFCDD2;border-radius:100px;padding:4px 12px;font-size:0.65rem;font-weight:800;color:#C62828;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;';
+    reqBadge.innerHTML = '⚠️ REQUIRED — Must Sign to Complete';
+    signWrap.appendChild(reqBadge);
+
+    const signIcon = document.createElement('div');
+    signIcon.style.cssText = 'font-size:1.8rem;margin-bottom:6px;';
+    signIcon.textContent = allDone ? (type==='opening'?'🌅':'🌙') : '🔒';
+    signWrap.appendChild(signIcon);
+
+    const signTitle = document.createElement('div');
+    signTitle.style.cssText = 'font-size:0.9rem;font-weight:700;color:var(--ink);margin-bottom:4px;';
+    signTitle.textContent = allDone ? 'All ' + items.length + ' tasks complete!' : done + ' of ' + items.length + ' tasks done — complete all to sign off';
+    signWrap.appendChild(signTitle);
+
+    const signDesc = document.createElement('div');
+    signDesc.style.cssText = 'font-size:0.75rem;color:var(--ink-muted);margin-bottom:14px;line-height:1.5;';
+    signDesc.textContent = allDone ? 'Sign your name to confirm the ' + type + ' checklist is complete.' : 'All items must be checked before you can sign off.';
+    signWrap.appendChild(signDesc);
+
+    const signBtn = document.createElement('button');
+    signBtn.style.cssText = 'width:100%;height:52px;border-radius:14px;border:none;background:' + (allDone ? color : '#ccc') + ';color:#fff;font-family:var(--font-body);font-size:0.95rem;font-weight:700;cursor:' + (allDone ? 'pointer' : 'not-allowed') + ';box-shadow:' + (allDone ? '0 6px 20px ' + (type==='opening'?'rgba(29,158,117,0.35)':'rgba(193,127,58,0.35)') : 'none') + ';';
+    signBtn.textContent = allDone ? '✍️ Sign Off ' + (type==='opening'?'Opening':'Closing') + ' Checklist' : '🔒 Complete all ' + items.length + ' items first';
+    signBtn.disabled = !allDone;
+    if (allDone) signBtn.onclick = () => clSignOff(type, rid, today);
+    signWrap.appendChild(signBtn);
+    panel.appendChild(signWrap);
 
   } catch(e) {
     console.error('clLoadTab error:', e);
@@ -10396,10 +10414,16 @@ window.calcApply = function() {
 
 // ============================================
 // AI FOOD SCANNER — Claude Vision (Anthropic)
+// Key saved to localStorage — paste once, remembered forever on this device
 // ============================================
-// Get your free API key at: https://console.anthropic.com
-// New accounts get free credits to start
-const ANTHROPIC_KEY = '';
+function getStoredAIKey() {
+  return localStorage.getItem('cnp-ai-key') || window._anthropicKey || '';
+}
+function saveAIKey(key) {
+  window._anthropicKey = key;
+  if (key) localStorage.setItem('cnp-ai-key', key);
+  else localStorage.removeItem('cnp-ai-key');
+}
 
 window.openAIFoodScanner = function() {
   const existing = document.getElementById('ai-scan-modal');
@@ -10441,6 +10465,73 @@ window.openAIFoodScanner = function() {
   // Body
   const body = document.createElement('div');
   body.style.cssText = 'padding:24px;';
+
+  // ── API Key row (remembers on this device via localStorage) ──
+  const storedKey = getStoredAIKey();
+  const keyRow = document.createElement('div');
+  keyRow.style.cssText = 'margin-bottom:16px;';
+
+  const keyLabel = document.createElement('div');
+  keyLabel.style.cssText = 'font-size:0.72rem;font-weight:700;color:var(--ink-muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;';
+  keyLabel.innerHTML = '<span>🔑 Anthropic API Key</span>'
+    + (storedKey ? '<span style="font-size:0.68rem;color:var(--green);font-weight:600;">✓ Saved on this device</span>' : '<span style="font-size:0.68rem;color:#F2A623;font-weight:600;">Required to scan</span>');
+  keyRow.appendChild(keyLabel);
+
+  const keyWrap = document.createElement('div');
+  keyWrap.style.cssText = 'display:flex;gap:8px;';
+
+  const keyInput = document.createElement('input');
+  keyInput.id = 'ai-key-input';
+  keyInput.type = 'password';
+  keyInput.placeholder = 'sk-ant-api03-...';
+  keyInput.value = storedKey;
+  keyInput.autocomplete = 'off';
+  keyInput.style.cssText = 'flex:1;height:42px;border-radius:10px;border:1.5px solid '
+    + (storedKey ? 'var(--green)' : 'var(--border)') + ';padding:0 12px;'
+    + 'font-family:var(--font-body);font-size:0.82rem;background:'
+    + (storedKey ? '#F0FAF5' : '#fff') + ';color:var(--ink);outline:none;';
+
+  const eyeBtn = document.createElement('button');
+  eyeBtn.type = 'button';
+  eyeBtn.textContent = '👁️';
+  eyeBtn.style.cssText = 'height:42px;width:42px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:1rem;flex-shrink:0;';
+
+  const getKeyLink = document.createElement('a');
+  getKeyLink.href = 'https://console.anthropic.com';
+  getKeyLink.target = '_blank';
+  getKeyLink.textContent = 'Get key ↗';
+  getKeyLink.style.cssText = 'height:42px;display:flex;align-items:center;padding:0 12px;background:var(--green);color:#fff;border-radius:10px;font-size:0.75rem;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0;';
+
+  keyWrap.appendChild(keyInput);
+  keyWrap.appendChild(eyeBtn);
+  if (!storedKey) keyWrap.appendChild(getKeyLink);
+  keyRow.appendChild(keyWrap);
+
+  const keyHint = document.createElement('div');
+  keyHint.style.cssText = 'font-size:0.68rem;color:var(--ink-muted);margin-top:5px;';
+  keyHint.textContent = '🔒 Saved to this device only — never in code or GitHub';
+  keyRow.appendChild(keyHint);
+
+  body.appendChild(keyRow);
+
+  // Wire up key input events
+  keyInput.addEventListener('input', function() {
+    const v = this.value.trim();
+    const valid = v.startsWith('sk-ant');
+    this.style.borderColor = valid ? 'var(--green)' : 'var(--border)';
+    this.style.background  = valid ? '#F0FAF5'     : '#fff';
+    if (valid) saveAIKey(v);
+  });
+  keyInput.addEventListener('change', function() {
+    const v = this.value.trim();
+    if (v.startsWith('sk-ant')) { saveAIKey(v); showToast('🔑 Key saved to this device!'); keyLabel.innerHTML = '<span>🔑 Anthropic API Key</span><span style="font-size:0.68rem;color:var(--green);font-weight:600;">✓ Saved on this device</span>'; }
+  });
+  eyeBtn.addEventListener('click', function() {
+    const hidden = keyInput.type === 'password';
+    keyInput.type = hidden ? 'text' : 'password';
+    this.textContent = hidden ? '🙈' : '👁️';
+  });
+  // ──────────────────────────────────────────────────────
 
   // Upload area
   const uploadArea = document.createElement('div');
@@ -10663,16 +10754,24 @@ async function runAIScan() {
   }
 
   try {
-    // Check key is set
-    if (!ANTHROPIC_KEY || ANTHROPIC_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
-      throw new Error('No API key set. Add your Anthropic key to the code (console.anthropic.com)');
+    // Read key from input field first, then localStorage
+    const keyField = document.getElementById('ai-key-input');
+    const apiKey = keyField?.value?.trim() || getStoredAIKey();
+
+    if (!apiKey) {
+      throw new Error('Paste your Anthropic API key in the field above.\nGet a free key at console.anthropic.com');
     }
+    if (!apiKey.startsWith('sk-ant')) {
+      throw new Error('Key should start with sk-ant-api03-...\nGet your key at console.anthropic.com');
+    }
+    // Save to localStorage so it persists
+    saveAIKey(apiKey);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
+        'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true'
       },
