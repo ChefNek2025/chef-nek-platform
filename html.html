@@ -699,10 +699,14 @@ function obRenderStep(step) {
       </div>
       <div style="margin-bottom:12px;">
         <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Cuisine Type *</label>
-        <select id="ob-cuisine" style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 12px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;background:#fff;color:#1A1A14;">
+        <select id="ob-cuisine" onchange="obCuisineChange(this.value)" style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 12px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;background:#fff;color:#1A1A14;">
           <option value="">Select cuisine...</option>
           ${['American','Ethiopian','Caribbean','Mexican','Italian','Asian Fusion','Mediterranean','Soul Food','BBQ','Seafood','Fast Casual','Bakery','Other'].map(c=>`<option value="${c}"${window._obData.cuisine===c?' selected':''}>${c}</option>`).join('')}
         </select>
+        <div id="ob-cuisine-other" style="display:${window._obData.cuisine==='Other'?'block':'none'};margin-top:8px;">
+          <input id="ob-cuisine-custom" type="text" placeholder="e.g. Ethiopian Fusion, Halal, Vegan..." value="${window._obData.cuisineCustom||''}"
+            style="width:100%;height:44px;border-radius:10px;border:1.5px solid #1D9E75;padding:0 14px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;box-sizing:border-box;color:#1A1A14;background:#F0FAF5;">
+        </div>
       </div>
       <div style="margin-bottom:22px;">
         <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Team Size</label>
@@ -761,13 +765,32 @@ function obRenderStep(step) {
   }
 }
 
+window.obCuisineChange = function(val) {
+  const other = document.getElementById('ob-cuisine-other');
+  const custom = document.getElementById('ob-cuisine-custom');
+  if (other) other.style.display = val === 'Other' ? 'block' : 'none';
+  if (val === 'Other' && custom) setTimeout(() => custom.focus(), 50);
+}
+
 window.obStep1Next = function() {
   const name    = document.getElementById('ob-name')?.value.trim();
   const cuisine = document.getElementById('ob-cuisine')?.value;
+  const custom  = document.getElementById('ob-cuisine-custom')?.value.trim();
   const size    = document.getElementById('ob-size')?.value;
   const err     = document.getElementById('ob-err');
-  if (!name || !cuisine) { if(err){err.style.display='block';err.textContent='Please fill in restaurant name and cuisine.';} return; }
-  window._obData = {...window._obData, restaurantName:name, cuisine, size};
+
+  if (!name || !cuisine) {
+    if(err){err.style.display='block';err.textContent='Please fill in restaurant name and cuisine.';}
+    return;
+  }
+  if (cuisine === 'Other' && !custom) {
+    if(err){err.style.display='block';err.textContent='Please describe your cuisine type.';}
+    document.getElementById('ob-cuisine-custom')?.focus();
+    return;
+  }
+
+  const finalCuisine = cuisine === 'Other' ? custom : cuisine;
+  window._obData = {...window._obData, restaurantName:name, cuisine:finalCuisine, cuisineCustom:custom, size};
   obRenderStep(2);
 }
 
