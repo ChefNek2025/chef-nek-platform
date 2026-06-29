@@ -639,34 +639,177 @@ window.renderLogin = function() {
 // ============================================
 window.renderRegister = function() {
   document.getElementById('root').innerHTML = `
-    <div class="login-page">
-      <div class="login-left">
-        <div class="login-brand">Chef Nek <span>Pro</span></div>
-        <p class="login-tagline">Join the Chef Nek Pro platform and run your kitchen the right way.</p>
-      </div>
-      <div class="login-right">
-        <h1 class="login-form-title">Create account</h1>
-        <p class="login-form-sub">Set up your restaurant account</p>
-        <div id="reg-error" style="display:none;" class="form-error"></div>
-        <div class="form-group">
-          <label class="form-label">Restaurant name</label>
-          <input type="text" id="reg-restaurant" class="form-input" placeholder="Island Grill DC">
+    <div style="min-height:100vh;background:linear-gradient(135deg,#0B2818,#0A0A14);display:flex;align-items:center;justify-content:center;padding:20px;font-family:'Inter',sans-serif;">
+      <div style="width:100%;max-width:480px;">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:0.06em;color:#fff;">Chef Nek <span style="color:#1D9E75;">Pro</span></div>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:4px;font-style:italic;">From Struggling to Thriving</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Email address</label>
-          <input type="email" id="reg-email" class="form-input" placeholder="you@restaurant.com">
+        <div style="background:#fff;border-radius:24px;padding:32px 28px;box-shadow:0 40px 80px rgba(0,0,0,0.4);">
+          <div style="display:flex;align-items:center;margin-bottom:28px;" id="ob-steps">
+            <div style="display:flex;align-items:center;flex:1;">
+              <div id="ob-dot-1" style="width:32px;height:32px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;flex-shrink:0;">1</div>
+              <div id="ob-line-1" style="flex:1;height:2px;background:#E5E7EB;"></div>
+            </div>
+            <div style="display:flex;align-items:center;flex:1;">
+              <div id="ob-dot-2" style="width:32px;height:32px;border-radius:50%;background:#E5E7EB;color:#9CA3AF;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;flex-shrink:0;">2</div>
+              <div id="ob-line-2" style="flex:1;height:2px;background:#E5E7EB;"></div>
+            </div>
+            <div id="ob-dot-3" style="width:32px;height:32px;border-radius:50%;background:#E5E7EB;color:#9CA3AF;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;flex-shrink:0;">3</div>
+          </div>
+          <div id="ob-content"></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" id="reg-password" class="form-input" placeholder="Min 6 characters">
-        </div>
-        <button class="form-btn" id="reg-btn" onclick="handleRegister()">Create account</button>
-        <p style="text-align:center;margin-top:20px;font-size:0.875rem;color:var(--ink-muted);">
-          Already have an account? <span style="color:var(--green);cursor:pointer;font-weight:500;" onclick="renderLogin()">Sign in</span>
+        <p style="text-align:center;margin-top:18px;font-size:0.78rem;color:rgba(255,255,255,0.3);">
+          Already have an account? <span style="color:#1D9E75;cursor:pointer;font-weight:600;" onclick="renderLogin()">Sign in</span>
         </p>
       </div>
-    </div>
-  `;
+    </div>`;
+  window._obData = {};
+  obRenderStep(1);
+}
+
+function obUpdateDots(step) {
+  [1,2,3].forEach(s => {
+    const dot = document.getElementById('ob-dot-'+s);
+    const line = document.getElementById('ob-line-'+s);
+    if (dot) {
+      dot.style.background = s < step ? '#1D9E75' : s === step ? '#1D9E75' : '#E5E7EB';
+      dot.style.color = s <= step ? '#fff' : '#9CA3AF';
+      dot.textContent = s < step ? '✓' : s;
+    }
+    if (line) line.style.background = s < step ? '#1D9E75' : '#E5E7EB';
+  });
+}
+
+function obRenderStep(step) {
+  window._obStep = step;
+  obUpdateDots(step);
+  const el = document.getElementById('ob-content');
+  if (!el) return;
+
+  if (step === 1) {
+    el.innerHTML = `
+      <h2 style="font-size:1.35rem;font-weight:800;color:#1A1A14;margin-bottom:4px;">Welcome to Chef Nek Pro 👋</h2>
+      <p style="font-size:0.8rem;color:#6B7280;margin-bottom:20px;line-height:1.6;">Tell us about your restaurant. Takes 2 minutes.</p>
+      <div id="ob-err" style="display:none;background:#FFF0F0;border:1px solid #FFCDD2;color:#C62828;font-size:0.78rem;padding:10px 14px;border-radius:10px;margin-bottom:12px;"></div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Restaurant Name *</label>
+        <input id="ob-name" type="text" placeholder="e.g. Black Lion Kitchen" value="${window._obData.restaurantName||''}"
+          style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 14px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;box-sizing:border-box;color:#1A1A14;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Cuisine Type *</label>
+        <select id="ob-cuisine" style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 12px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;background:#fff;color:#1A1A14;">
+          <option value="">Select cuisine...</option>
+          ${['American','Ethiopian','Caribbean','Mexican','Italian','Asian Fusion','Mediterranean','Soul Food','BBQ','Seafood','Fast Casual','Bakery','Other'].map(c=>`<option value="${c}"${window._obData.cuisine===c?' selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div style="margin-bottom:22px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Team Size</label>
+        <select id="ob-size" style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 12px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;background:#fff;color:#1A1A14;">
+          ${['1-3 employees','4-8 employees','9-15 employees','16-30 employees','30+ employees'].map(s=>`<option value="${s}"${window._obData.size===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <button onclick="obStep1Next()" style="width:100%;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(29,158,117,0.3);">Continue →</button>`;
+    setTimeout(()=>document.getElementById('ob-name')?.focus(),50);
+
+  } else if (step === 2) {
+    el.innerHTML = `
+      <h2 style="font-size:1.35rem;font-weight:800;color:#1A1A14;margin-bottom:4px;">Create your login 🔐</h2>
+      <p style="font-size:0.8rem;color:#6B7280;margin-bottom:20px;">You'll use this to sign in every time.</p>
+      <div id="ob-err" style="display:none;background:#FFF0F0;border:1px solid #FFCDD2;color:#C62828;font-size:0.78rem;padding:10px 14px;border-radius:10px;margin-bottom:12px;"></div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Phone Number</label>
+        <input id="ob-phone" type="tel" placeholder="+1 (202) 555-0100" value="${window._obData.phone||''}"
+          style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 14px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;box-sizing:border-box;color:#1A1A14;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Email Address *</label>
+        <input id="ob-email" type="email" placeholder="you@restaurant.com" value="${window._obData.email||''}"
+          style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 14px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;box-sizing:border-box;color:#1A1A14;">
+      </div>
+      <div style="margin-bottom:22px;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;">Password *</label>
+        <input id="ob-pwd" type="password" placeholder="Min 6 characters"
+          style="width:100%;height:44px;border-radius:10px;border:1.5px solid #E5E7EB;padding:0 14px;font-family:'Inter',sans-serif;font-size:0.9rem;outline:none;box-sizing:border-box;color:#1A1A14;">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="obRenderStep(1)" style="height:50px;padding:0 18px;border-radius:12px;border:1.5px solid #E5E7EB;background:#fff;color:#6B7280;font-family:'Inter',sans-serif;font-size:0.875rem;font-weight:600;cursor:pointer;">← Back</button>
+        <button id="ob-create-btn" onclick="obStep2Create()" style="flex:1;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(29,158,117,0.3);">Create Account →</button>
+      </div>`;
+
+  } else if (step === 3) {
+    const founding = window._obData.plan === 'founding';
+    el.innerHTML = `
+      <div style="text-align:center;padding:8px 0;">
+        <div style="font-size:3.5rem;margin-bottom:12px;">${founding?'🏆':'🎉'}</div>
+        <h2 style="font-size:1.3rem;font-weight:800;color:#1A1A14;margin-bottom:10px;">${founding?"You're a Founding Restaurant!":"You're all set!"}</h2>
+        <div style="background:${founding?'linear-gradient(135deg,#FFF8ED,#FFF4D6)':'linear-gradient(135deg,#EDFAF4,#D4F5E8)'};border:2px solid ${founding?'#F2A623':'#1D9E75'};border-radius:14px;padding:14px 16px;margin-bottom:20px;text-align:left;">
+          <div style="font-size:0.7rem;font-weight:800;color:${founding?'#C17F3A':'#0A5C3F'};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">${founding?'🏆 Free Forever — Founding Partner':'🎉 30-Day Free Trial'}</div>
+          <div style="font-size:0.82rem;color:${founding?'#854F0B':'#1D5E40'};line-height:1.6;">${founding?'Chef Nek Pro is <strong>free forever</strong> for you as a founding restaurant partner. You only pay for the training session.':'You have <strong>30 full days</strong> to explore everything — no credit card needed right now.'}</div>
+        </div>
+        <div style="text-align:left;margin-bottom:22px;">
+          <div style="font-size:0.8rem;font-weight:700;color:#1A1A14;margin-bottom:10px;">Your first steps in the kitchen:</div>
+          ${[['📋','Add your recipes','Recipe Book → + Add Recipe'],['👥','Add your staff','Staff page → + Add Employee'],['✅','Set opening checklist','Opening & Closing → + Add Item'],['📅','Build your schedule','Schedule → + Add Shift']].map(([i,t,s])=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F0EDE8;">
+            <div style="width:30px;height:30px;border-radius:8px;background:#F0FAF5;display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0;">${i}</div>
+            <div><div style="font-size:0.82rem;font-weight:600;color:#1A1A14;">${t}</div><div style="font-size:0.7rem;color:#6B7280;">${s}</div></div>
+          </div>`).join('')}
+        </div>
+        <button onclick="obFinish()" style="width:100%;height:50px;border-radius:12px;border:none;background:linear-gradient(135deg,#1D9E75,#16856A);color:#fff;font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(29,158,117,0.3);">🚀 Enter My Kitchen</button>
+      </div>`;
+  }
+}
+
+window.obStep1Next = function() {
+  const name    = document.getElementById('ob-name')?.value.trim();
+  const cuisine = document.getElementById('ob-cuisine')?.value;
+  const size    = document.getElementById('ob-size')?.value;
+  const err     = document.getElementById('ob-err');
+  if (!name || !cuisine) { if(err){err.style.display='block';err.textContent='Please fill in restaurant name and cuisine.';} return; }
+  window._obData = {...window._obData, restaurantName:name, cuisine, size};
+  obRenderStep(2);
+}
+
+window.obStep2Create = async function() {
+  const phone = document.getElementById('ob-phone')?.value.trim();
+  const email = document.getElementById('ob-email')?.value.trim();
+  const pwd   = document.getElementById('ob-pwd')?.value;
+  const err   = document.getElementById('ob-err');
+  const btn   = document.getElementById('ob-create-btn');
+  if (!email || !pwd) { if(err){err.style.display='block';err.textContent='Email and password are required.';} return; }
+  if (pwd.length < 6) { if(err){err.style.display='block';err.textContent='Password must be at least 6 characters.';} return; }
+  window._obData = {...window._obData, phone, email};
+  if (btn) { btn.disabled=true; btn.textContent='Creating your account...'; }
+  try {
+    // Check founding count
+    const snap = await getDocs(query(collection(db,'users'), where('plan','==','founding')));
+    const plan = snap.docs.length < 3 ? 'founding' : 'trial';
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db,'users',cred.user.uid), {
+      restaurantName: window._obData.restaurantName,
+      cuisine: window._obData.cuisine,
+      teamSize: window._obData.size,
+      phone: phone||'', email, plan,
+      trialStart: new Date().toISOString().split('T')[0],
+      trialDays: plan==='founding' ? 99999 : 30,
+      isAdmin: false,
+      onboardingComplete: false,
+      status: 'active',
+      createdAt: serverTimestamp()
+    });
+    window._obData.plan = plan;
+    obRenderStep(3);
+  } catch(e) {
+    const msg = e.message.includes('email-already-in-use') ? 'That email already has an account — try signing in instead.' : e.message.replace('Firebase: ','');
+    if (err) { err.style.display='block'; err.textContent=msg; }
+    if (btn) { btn.disabled=false; btn.textContent='Create Account →'; }
+  }
+}
+
+window.obFinish = async function() {
+  try { if(auth.currentUser) await setDoc(doc(db,'users',auth.currentUser.uid),{onboardingComplete:true},{merge:true}); } catch(e){}
+  // onAuthStateChanged fires renderApp automatically
 }
 
 
@@ -908,6 +1051,19 @@ function renderApp(userData) {
   if (isAdmin) {
     const rid = currentRestaurantId() || userData.uid;
     setTimeout(() => startNotifListener(rid), 2000);
+  }
+  // Show trial banner for non-admin restaurants on trial
+  if (!isAdmin && userData.plan === 'trial') {
+    const start = new Date(userData.trialStart || new Date());
+    const daysUsed = Math.floor((new Date() - start) / (1000*60*60*24));
+    const daysLeft = Math.max(0, (userData.trialDays||30) - daysUsed);
+    if (daysLeft <= 30) {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:500;background:'+(daysLeft<=5?'#E53935':'#1D9E75')+';color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;font-family:var(--font-body);font-size:0.8rem;font-weight:600;';
+      banner.innerHTML = '<span>'+(daysLeft<=5?'⚠️':'🎉')+' '+(daysLeft===0?'Your trial has ended — contact Chef Nek to continue':'Your free trial: <strong>'+daysLeft+' day'+(daysLeft!==1?'s':'')+' left</strong>')+'</span>'
+        + '<a href="mailto:hailu.nekatibeb2025@gmail.com?subject=Chef Nek Pro Subscription" style="background:rgba(255,255,255,0.2);color:#fff;padding:5px 14px;border-radius:100px;text-decoration:none;font-size:0.75rem;font-weight:700;white-space:nowrap;">Contact Chef Nek →</a>';
+      document.getElementById('root')?.appendChild(banner);
+    }
   }
   // Ensure sidebar is closed on page load
   setTimeout(() => {
